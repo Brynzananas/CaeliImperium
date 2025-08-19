@@ -13,6 +13,7 @@ using UnityEngine.EventSystems;
 using static CaeliImperium.Utils;
 using System.Linq;
 using static RoR2.CombatDirector;
+using RoR2.UI;
 
 namespace CaeliImperium
 {
@@ -98,7 +99,7 @@ namespace CaeliImperium
             buffDef.eliteDef = eliteDef;
             elites.Add(eliteDef);
             if (onEliteAdded != null) onEliteAdded(eliteDef);
-            Hooks.OnCombatDirectorInitAfter += Hooks_OnCombatDirectorInitAfter;
+            Hooks.OnCombatDirectorInit += Hooks_OnCombatDirectorInitAfter;
             void Hooks_OnCombatDirectorInitAfter()
             {
                 EliteDef index = RoR2Content.Elites.Ice;
@@ -125,9 +126,8 @@ namespace CaeliImperium
         }
 
         public delegate void OnDOTAdded(DotController.DotDef dotDef);
-        public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, OnDOTAdded onDOTAdded = null)
+        public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, OnDOTAdded onDOTAdded = null)
         {
-            
             DotController.DotDef dotDef = new DotController.DotDef
             {
                 resetTimerOnAdd = resetTimerOnAdd,
@@ -136,7 +136,7 @@ namespace CaeliImperium
                 damageColorIndex = damageColorIndex,
                 associatedBuff = buffDef
             };
-            dotIndex = DotAPI.RegisterDotDef(dotDef, customDotBehaviour, customDotVisual);
+            dotIndex = DotAPI.RegisterDotDef(dotDef, customDotBehaviour, customDotVisual, customDotDamageEvaluation);
             return dotDef;
 
         }
@@ -170,6 +170,46 @@ namespace CaeliImperium
             }
             //if (bodyToTransferCopiedGenericSkill.skillLocator) bodyToTransferCopiedGenericSkill.skillLocator.AddBonusSkill(genericSkill1);
             return genericSkill1;
+        }
+        public static EquipmentPicker CreateEquipmentPicker()
+        {
+            Transform transform = HUD.instancesList[0] && HUD.instancesList[0].mainContainer ? HUD.instancesList[0].mainContainer.transform : null;
+            if (transform == null) return null;
+            EquipmentPicker equipmentPicker = GameObject.Instantiate(Assets.EquipmentPicker, HUD.instancesList[0].mainContainer.transform).GetComponent<EquipmentPicker>();
+            return equipmentPicker;
+        }
+    }
+    public static class Extensions
+    {
+        public static T RegisterItemDef<T>(this T itemDef, Action<T> onItemDefAdded = null) where T : ItemDef
+        {
+            items.Add(itemDef);
+            onItemDefAdded?.Invoke(itemDef);
+            return itemDef;
+        }
+        public static T RegisterEquipmentDef<T>(this T equipmentDef, Action<T> onEquipmentDefAdded = null) where T : EquipmentDef
+        {
+            equipments.Add(equipmentDef);
+            onEquipmentDefAdded?.Invoke(equipmentDef);
+            return equipmentDef;
+        }
+        public static T RegisterEliteDef<T>(this T eliteDef, Action<T> onEliteDefAdded = null) where T : EliteDef
+        {
+            elites.Add(eliteDef);
+            onEliteDefAdded?.Invoke(eliteDef);
+            return eliteDef;
+        }
+        public static T RegisterBuffDef<T>(this T buffDef, Action<T> onBuffDefAdded = null) where T : BuffDef
+        {
+            buffs.Add(buffDef);
+            onBuffDefAdded?.Invoke(buffDef);
+            return buffDef;
+        }
+        public static T RegisterExpansionDef<T>(this T expansionsDef, Action<T> onExpansionDefAdded = null) where T : ExpansionDef
+        {
+            expansions.Add(expansionsDef);
+            onExpansionDefAdded?.Invoke(expansionsDef);
+            return expansionsDef;
         }
     }
 }

@@ -7,7 +7,6 @@ using static CaeliImperium.Hooks;
 using static CaeliImperium.Items;
 using static CaeliImperium.Buffs;
 using static CaeliImperium.Utils;
-using static CaeliImperium.Components;
 using static R2API.RecalculateStatsAPI;
 using UnityEngine.Networking;
 using Rewired;
@@ -19,20 +18,24 @@ using System.Security.Cryptography;
 using System.Linq;
 using System.Runtime.InteropServices;
 using BrynzaAPI;
+using R2API;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using System.Numerics;
 
 namespace CaeliImperium
 {
     public class Events
     {
-        public static void KeychainEvents(ItemDef itemDef)
+        public static void CritUpgradeOnKillEvents(ItemDef itemDef)
         {
-            OnCharacterDeathAfter += Events_OnCharacterDeathAfter;
+            OnCharacterDeath += Events_OnCharacterDeathAfter;
             void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
             {
                 if (!NetworkServer.active) return;
                 if (attackerBody == null) return;
                 if (attackerBody.inventory == null) return;
-                int itemCount = attackerBody.inventory.GetItemCount(Keychain);
+                int itemCount = attackerBody.inventory.GetItemCount(CritUpgradeOnKill);
                 if (itemCount > 0)
                 {
                     int rolls = SuperRoll(itemCount * 5f);
@@ -48,83 +51,79 @@ namespace CaeliImperium
                 args.critDamageMultAdd += buffCount * 0.05f;
             }
         }
-        public static void ContainedPotentialEvent(ItemDef itemDef)
+        public static void ExtraEquipmentSlotEvents(ItemDef itemDef)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
-            //On.RoR2.EquipmentSlot.ExecuteIfReady += EquipmentSlot_ExecuteIfReady;
-            //On.EntityStates.GenericCharacterMain.CanExecuteSkill += GenericCharacterMain_CanExecuteSkill;
-            bool EquipmentSlot_ExecuteIfReady(On.RoR2.EquipmentSlot.orig_ExecuteIfReady orig, EquipmentSlot self)
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
+            IL.RoR2.EquipmentSlot.MyFixedUpdate += EquipmentSlot_MyFixedUpdate;
+            void EquipmentSlot_MyFixedUpdate(ILContext il)
             {
-                if (self.characterBody && self.characterBody.master && self.characterBody.inventory && self.inventory.GetItemCount(ContainedPotential) > 0)
+                ILCursor c = new ILCursor(il);
+                ILLabel iLLabel = null;
+                int newVariable = il.Body.Variables.Count;
+                il.Body.Variables.Add(new(il.Import(typeof(bool))));
+                if (c.TryGotoNext(MoveType.After,
+                    x => x.MatchLdarg(0),
+                    x => x.MatchCall(typeof(EquipmentSlot).GetPropertyGetter(nameof(EquipmentSlot.characterBody))),
+                    x => x.MatchCallvirt(typeof(CharacterBody).GetPropertyGetter(nameof(CharacterBody.isEquipmentActivationAllowed))),
+                    x => x.MatchStloc(out _),
+                    x => x.MatchLdloc(out _),
+                    x => x.MatchAnd(),
+                    x => x.MatchBrfalse(out iLLabel)
+                    ))
                 {
-                    ContainedPotentialComponent containedPotentialComponent = self.characterBody.masterObject.GetComponent<ContainedPotentialComponent>();
-                    if (containedPotentialComponent)
-                        if (containedPotentialComponent.canExecuteEquipment)
-                        {
-                            return orig(self);
-                        }
-                        else
-                        {
-                            containedPotentialComponent.OpenWheel();
-                            return false;
-                        }
-
-                }
-                return orig(self);
-            }
-            bool GenericCharacterMain_CanExecuteSkill(On.EntityStates.GenericCharacterMain.orig_CanExecuteSkill orig, EntityStates.GenericCharacterMain self, GenericSkill skillSlot)
-            {
-                if (self.characterBody && self.characterBody.master && self.characterBody.inventory && self.characterBody.inventory.GetItemCount(ContainedPotential) > 0)
-                {
-                    ContainedPotentialComponent containedPotentialComponent = self.characterBody.masterObject.GetComponent<ContainedPotentialComponent>();
-                    if (containedPotentialComponent && self.skillLocator && self.inputBank)
+                    c.Emit(OpCodes.Ldarg_0);
+                    c.EmitDelegate(OpenPicker);
+                    bool OpenPicker(EquipmentSlot equipmentSlot)
                     {
-                        if (!self.inputBank.ping.down)
+                        Inventory inventory = equipmentSlot.inventory;
+                        if (inventory && inventory.GetItemCount(itemDef) > 0)
                         {
-                            return orig(self, skillSlot);
-                        }
-                        else
-                        {
-                            if (skillSlot == self.skillLocator.primary)
+                            EquipmentPicker equipmentPicker = ExtraEquipmentSlotBehaviour.equipmentPicker;
+                            if (equipmentPicker && !equipmentPicker.gameObject.activeSelf)
                             {
-                                containedPotentialComponent.MoveEquipmentUpwards();
-                                return false;
+                                equipmentPicker.gameObject.SetActive(true);
+                                return true;
                             }
-                            if (skillSlot == self.skillLocator.secondary)
+                            else
                             {
-                                containedPotentialComponent.MoveEquipmentDownwards();
-                                return false;
+                                bool flag = equipmentPicker.blockEquipmentUse;
+                                equipmentPicker.gameObject.SetActive(false);
+                                return flag;
                             }
-                            return orig(self, skillSlot);
                         }
+                        return false;
                     }
+                    c.Emit(OpCodes.Brtrue_S, iLLabel);
                 }
-                return orig(self, skillSlot);
+                else
+                {
+                    Debug.LogError(il.Method + "IL Hook failed");
+                }
             }
             void Events_OnInventoryChangedAfter(CharacterBody characterBody)
             {
-                if (characterBody.inventory && characterBody.master && characterBody.inventory.GetItemCount(ContainedPotential) > 0)
+                if (characterBody.inventory && characterBody.master && characterBody.inventory.GetItemCount(itemDef) > 0)
                 {
-                    ContainedPotentialComponent containedPotentialComponent = characterBody.masterObject.GetOrAddComponent<ContainedPotentialComponent>();
+                    ExtraEquipmentSlotBehaviour containedPotentialComponent = characterBody.masterObject.GetOrAddComponent<ExtraEquipmentSlotBehaviour>();
                 }
             }
         }
-        public static void SkullMachineGunEvents(ItemDef itemDef)
+        public static void FireBulletOnPrimarySkillEvents(ItemDef itemDef)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(itemDef) : 0;
-                obj.AddItemBehavior<SkullMachineGunComponent>(stacks);
+                obj.AddItemBehavior<FireBulletOnPrimarySkillBehaviour>(stacks);
             }
         }
-        public static void CopperBellEvents(ItemDef itemDef)
+        public static void PeriodicDamageIncreaseEvents(ItemDef itemDef)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(itemDef) : 0;
-                obj.AddItemBehavior<CopperBellComponent>(stacks);
+                obj.AddItemBehavior<PeriodicDamageIncreaseBehaviour>(stacks);
             }
             GetStatCoefficients += Events_GetStatCoefficients;
             void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
@@ -133,7 +132,7 @@ namespace CaeliImperium
                 args.damageMultAdd += buffCount / 2;
             }
         }
-        public static void GuardianFleshEvents(ItemDef itemDef)
+        public static void StunEnemyOnItsAttackEvents(ItemDef itemDef)
         {
             //On.RoR2.GenericSkill.ExecuteIfReady += GenericSkill_ExecuteIfReady;
             On.RoR2.Skills.SkillDef.OnExecute += SkillDef_OnExecute;
@@ -173,7 +172,7 @@ namespace CaeliImperium
         }
         public static void NecronomiconEvents(EquipmentDef equip)
         {
-            OnCharacterDeathAfter += Events_OnCharacterDeathAfter;
+            OnCharacterDeath += Events_OnCharacterDeathAfter;
             void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
             {
                 GameObject bodyPrefab = BodyCatalog.GetBodyPrefab(victimBody.bodyIndex);
@@ -219,24 +218,24 @@ namespace CaeliImperium
             }
         }
         public static List<DeadBodyComponent> deadBodyComponents = new List<DeadBodyComponent>();
-        public static void AtomicHeartEvents(ItemDef item)
+        public static void ChargeAtomicBeamOnSpecialSkillEvents(ItemDef item)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
                 obj.AddItemBehavior<AtomicHeartComponent>(stacks);
             }
         }
-        public static void GeneModificationEvents(ItemDef item)
+        public static void CopyNearbyCharactersSkillsOnDeathEvents(ItemDef item)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
                 obj.AddItemBehavior<SewingMachineComponent>(stacks);
             }
-            OnCharacterDeathAfter += Events_OnCharacterDeathAfter;
+            OnCharacterDeath += Events_OnCharacterDeathAfter;
             void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
             {
                 if (!attackerBody || !attackerBody.inventory || attackerBody.inventory.GetItemCount(item) <= 0) return;
@@ -305,7 +304,7 @@ namespace CaeliImperium
             }
         }
 
-        public static void MedicineEvents(ItemDef item)
+        public static void ImproveHealingAndRegenEvents(ItemDef item)
         {
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
@@ -318,114 +317,45 @@ namespace CaeliImperium
             }
         }
 
-        public static void IrradiatedDotBehaviour(RoR2.DotController self, RoR2.DotController.DotStack dotStack)
+        public static void IrradiatedDotBehaviour(DotController self, DotController.DotStack dotStack)
         {
-            dotStack.dotIndex = IrradiatedDotIndex;
-            dotStack.attackerObject = null;
-            dotStack.attackerTeam = TeamIndex.Neutral;
-            dotStack.timer = 0f;
-            dotStack.damage = 0f;
-            dotStack.damageType = default(DamageTypeCombo);
         }
-        public static void IrradiatedEvents(DotController.DotDef dotDef)
+        public static float irradiatedRadius = 12f;
+        public static void IrradiatedDotEvaluation(DotController self, DotController.PendingDamage pendingDamage)
         {
-            OnEvaluateDotStacksForTypeBefore += Events_OnEvaluateDotStacksForTypeBefore;
-            void Events_OnEvaluateDotStacksForTypeBefore(DotController arg1, DotController.DotIndex arg2, float arg3)
+            BlastAttack blastAttack = new BlastAttack
             {
-                if (arg2 == IrradiatedDotIndex)
-                {
-                    for (int i = 0; i < arg1.dotStackList.Count; i++)
-                    {
-                        DotController.DotStack dotStack = arg1.dotStackList[i];
-                        if(dotStack.dotIndex == IrradiatedDotIndex)
-                        {
-                            Chat.AddMessage("Explode");
-                            BlastAttack blastAttack = new BlastAttack
-                            {
-                                attacker = dotStack.attackerObject,
-                                attackerFiltering = AttackerFiltering.Default,
-                                baseDamage = dotStack.damage,
-                                baseForce = 0f,
-                                damageColorIndex = DamageColorIndex.Poison,
-                                damageType = DamageTypeCombo.Generic,
-                                losType = BlastAttack.LoSType.None,
-                                inflictor = arg1.gameObject,
-                                falloffModel = BlastAttack.FalloffModel.None,
-                                position = arg1.victimBody.corePosition,
-                                radius = 6f,
-                                procCoefficient = 0f,
-                                teamIndex = dotStack.attackerTeam,
-                            };
-                            BlastAttack.Result result = blastAttack.Fire();
-                        }
-                        
-                    }
-                    EffectData effectData = new EffectData
-                    {
-                        origin = arg1.victimBody.corePosition,
-                        scale = 6f
-                    };
-                    EffectManager.SpawnEffect(Assets.igniteOnkillExplosion, effectData, true);
-                }
-            }
+                attacker = pendingDamage.attackerObject,
+                inflictor = pendingDamage.attackerObject,
+                teamIndex = TeamComponent.GetObjectTeam(pendingDamage.attackerObject),
+                baseDamage = pendingDamage.totalDamage,
+                baseForce = 0f,
+                position = self.victimBody.corePosition,
+                radius = irradiatedRadius,
+                damageColorIndex = DamageColorIndex.Nearby,
+                falloffModel = BlastAttack.FalloffModel.None,
+            };
+            blastAttack.Fire();
+            EffectData effectData = new EffectData
+            {
+                origin = blastAttack.position,
+                scale = blastAttack.radius,
+            };
+            EffectManager.SpawnEffect(Assets.igniteOnkillExplosion, effectData, true);
         }
-        public static void PossessedSwordEvents(ItemDef item)
+        public static void SummonMercenaryEvents(ItemDef item)
         {
-            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
-            void GlobalEventManager_onServerDamageDealt(DamageReport obj)
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
+            void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
-                int itemCount = obj.attackerBody && obj.attackerBody.inventory ? obj.attackerBody.inventory.GetItemCount(item) : 0;
-                if (itemCount > 0)
-                {
-                    float chance = 1 * (obj.attackerBody.GetBuffCount(IncreaseMercenaryCloneSummonChance) + 1);
-                    bool roll = Util.CheckRoll(chance);
-                    if (roll)
-                    {
-                        Vector3 destination = obj.damageInfo.position;
-                        Vector3 startPosition = obj.damageInfo.position;
-                        NodeGraph groundNodes = SceneInfo.instance.groundNodes;
-                        NodeGraph.NodeIndex nodeIndex = groundNodes.FindClosestNode(startPosition, HullClassification.Human, float.PositiveInfinity);
-                        groundNodes.GetNodePosition(nodeIndex, out destination);
-                        CharacterMaster characterMaster = new MasterSummon
-                        {
-                            position = destination,
-                            ignoreTeamMemberLimit = true,
-                            masterPrefab = Assets.mercMaster,
-                            summonerBodyObject = obj.attacker,
-                            //teamIndexOverride = TeamIndex.Player,
-                            rotation = Quaternion.identity,
-                            //inventoryToCopy = inventory,
-                            //loadout = loadout,
-                        }.Perform();
-                        if (characterMaster)
-                        {
-                            EntityStateMachine entityStateMachine = characterMaster.GetBody() ? characterMaster.GetBody().GetComponent<EntityStateMachine>() : null;
-                            if (entityStateMachine != null)
-                            {
-                                entityStateMachine.SetNextStateToMain();
-                            }
-                            if (characterMaster.inventory)
-                            {
-                                characterMaster.inventory.GiveItem(RoR2Content.Items.HealthDecay, 30);
-                                characterMaster.inventory.GiveItem(RoR2Content.Items.BoostDamage, itemCount * 10);
-                                characterMaster.inventory.GiveItem(RoR2Content.Items.BoostAttackSpeed, itemCount * 5);
-                                characterMaster.inventory.GiveItem(RoR2Content.Items.Ghost);
-                                characterMaster.inventory.GiveItem(TransferDamageOwnership);
-                            }
-                            
-                        }
-                        obj.attackerBody.SetBuffCount(IncreaseMercenaryCloneSummonChance.buffIndex, 0);
-                    }
-                    else
-                    {
-                        obj.attackerBody.AddBuff(IncreaseMercenaryCloneSummonChance);
-                    }
-                }
+                if(NetworkServer.instance == null) return;
+                int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
+                obj.AddItemBehavior<SummonMercenaryComponent>(stacks);
             }
         }
         public static void TransferDamageOwnershipEvents(ItemDef item)
         {
-            OnTakeDamageProcessBefore += Events_OnTakeDamageProcessBefore;
+            OnTakeDamageProcess += Events_OnTakeDamageProcessBefore;
             void Events_OnTakeDamageProcessBefore(HealthComponent arg1, DamageInfo arg2, CharacterBody attackerBody)
             {
                 if (attackerBody && attackerBody.master && attackerBody.master.minionOwnership && attackerBody.master.minionOwnership.ownerMaster && attackerBody.inventory && attackerBody.inventory.GetItemCount(item) > 0)
@@ -435,16 +365,16 @@ namespace CaeliImperium
                 }
             }
         }
-        public static void BrassKnucklesEvents(ItemDef item)
+        public static void DuplicateMainSkillsEvents(ItemDef item)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
                 obj.AddItemBehavior<BrassKnucklesComponent>(stacks);
             }
         }
-        public static void FireAxeEvents(ItemDef item)
+        public static void DamageAllEnemiesEvents(ItemDef item)
         {
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
@@ -479,82 +409,33 @@ namespace CaeliImperium
                 }
             }
         }
-        public static void TaoManuscriptEvents(ItemDef itemDef)
+        private static bool TaoRegistered;
+        public static void TaoEvents(ItemDef itemDef)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            if (TaoRegistered) return;
+            TaoRegistered = true;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
-                int stacks = obj.inventory ? obj.inventory.GetItemCount(TaoManuscript) + obj.inventory.GetItemCount(TaoFruit) : 0;
+                int stacks = obj.inventory ? obj.inventory.GetItemCount(WoundEnemyOnContiniousHits) + obj.inventory.GetItemCount(DropHealOrbsOnContiniousHits) : 0;
                 obj.AddItemBehavior<TaoArtifactsComponent>(stacks);
             }
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
             {
-                bool hasFlag = obj.damageInfo.damageType.damageSource.HasFlag(DamageSource.Primary);
-                Debug.Log("has Flag: " + hasFlag);
-                if (!hasFlag) return;
-                int itemCount = obj.attackerBody && obj.attackerBody.inventory ? obj.attackerBody.inventory.GetItemCount(TaoManuscript) : 0;
-                int itemCount2 = obj.attackerBody && obj.attackerBody.inventory ? obj.attackerBody.inventory.GetItemCount(TaoFruit) : 0;
-                if (itemCount + itemCount2 > 0)
-                {
-                    obj.victimBody.AddBuff(TaoCount);
-                    if (obj.victimBody.GetBuffCount(TaoCount) >= 7)
-                    {
-                        if(itemCount > 0)
-                        {
-                            DamageInfo damageInfo = new DamageInfo
-                            {
-                                attacker = obj.attacker,
-                                canRejectForce = true,
-                                crit = false,
-                                damageColorIndex = DamageColorIndex.Item,
-                                damageType = DamageTypeCombo.Generic,
-                                damage = obj.attackerBody.damage * itemCount * 10,
-                                inflictor = obj.attacker,
-                                position = obj.damageInfo.position,
-                                //procChainMask = procChainMask,
-                                procCoefficient = 1f,
-                            };
-                            obj.victimBody.healthComponent.TakeDamageProcess(damageInfo);
-                        }
-                        if (itemCount2 > 0)
-                        {
-                            EffectManager.SpawnEffect(LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/TreebotFruitDeathEffect"), new EffectData
-                            {
-                                origin = obj.victimBody.corePosition,
-                                rotation = UnityEngine.Random.rotation
-                            }, true);
-                            int num2 = itemCount2;
-                            GameObject original = LegacyResourcesAPI.Load<GameObject>("Prefabs/NetworkedObjects/TreebotFruitPack");
-                            for (int i = 0; i < num2; i++)
-                            {
-                                GameObject gameObject4 = UnityEngine.Object.Instantiate<GameObject>(original, obj.victimBody.corePosition + UnityEngine.Random.insideUnitSphere * obj.victimBody.radius * 0.5f, UnityEngine.Random.rotation);
-                                TeamFilter component4 = gameObject4.GetComponent<TeamFilter>();
-                                if (component4)
-                                {
-                                    component4.teamIndex = obj.attackerTeamIndex;
-                                }
-                                gameObject4.GetComponentInChildren<HealthPickup>();
-                                gameObject4.transform.localScale = new Vector3(1f, 1f, 1f);
-                                NetworkServer.Spawn(gameObject4);
-                            }
-                        }
-                        obj.victimBody.SetBuffCount(TaoCount.buffIndex, 0);
-                        
-                        
-                    }
-                }
+               TaoArtifactsComponent taoArtifactsComponent = obj.attackerBody && obj.attackerBody.inventory && obj.attackerBody.inventory.GetItemCount(WoundEnemyOnContiniousHits) + obj.attackerBody.inventory.GetItemCount(DropHealOrbsOnContiniousHits) > 0 ? obj.attacker.GetComponent<TaoArtifactsComponent>() : null;
+                if (taoArtifactsComponent != null) taoArtifactsComponent.RegisterHit(obj);
             }
         }
-        public static void ChalkEvents(ItemDef item)
+        public static void TeleportAroundOpenedChestsEvents(ItemDef item)
         {
-            OnInventoryChangedAfter += Events_OnInventoryChangedAfter;
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
                 obj.AddItemBehavior<ChalkComponent>(stacks);
             }
-            OnPurchaseInteractionEnableAfter += Events_OnPurchaseInteractionEnableAfter;
+            OnPurchaseInteractionEnable += Events_OnPurchaseInteractionEnableAfter;
             void Events_OnPurchaseInteractionEnableAfter(PurchaseInteraction obj)
             {
                 GameObject gameObject = new GameObject("Wormhole");
@@ -565,12 +446,25 @@ namespace CaeliImperium
                 WormholeComponent wormholeComponent = gameObject.AddComponent<WormholeComponent>();
             }
         }
+        public static void NegativeLuckEvents(ItemDef item)
+        {
+            void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
+            {
+                int itemCount = sender && sender.inventory ? sender.inventory.GetItemCount(item) : 0;
+                if (itemCount > 0)
+                {
+                    args.luckReductionAdd += itemCount;
+                    args.luckReductionMult += itemCount;
+                }
+            }
+            GetStatCoefficients += Events_GetStatCoefficients;
+        }
         public static void HastingEvents(EliteDef eliteDef)
         {
             GetStatCoefficients += Events_GetStatCoefficients;
             void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
             {
-                if (!sender.HasBuff(AffixHasting)) return;
+                if (!sender.HasBuff(AffixSpeedster)) return;
                 args.moveSpeedMultAdd += 1;
                 args.primaryCooldownMultAdd -= 0.5f;
                 args.secondaryCooldownMultAdd -= 0.5f;

@@ -1,5 +1,6 @@
 ﻿using RoR2;
 using RoR2.ContentManagement;
+using RoR2.ExpansionManagement;
 using RoR2.Skills;
 using System;
 using System.Collections;
@@ -27,6 +28,7 @@ namespace CaeliImperium
         public static List<ItemDef> items = new List<ItemDef>();
         public static List<EquipmentDef> equipments = new List<EquipmentDef>();
         public static List<EliteDef> elites = new List<EliteDef>();
+        public static List<ExpansionDef> expansions = new List<ExpansionDef>();
         public IEnumerator FinalizeAsync(FinalizeAsyncArgs args)
         {
             args.ReportProgress(1f);
@@ -43,20 +45,21 @@ namespace CaeliImperium
         public IEnumerator LoadStaticContentAsync(LoadStaticContentAsyncArgs args)
         {
             this.contentPack.identifier = this.identifier;
-            contentPack.skillDefs.Add(skills.ToArray());
-            contentPack.skillFamilies.Add(skillFamilies.ToArray());
-            contentPack.bodyPrefabs.Add(bodies.ToArray());
-            contentPack.buffDefs.Add(buffs.ToArray());
-            contentPack.projectilePrefabs.Add(projectiles.ToArray());
-            contentPack.survivorDefs.Add(survivors.ToArray());
-            contentPack.entityStateTypes.Add(states.ToArray());
-            contentPack.networkSoundEventDefs.Add(sounds.ToArray());
-            contentPack.networkedObjectPrefabs.Add(networkPrefabs.ToArray());
-            contentPack.unlockableDefs.Add(unlockableDefs.ToArray());
-            contentPack.masterPrefabs.Add(masters.ToArray());
-            contentPack.itemDefs.Add(items.ToArray());
-            contentPack.equipmentDefs.Add(equipments.ToArray());
-            contentPack.eliteDefs.Add(elites.ToArray());
+            contentPack.skillDefs.Add([.. skills]);
+            contentPack.skillFamilies.Add([.. skillFamilies]);
+            contentPack.bodyPrefabs.Add([.. bodies]);
+            contentPack.buffDefs.Add([.. buffs]);
+            contentPack.projectilePrefabs.Add([.. projectiles]);
+            contentPack.survivorDefs.Add([.. survivors]);
+            contentPack.entityStateTypes.Add([.. states]);
+            contentPack.networkSoundEventDefs.Add([.. sounds]);
+            contentPack.networkedObjectPrefabs.Add([.. networkPrefabs]);
+            contentPack.unlockableDefs.Add([.. unlockableDefs]);
+            contentPack.masterPrefabs.Add([.. masters]);
+            contentPack.itemDefs.Add([.. items]);
+            contentPack.equipmentDefs.Add([.. equipments]);
+            contentPack.eliteDefs.Add([.. elites]);
+            contentPack.expansionDefs.Add([.. expansions]);
             yield break;
         }
     }

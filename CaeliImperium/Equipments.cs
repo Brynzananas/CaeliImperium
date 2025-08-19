@@ -9,6 +9,7 @@ namespace CaeliImperium
 {
     public class Equipments
     {
-        public static EquipmentDef Necronomicon = CreateEquipment("Necronomicon", null, null, true, true, 30, true, null, NecronomiconEvents);
+        public static EquipmentDef Necronomicon;
+        public static EquipmentDef SpeedsterEquipment;
     }
 }
