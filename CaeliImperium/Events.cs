@@ -446,19 +446,28 @@ namespace CaeliImperium
                 WormholeComponent wormholeComponent = gameObject.AddComponent<WormholeComponent>();
             }
         }
-        public static void NegativeLuckEvents(ItemDef item)
+
+        public static void HealReceivedDamage(ItemDef itemDef)
         {
-            void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
+            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
+            void GlobalEventManager_onServerDamageDealt(DamageReport obj)
             {
-                int itemCount = sender && sender.inventory ? sender.inventory.GetItemCount(item) : 0;
-                if (itemCount > 0)
-                {
-                    args.luckReductionAdd += itemCount;
-                    args.luckReductionMult += itemCount;
-                }
+                int stacks = obj.victimBody && obj.victimBody.inventory ? obj.victimBody.inventory.GetItemCount(itemDef) : 0;
+                if (stacks <= 0) return;
+                HealReceivedDamageBehaviour healReceivedDamageBehaviour = obj.victimBody.GetComponent<HealReceivedDamageBehaviour>();
+                if (healReceivedDamageBehaviour == null) return;
+                healReceivedDamageBehaviour.AddHealReceivedDamageBit(obj.damageDealt, 7f / stacks);
+
+
             }
-            GetStatCoefficients += Events_GetStatCoefficients;
+            OnInventoryChanged += Events_OnInventoryChanged;
+            void Events_OnInventoryChanged(CharacterBody obj)
+            {
+                int stacks = obj.inventory ? obj.inventory.GetItemCount(itemDef) : 0;
+                obj.AddItemBehavior<ChalkComponent>(stacks);
+            }
         }
+
         public static void HastingEvents(EliteDef eliteDef)
         {
             GetStatCoefficients += Events_GetStatCoefficients;

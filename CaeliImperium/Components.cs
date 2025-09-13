@@ -12,6 +12,7 @@ using System.Diagnostics;
 using RoR2.Navigation;
 using RoR2.UI;
 using UnityEngine.UI;
+using BrynzaAPI;
 
 namespace CaeliImperium
 {
@@ -630,6 +631,36 @@ namespace CaeliImperium
             }
         }
     }
+    public class HealReceivedDamageBehaviour : CharacterBody.ItemBehavior
+    {
+        public List<HealReceivedDamage> healReceivedDamageBits = [];
+        public class HealReceivedDamage
+        {
+            public HealReceivedDamage(float healAmount, float healTime)
+            {
+                healRate = healAmount / healTime;
+                this.healTime = healTime;
+            }
+            public float healRate;
+            public float healTime;
+        }
+        public void AddHealReceivedDamageBit(float healAmount, float time)
+        {
+            HealReceivedDamage healReceivedDamageBit = new(healAmount, time);
+            healReceivedDamageBits.Add(healReceivedDamageBit);
+        }
+        public void FixedUpdate()
+        {
+            HealthComponent healthComponent = body.healthComponent;
+            for (int i = 0; i < healReceivedDamageBits.Count; i++)
+            {
+                HealReceivedDamage healReceivedDamageBit = healReceivedDamageBits[i];
+                if (healthComponent) healthComponent.health += healReceivedDamageBit.healRate * Time.fixedDeltaTime;
+                healReceivedDamageBit.healTime -= Time.fixedDeltaTime;
+                if (healReceivedDamageBit.healTime <= 0) healReceivedDamageBits.Remove(healReceivedDamageBit);
+            }
+        }
+    }
     public class WormholeComponent : MonoBehaviour
     {
         public float timer = 10f;
@@ -760,6 +791,7 @@ namespace CaeliImperium
             }
         }
     }
+    
     [CreateAssetMenu(menuName = "RoR2/CIItemDef")]
     public class CIItemDef : ItemDef
     {
