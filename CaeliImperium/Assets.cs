@@ -48,7 +48,7 @@ namespace CaeliImperium
             ChargeAtomicBeamOnSpecialSkill = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/ChargeAtomicBeamOnSpecialSkill.asset").RegisterItemDef(ChargeAtomicBeamOnSpecialSkillEvents);
             CopyNearbyCharactersSkillsOnDeath = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/CopyNearbyCharactersSkillsOnDeath.asset").RegisterItemDef(CopyNearbyCharactersSkillsOnDeathEvents);
             CritUpgradeOnKill = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/CritUpgradeOnKill.asset").RegisterItemDef(CritUpgradeOnKillEvents);
-            DamageAllEnemies = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DamageAllEnemies.asset").RegisterItemDef(DamageAllEnemiesEvents);
+            SHareDamageToAll = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DamageAllEnemies.asset").RegisterItemDef(SHareDamageToAllEvents);
             DropHealOrbsOnContiniousHits = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DropHealOrbsOnContiniousHits.asset").RegisterItemDef(TaoEvents);
             DuplicateMainSkills = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DuplicateMainSkills.asset").RegisterItemDef(DuplicateMainSkillsEvents);
             ExtraEquipmentSlot = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/ExtraEquipmentSlot.asset").RegisterItemDef(ExtraEquipmentSlotEvents);

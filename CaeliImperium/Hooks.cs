@@ -12,7 +12,6 @@ namespace CaeliImperium
     {
         public static void Init()
         {
-            On.RoR2.GlobalEventManager.OnCharacterDeath += GlobalEventManager_OnCharacterDeath;
             On.RoR2.CharacterBody.OnInventoryChanged += CharacterBody_OnInventoryChanged;
             On.RoR2.EquipmentSlot.PerformEquipmentAction += EquipmentSlot_PerformEquipmentAction;
             On.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
@@ -74,11 +73,5 @@ namespace CaeliImperium
             OnInventoryChanged?.Invoke(self);
         }
         public static event Action<CharacterBody> OnInventoryChanged;
-        private static void GlobalEventManager_OnCharacterDeath(On.RoR2.GlobalEventManager.orig_OnCharacterDeath orig, GlobalEventManager self, DamageReport damageReport)
-        {
-            orig(self, damageReport);
-            OnCharacterDeath?.Invoke(self, damageReport, damageReport.attackerBody, damageReport.victimBody);
-        }
-        public static event Action<GlobalEventManager, DamageReport, CharacterBody, CharacterBody> OnCharacterDeath;
     }
 }

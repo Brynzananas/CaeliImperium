@@ -11,5 +11,6 @@ namespace CaeliImperium
     {
         public static EquipmentDef Necronomicon;
         public static EquipmentDef SpeedsterEquipment;
+        public static EquipmentDef DamageAllEnemies;
     }
 }

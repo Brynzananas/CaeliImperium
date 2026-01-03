@@ -17,13 +17,23 @@ using RoR2.UI;
 
 namespace CaeliImperium
 {
-    public class Utils
+    public static class Utils
     {
         public const string NamePrefix = "_NAME";
         public const string PickupPrefix = "_PICKUP";
         public const string DescriptionPrefix = "_DESCRIPTION";
         public const string LorePrefix = "_LORE";
         public delegate void OnItemAdded(ItemDef itemDef);
+        public static int GetEquipmentCount(this CharacterBody characterBody, EquipmentDef equipmentDef) => characterBody.GetEquipmentCount(equipmentDef.equipmentIndex);
+        public static int GetEquipmentCount(this CharacterBody characterBody, EquipmentIndex equipmentIndex)
+        {
+            int count = 0;
+            Inventory inventory = characterBody.inventory;
+            if (inventory) foreach (EquipmentState equipmentState in inventory.equipmentStateSlots) if (equipmentState.equipmentIndex == equipmentIndex) count++;
+            ExtraEquipmentSlotBehaviour extraEquipmentSlotBehaviour = characterBody.GetComponent<ExtraEquipmentSlotBehaviour>();
+            if (extraEquipmentSlotBehaviour) foreach (EquipmentIndex equipmentIndex1 in extraEquipmentSlotBehaviour.equipments) if (equipmentIndex == equipmentIndex1) count++;
+            return count;
+        }
         public static ItemDef CreateItem(string name, Sprite pickupIcon, GameObject pickupObject, bool canRemove, ItemTier itemTier, ItemTag[] itemTags = null, ExpansionDef expansionDef = null, OnItemAdded onItemAdded = null)
         {
             ItemDef itemDef = ScriptableObject.CreateInstance<ItemDef>();

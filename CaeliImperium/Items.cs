@@ -19,7 +19,7 @@ namespace CaeliImperium
         public static ItemDef CopyNearbyCharactersSkillsOnDeath;
         public static ItemDef ImproveHealingAndRegen;
         public static ItemDef SummonMercenary;
-        public static ItemDef DamageAllEnemies;
+        public static ItemDef SHareDamageToAll;
         public static ItemDef DuplicateMainSkills;
         public static ItemDef WoundEnemyOnContiniousHits;
         public static ItemDef DropHealOrbsOnContiniousHits;

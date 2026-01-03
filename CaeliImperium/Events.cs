@@ -29,18 +29,20 @@ namespace CaeliImperium
     {
         public static void CritUpgradeOnKillEvents(ItemDef itemDef)
         {
-            OnCharacterDeath += Events_OnCharacterDeathAfter;
-            void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
+            GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
+            void GlobalEventManager_onCharacterDeathGlobal(DamageReport obj)
             {
                 if (!NetworkServer.active) return;
+                CharacterBody attackerBody = obj.attackerBody;
+                if (!attackerBody) return;
                 if (attackerBody == null) return;
                 if (attackerBody.inventory == null) return;
-                int itemCount = attackerBody.inventory.GetItemCount(CritUpgradeOnKill);
+                int itemCount = attackerBody.inventory.GetItemCount(itemDef);
                 if (itemCount > 0)
                 {
                     int rolls = SuperRoll(itemCount * 5f);
-                    for(int i = 0; i < rolls; i++)
-                    attackerBody.AddBuff(IncreaseCritChanceAndDamage);
+                    for (int i = 0; i < rolls; i++)
+                        attackerBody.AddBuff(IncreaseCritChanceAndDamage);
                 }
             }
             GetStatCoefficients += Events_GetStatCoefficients;
@@ -51,6 +53,7 @@ namespace CaeliImperium
                 args.critDamageMultAdd += buffCount * 0.05f;
             }
         }
+
         public static void ExtraEquipmentSlotEvents(ItemDef itemDef)
         {
             OnInventoryChanged += Events_OnInventoryChangedAfter;
@@ -172,9 +175,11 @@ namespace CaeliImperium
         }
         public static void NecronomiconEvents(EquipmentDef equip)
         {
-            OnCharacterDeath += Events_OnCharacterDeathAfter;
-            void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
+            GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
+            void GlobalEventManager_onCharacterDeathGlobal(DamageReport obj)
             {
+                CharacterBody victimBody = obj.victimBody;
+                if (!victimBody) return;
                 GameObject bodyPrefab = BodyCatalog.GetBodyPrefab(victimBody.bodyIndex);
                 GameObject masterPrefab = MasterCatalog.GetMasterPrefab(victimBody.master.masterIndex);
                 if (masterPrefab == null) return;
@@ -217,6 +222,34 @@ namespace CaeliImperium
                 
             }
         }
+        public static void DamageAllEnemiesEvents(EquipmentDef equip)
+        {
+            OnInventoryChanged += Events_OnInventoryChanged;
+            void Events_OnInventoryChanged(CharacterBody obj)
+            {
+                int stacks = obj.GetEquipmentCount(equip);
+                obj.AddItemBehavior<PeriodicDamageIncreaseBehaviour>(stacks);
+            }
+            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
+            void GlobalEventManager_onServerDamageDealt(DamageReport obj)
+            {
+                DamageAllEnemiesComponent attackerComponent = obj.attacker ? obj.attacker.GetComponent<DamageAllEnemiesComponent>() : null;
+                DamageAllEnemiesComponent victimComponent = obj.victim ? obj.victim.GetComponent<DamageAllEnemiesComponent>() : null;
+                if (attackerComponent) attackerComponent.outcomingDamage += obj.damageDealt;
+                if (victimComponent) victimComponent.receivedDamage += obj.damageDealt;
+            }
+            equipmentActions.Add(equip, FireDamageAllEnemies);
+            bool FireDamageAllEnemies(EquipmentSlot equipmentSlot, EquipmentDef equipmentDef)
+            {
+                DamageAllEnemiesComponent damageAllEnemiesComponent = equipmentSlot.GetComponent<DamageAllEnemiesComponent>();
+                if (!damageAllEnemiesComponent) return false;
+                damageAllEnemiesComponent.DamageAll();
+                return true;
+
+            }
+
+        }
+
         public static List<DeadBodyComponent> deadBodyComponents = new List<DeadBodyComponent>();
         public static void ChargeAtomicBeamOnSpecialSkillEvents(ItemDef item)
         {
@@ -224,7 +257,7 @@ namespace CaeliImperium
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<AtomicHeartComponent>(stacks);
+                obj.AddItemBehavior<ChargeAtomicBeamOnSpecialSkillBehaviour>(stacks);
             }
         }
         public static void CopyNearbyCharactersSkillsOnDeathEvents(ItemDef item)
@@ -233,15 +266,17 @@ namespace CaeliImperium
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<SewingMachineComponent>(stacks);
+                obj.AddItemBehavior<CopyNearbyCharactersSkillsOnDeathBehaviour>(stacks);
             }
-            OnCharacterDeath += Events_OnCharacterDeathAfter;
-            void Events_OnCharacterDeathAfter(GlobalEventManager arg1, DamageReport arg2, CharacterBody attackerBody, CharacterBody victimBody)
+            GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
+            void GlobalEventManager_onCharacterDeathGlobal(DamageReport obj)
             {
+                CharacterBody attackerBody = obj.attackerBody;
+                CharacterBody victimBody = obj.victimBody;
                 if (!attackerBody || !attackerBody.inventory || attackerBody.inventory.GetItemCount(item) <= 0) return;
                 if (!victimBody.skillLocator) return;
 
-                SewingMachineComponent geneModificationComponent = attackerBody.GetComponent<SewingMachineComponent>();
+                CopyNearbyCharactersSkillsOnDeathBehaviour geneModificationComponent = attackerBody.GetComponent<CopyNearbyCharactersSkillsOnDeathBehaviour>();
                 if (geneModificationComponent != null)
                     foreach (GenericSkill genericSkill in victimBody.skillLocator.allSkills)
                     {
@@ -256,7 +291,7 @@ namespace CaeliImperium
                                     //attackerBody.skillLocator.primary.AddAlongsideSkill(genericSkill1);
                                     genericSkill1.LinkSkill(attackerBody.skillLocator.primary);
                                 }
-                                    
+
                             }
                             if (victimBody.skillLocator.secondary && genericSkill == victimBody.skillLocator.secondary)
                             {
@@ -371,11 +406,13 @@ namespace CaeliImperium
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<BrassKnucklesComponent>(stacks);
+                obj.AddItemBehavior<DuplicateMainSkillsBehaviour>(stacks);
             }
         }
-        public static void DamageAllEnemiesEvents(ItemDef item)
+        public static void SHareDamageToAllEvents(ItemDef item)
         {
+
+            /*
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
             {
@@ -407,7 +444,7 @@ namespace CaeliImperium
                         }
                     }
                 }
-            }
+            }*/
         }
         private static bool TaoRegistered;
         public static void TaoEvents(ItemDef itemDef)

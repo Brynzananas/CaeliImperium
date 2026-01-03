@@ -145,56 +145,38 @@ namespace CaeliImperium
         public static float fireRate = 0.2f;
         public float stopwatch = 0f;
         public bool firing;
+        public EntityStateMachine entityStateMachine;
+        public void OnEnable()
+        {
+            BrynzaAPI.Assets.EntityStateMachineAdditionInfo entityStateMachineAdditionInfo = new BrynzaAPI.Assets.EntityStateMachineAdditionInfo
+            {
+                entityStateMachineName = "balls"
+            };
+            entityStateMachine = BrynzaAPI.Utils.AddEntityStateMachine(body, entityStateMachineAdditionInfo);
+        }
         public void FixedUpdate()
         {
             if (body == null) return;
+            if (!Util.HasEffectiveAuthority(body.networkIdentity)) return;
             if (body.inputBank == null) return;
             if (body.inputBank.skill1.down)
             {
                 if (stopwatch > 0f) stopwatch -= Time.fixedDeltaTime;
                 if (stopwatch <= 0f)
                 {
-                    Ray ray = body.inputBank ? body.inputBank.GetAimRay() : new Ray { direction = transform.eulerAngles, origin = transform.position };
-                    Util.PlaySound(EntityStates.Commando.CommandoWeapon.FirePistol2.firePistolSoundString, base.gameObject);
-                    if (EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab)
-                    {
-                        EffectData effectData = new EffectData
-                        {
-                            origin = ray.origin,
-                            rotation = Quaternion.LookRotation(ray.direction),
-                        };
-                        EffectManager.SpawnEffect(EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab, effectData, true);
-                    }
-
-                    if (Util.HasEffectiveAuthority(body.networkIdentity))
-                    {
-                        new BulletAttack
-                        {
-                            owner = base.gameObject,
-                            weapon = base.gameObject,
-                            origin = ray.origin,
-                            aimVector = ray.direction,
-                            minSpread = 0f,
-                            maxSpread = 0f,
-                            damage = body.damage * stack,
-                            force = 0f,
-                            tracerEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.tracerEffectPrefab,
-                            //muzzleName = targetMuzzle,
-                            hitEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.hitEffectPrefab,
-                            isCrit = Util.CheckRoll(body.crit, body.master),
-                            radius = 0.1f,
-                            smartCollision = true,
-                            trajectoryAimAssistMultiplier = EntityStates.Commando.CommandoWeapon.FirePistol2.trajectoryAimAssistMultiplier,
-                            damageType = DamageTypeCombo.GenericPrimary
-                        }.Fire();
-                    }
+                    entityStateMachine.SetState(new FireSkullGun { stack = this.stack });
                     stopwatch = fireRate;
                 }
             }
             else
             {
                 stopwatch = windUpTime;
-            };
+            }
+            
+        }
+        public void OnDisable()
+        {
+            if (entityStateMachine) Destroy(entityStateMachine);
         }
     }
     public class PeriodicDamageIncreaseBehaviour : CharacterBody.ItemBehavior
@@ -267,7 +249,7 @@ namespace CaeliImperium
             if (destroy) Destroy(gameObject);
         }
     }
-    public class AtomicHeartComponent : CharacterBody.ItemBehavior
+    public class ChargeAtomicBeamOnSpecialSkillBehaviour : CharacterBody.ItemBehavior
     {
         public static float timeToFire = 1f;
         public static float maxDamageMultiplier = 100f;
@@ -275,6 +257,15 @@ namespace CaeliImperium
         public float stopwatch = 0f;
         public float charge = 0f;
         public bool fire = false;
+        public EntityStateMachine entityStateMachine;
+        public void OnEnable()
+        {
+            BrynzaAPI.Assets.EntityStateMachineAdditionInfo entityStateMachineAdditionInfo = new BrynzaAPI.Assets.EntityStateMachineAdditionInfo
+            {
+                entityStateMachineName = "balls"
+            };
+            entityStateMachine = BrynzaAPI.Utils.AddEntityStateMachine(body, entityStateMachineAdditionInfo);
+        }
         public void FixedUpdate()
         {
             charge += Time.fixedDeltaTime * stack;
@@ -289,56 +280,18 @@ namespace CaeliImperium
                 FireLaser();
             }
         }
+        public void OnDisable()
+        {
+            if (entityStateMachine) Destroy(entityStateMachine);
+        }
         public void FireLaser()
         {
-            Ray ray = body.inputBank ? body.inputBank.GetAimRay() : new Ray { direction = transform.eulerAngles, origin = transform.position };
-            if (Util.HasEffectiveAuthority(body.networkIdentity))
-            {
-                new BulletAttack
-                {
-                    owner = base.gameObject,
-                    weapon = base.gameObject,
-                    origin = ray.origin,
-                    aimVector = ray.direction,
-                    minSpread = 0f,
-                    maxSpread = 0f,
-                    damage = body.damage * Utils.ConvertAmplificationPercentageIntoReductionPercentage(charge, maxDamageMultiplier),
-                    force = 0f,
-                    tracerEffectPrefab = Assets.fireSnipeSuperTracer,
-                    //muzzleName = targetMuzzle,
-                    hitEffectPrefab = null,
-                    isCrit = Util.CheckRoll(body.crit, body.master),
-                    radius = 2f,
-                    smartCollision = true,
-                    trajectoryAimAssistMultiplier = EntityStates.Commando.CommandoWeapon.FirePistol2.trajectoryAimAssistMultiplier,
-                    damageType = DamageTypeCombo.GenericSpecial,
-                    hitCallback = IrradiateOnHit,
-
-                }.Fire();
-                bool IrradiateOnHit(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo)
-                {
-                    if (hitInfo.hitHurtBox)
-                    {
-                        InflictDotInfo dotInfo = new InflictDotInfo()
-                        {
-                            attackerObject = gameObject,
-                            victimObject = hitInfo.hitHurtBox.healthComponent.gameObject,
-                            totalDamage = body.damage,
-                            damageMultiplier = stack,
-                            duration = dotDuration,
-                            dotIndex = IrradiatedDotIndex,
-
-                        };
-                        DotController.InflictDot(ref dotInfo);
-                    }
-                    return BulletAttack.DefaultHitCallbackImplementation(bulletAttack, ref hitInfo);
-                }
-            }
+            entityStateMachine.SetState(new FireAtomicBeam { stack = this.stack, charge = this.charge });
             charge = 0f;
             fire = false;
         }
     }
-    public class SewingMachineComponent : CharacterBody.ItemBehavior
+    public class CopyNearbyCharactersSkillsOnDeathBehaviour : CharacterBody.ItemBehavior
     {
         public Dictionary<int, List<GenericSkill>> keyValuePairs = new Dictionary<int, List<GenericSkill>>();
         public List<GenericSkill> skillList = new List<GenericSkill>();
@@ -365,7 +318,7 @@ namespace CaeliImperium
             if ((!body.inputBank || body.inputBank.skill4.down) && keyValuePairs[4] != null) foreach (GenericSkill skill in keyValuePairs[4]) if (skill) skill.ExecuteIfReady();
         }
     }
-    public class BrassKnucklesComponent : CharacterBody.ItemBehavior
+    public class DuplicateMainSkillsBehaviour : CharacterBody.ItemBehavior
     {
         public static float chancePerStack = 10f;
         public List<GenericSkill> genericSkills = new List<GenericSkill>();
@@ -420,7 +373,7 @@ namespace CaeliImperium
     public class SummonMercenaryComponent : CharacterBody.ItemBehavior
     {
         public static int maxAmount = 1;
-        private void FixedUpdate()
+        public void FixedUpdate()
         {
             int itemCount = stack;
             if (itemCount > 0)
@@ -658,6 +611,45 @@ namespace CaeliImperium
                 if (healthComponent) healthComponent.health += healReceivedDamageBit.healRate * Time.fixedDeltaTime;
                 healReceivedDamageBit.healTime -= Time.fixedDeltaTime;
                 if (healReceivedDamageBit.healTime <= 0) healReceivedDamageBits.Remove(healReceivedDamageBit);
+            }
+        }
+    }
+    public class DamageAllEnemiesComponent : CharacterBody.ItemBehavior
+    {
+        public static float procCoefficient = 0f;
+        public static float characterDamageMultiplier = 10f;
+        public static float receivedDamageMultiplier = 10f;
+        public static float outcomingDamageMultiplier = 1f;
+        public float receivedDamage;
+        public float outcomingDamage;
+        public void DamageAll()
+        {
+            if (body == null) return;
+            float damage = body.damage * characterDamageMultiplier + receivedDamage * receivedDamageMultiplier + outcomingDamage * outcomingDamageMultiplier;
+            receivedDamage = 0f;
+            outcomingDamage = 0f;
+            foreach (CharacterBody characterBody in CharacterBody.readOnlyInstancesList)
+            {
+                HealthComponent healthComponent = characterBody.healthComponent;
+                if (!healthComponent) continue;
+                if (body.teamComponent)
+                {
+                    TeamComponent teamComponent = characterBody.teamComponent;
+                    if (!teamComponent || teamComponent.teamIndex == TeamIndex.None || teamComponent.teamIndex == body.teamComponent.teamIndex) continue;
+                }
+                DamageInfo damageInfo = new DamageInfo
+                {
+                    attacker = gameObject,
+                    crit = Util.CheckRoll(body.crit),
+                    damage = damage,
+                    damageColorIndex = DamageColorIndex.Default,
+                    damageType = DamageTypeCombo.Generic,
+                    inflictor = gameObject,
+                    position = characterBody.corePosition,
+                    procCoefficient = procCoefficient
+                };
+                damageInfo.position = characterBody.corePosition;
+                healthComponent.TakeDamageProcess(damageInfo);
             }
         }
     }
