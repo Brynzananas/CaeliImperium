@@ -1,22 +1,28 @@
-﻿using RoR2;
+﻿using BepInEx.Configuration;
+using BrynzaAPI;
+using R2API;
+using RoR2;
 using RoR2.ExpansionManagement;
+using RoR2.UI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
-using static CaeliImperium.Main;
-using static CaeliImperium.ContentPacks;
-using System.Runtime.CompilerServices;
-using R2API;
-using static R2API.DotAPI;
 using UnityEngine.EventSystems;
+using static CaeliImperium.CaeliImperiumPlugin;
+using static CaeliImperium.ContentPacks;
 using static CaeliImperium.Utils;
-using System.Linq;
+using static R2API.DotAPI;
 using static RoR2.CombatDirector;
-using RoR2.UI;
 
 namespace CaeliImperium
 {
+    public static class Keywords
+    {
+        public const string ItemName = "Item: ";
+    }
     public static class Utils
     {
         public const string NamePrefix = "_NAME";
@@ -135,8 +141,7 @@ namespace CaeliImperium
             return eliteDef;
         }
 
-        public delegate void OnDOTAdded(DotController.DotDef dotDef);
-        public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, OnDOTAdded onDOTAdded = null)
+        public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, Action<DotController.DotDef> onDOTAdded = null)
         {
             DotController.DotDef dotDef = new DotController.DotDef
             {
@@ -147,6 +152,7 @@ namespace CaeliImperium
                 associatedBuff = buffDef
             };
             dotIndex = DotAPI.RegisterDotDef(dotDef, customDotBehaviour, customDotVisual, customDotDamageEvaluation);
+            onDOTAdded?.Invoke(dotDef);
             return dotDef;
 
         }
@@ -188,11 +194,77 @@ namespace CaeliImperium
             EquipmentPicker equipmentPicker = GameObject.Instantiate(Assets.EquipmentPicker, HUD.instancesList[0].mainContainer.transform).GetComponent<EquipmentPicker>();
             return equipmentPicker;
         }
+        public static void ModifyCharacterGravityParams(this CharacterBody characterBody, int i)
+        {
+            ICharacterGravityParameterProvider component = characterBody.GetComponent<ICharacterGravityParameterProvider>();
+            if (component != null)
+            {
+                CharacterGravityParameters gravityParameters = component.gravityParameters;
+                gravityParameters.environmentalAntiGravityGranterCount += i;
+                component.gravityParameters = gravityParameters;
+            }
+            ICharacterFlightParameterProvider component2 = characterBody.GetComponent<ICharacterFlightParameterProvider>();
+            if (component2 != null)
+            {
+                CharacterFlightParameters flightParameters = component2.flightParameters;
+                flightParameters.channeledFlightGranterCount += i;
+                component2.flightParameters = flightParameters;
+            }
+        }
+        public static ConfigEntry<T> CreateConfig<T>(string section, string key, T defaultValue, string description)
+        {
+            return CreateConfig(CaeliImperiumPlugin.configFile, section, key, defaultValue, description);
+        }
+        public static ConfigEntry<T> CreateConfig<T>(ConfigFile configFile, string section, string key, T defaultValue, string description)
+        {
+            ConfigDefinition configDefinition = new ConfigDefinition(section, key);
+            object value = null;
+            if (BrynzaAPI.BrynzaAPI.defaultConfigValues.TryGetValue(configFile, out Dictionary<ConfigDefinition, string> keyValuePairs) &&
+                keyValuePairs.TryGetValue(configDefinition, out string oldDefaultValue) && configFile.OrphanedEntries.TryGetValue(configDefinition, out string oldValue))
+            {
+                if (oldDefaultValue != defaultValue.ToString() && oldDefaultValue == oldValue) value = defaultValue;
+            }
+            ConfigDescription configDescription = new ConfigDescription(description);
+            ConfigEntry<T> entry = configFile.Bind(configDefinition, defaultValue, configDescription);
+            if (value != null) entry.Value = (T)value;
+            if (CaeliImperiumPlugin.riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.AddConfig(entry);
+            return entry;
+        }
     }
     public static class Extensions
     {
         public static T RegisterItemDef<T>(this T itemDef, Action<T> onItemDefAdded = null) where T : ItemDef
         {
+            if (itemDef is CIItemDef ciItemDef)
+            {
+                string sectionName = Keywords.ItemName + ciItemDef.configName;
+                ConfigEntry<bool> enableConfig = CreateConfig(sectionName, "Enable", true, "Enable this item AKA \"" + (itemDef as ScriptableObject).name + "\"?");
+                ConfigEntry<CIItemDef.ConfigItemTier> tierConfig = CreateConfig(sectionName, "Tier", ciItemDef.configItemTier, "Select tier for this item");
+                Sprite sprite;
+                ItemTier itemTier;
+                switch (tierConfig.Value)
+                {
+                    case CIItemDef.ConfigItemTier.WhiteCommon:
+                        itemTier = ItemTier.Tier1;
+                        sprite = ciItemDef.commonTierSprite;
+                        break;
+                    case CIItemDef.ConfigItemTier.GreenUncommon:
+                        itemTier = ItemTier.Tier2;
+                        sprite = ciItemDef.uncommonTierSprite;
+                        break;
+                    case CIItemDef.ConfigItemTier.RedLegendary:
+                        itemTier = ItemTier.Tier3;
+                        sprite = ciItemDef.legendaryTierSprite;
+                        break;
+                    default:
+                        itemTier = ciItemDef.deprecatedTier;
+                        sprite = ciItemDef.pickupIconSprite;
+                        break;
+                }
+                ciItemDef.deprecatedTier = itemTier;
+                ciItemDef.pickupIconSprite = sprite;
+                if (!enableConfig.Value) return itemDef;
+            }
             items.Add(itemDef);
             onItemDefAdded?.Invoke(itemDef);
             return itemDef;
@@ -221,5 +293,7 @@ namespace CaeliImperium
             onExpansionDefAdded?.Invoke(expansionsDef);
             return expansionsDef;
         }
+        public static float Stack(this int stack, float nonStackValue, float stackValue) => nonStackValue + ((stack - 1) * stackValue);
+        public static int Stack(this int stack, int nonStackValue, int stackValue) => nonStackValue + ((stack - 1) * stackValue);
     }
 }

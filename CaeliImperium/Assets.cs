@@ -1,7 +1,4 @@
 ﻿using RoR2;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using static CaeliImperium.Items;
@@ -9,8 +6,8 @@ using static CaeliImperium.Buffs;
 using static CaeliImperium.Equipments;
 using static CaeliImperium.Elites;
 using static CaeliImperium.Events;
-using R2API;
 using RoR2.ExpansionManagement;
+using RoR2.ContentManagement;
 
 namespace CaeliImperium
 {
@@ -27,9 +24,12 @@ namespace CaeliImperium
         public static DeployableSlot mercenaryGhostDeployable;
         public static GameObject EquipmentPicker;
         public static GameObject EquipmentPickerSlot;
+        public static GameObject SpeedPathPrefab;
+        public static GameObject GlobalSpeedPathPrefab;
+        public static GameObject SpeedPathEndPrefab;
         public static void Init()
         {
-            assetBundle = AssetBundle.LoadFromFileAsync(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Main.PluginInfo.Location), "assetbundles", "caeliimperiumassets")).assetBundle;
+            assetBundle = AssetBundle.LoadFromFileAsync(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(CaeliImperiumPlugin.PluginInfo.Location), "assetbundles", "caeliimperiumassets")).assetBundle;
             foreach (Material material in assetBundle.LoadAllAssets<Material>())
             {
                 if (!material.shader.name.StartsWith("StubbedRoR2"))
@@ -45,10 +45,13 @@ namespace CaeliImperium
             }
             EquipmentPicker = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/EquipmentPicker.prefab");
             EquipmentPickerSlot = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/EquipmentPickerSlot.prefab");
-            ChargeAtomicBeamOnSpecialSkill = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/ChargeAtomicBeamOnSpecialSkill.asset").RegisterItemDef(ChargeAtomicBeamOnSpecialSkillEvents);
+            SpeedPathPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/SpeedPath.prefab");
+            GlobalSpeedPathPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/GlobalSpeedPath.prefab");
+            SpeedPathEndPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Effects/ChalkEnd.prefab");
+            /*ChargeAtomicBeamOnSpecialSkill = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/ChargeAtomicBeamOnSpecialSkill.asset").RegisterItemDef(ChargeAtomicBeamOnSpecialSkillEvents);
             CopyNearbyCharactersSkillsOnDeath = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/CopyNearbyCharactersSkillsOnDeath.asset").RegisterItemDef(CopyNearbyCharactersSkillsOnDeathEvents);
             CritUpgradeOnKill = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/CritUpgradeOnKill.asset").RegisterItemDef(CritUpgradeOnKillEvents);
-            SHareDamageToAll = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DamageAllEnemies.asset").RegisterItemDef(SHareDamageToAllEvents);
+            ShareDamageToAll = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DamageAllEnemies.asset").RegisterItemDef(ShareDamageToAllEvents);
             DropHealOrbsOnContiniousHits = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DropHealOrbsOnContiniousHits.asset").RegisterItemDef(TaoEvents);
             DuplicateMainSkills = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/DuplicateMainSkills.asset").RegisterItemDef(DuplicateMainSkillsEvents);
             ExtraEquipmentSlot = assetBundle.LoadAsset<ItemDef>("Assets/CaeliImperium/Items/ExtraEquipmentSlot.asset").RegisterItemDef(ExtraEquipmentSlotEvents);
@@ -69,13 +72,20 @@ namespace CaeliImperium
             TaoPunchReady = assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/TaoChargeReady.asset").RegisterBuffDef();
             Necronomicon = assetBundle.LoadAsset<EquipmentDef>("Assets/CaeliImperium/Equipments/Necronomicon.asset").RegisterEquipmentDef(NecronomiconEvents);
             SpeedsterEquipment = assetBundle.LoadAsset<EquipmentDef>("Assets/CaeliImperium/Equipments/SpeedsterEquipment.asset").RegisterEquipmentDef();
-            HastingElite = assetBundle.LoadAsset<EliteDef>("Assets/CaeliImperium/Elites/Speedster.asset").RegisterEliteDef(HastingEvents);
-            Main.expansionDef = assetBundle.LoadAsset<ExpansionDef>("Assets/CaeliImperium/CaeliImperiumExpansion.asset").RegisterExpansionDef();
-            mercenaryGhostDeployable = DeployableAPI.RegisterDeployableSlot(GetMercenaryDeployableSlot);
-            int GetMercenaryDeployableSlot(CharacterMaster self, int deployableSlotMultiplier)
+            HastingElite = assetBundle.LoadAsset<EliteDef>("Assets/CaeliImperium/Elites/Speedster.asset").RegisterEliteDef(HastingEvents);*/
+            DrawSpeedPath = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/DrawSpeedPath.asset").RegisterItemDef(DrawSpeedPathEvents);
+            HealReceivedDamage = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/HealReceivedDamage.asset").RegisterItemDef(HealReceivedDamageEvents);
+            CaeliImperiumPlugin.expansionDef = assetBundle.LoadAsset<ExpansionDef>("Assets/CaeliImperium/CaeliImperiumExpansion.asset").RegisterExpansionDef();
+            CaeliImperiumPlugin.expansionDef.disabledIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texUnlockIcon.png").WaitForCompletion();
+            //mercenaryGhostDeployable = DeployableAPI.RegisterDeployableSlot(GetMercenaryDeployableSlot);
+            //int GetMercenaryDeployableSlot(CharacterMaster self, int deployableSlotMultiplier)
+            //{
+            //    return deployableSlotMultiplier;
+            //}
+            ContentManager.collectContentPackProviders += (addContentPackProvider) =>
             {
-                return deployableSlotMultiplier;
-            }
+                addContentPackProvider(new ContentPacks());
+            };
         }
     }
 }

@@ -1,18 +1,15 @@
 ﻿using RoR2;
+using RoR2.Navigation;
 using RoR2.Projectile;
+using RoR2.UI;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using static CaeliImperium.Events;
-using static CaeliImperium.Buffs;
-using static CaeliImperium.Items;
-using System.Diagnostics;
-using RoR2.Navigation;
-using RoR2.UI;
 using UnityEngine.UI;
-using BrynzaAPI;
+using static CaeliImperium.Buffs;
+using static CaeliImperium.Events;
+using static CaeliImperium.Items;
 
 namespace CaeliImperium
 {
@@ -551,7 +548,260 @@ namespace CaeliImperium
             }
         }
     }
-    public class ChalkComponent : CharacterBody.ItemBehavior
+    public class SpeedPathDrawerComponent : CharacterBody.ItemBehavior
+    {
+        private static GameObject _globalPathsHolder;
+        public static Transform globalPathsHolder
+        {
+            get
+            {
+                if (_globalPathsHolder == null)
+                {
+                    _globalPathsHolder = new GameObject("GlobalPathsHolder");
+                }
+                return _globalPathsHolder.transform;
+            }
+        }
+        public static float groundingDistance = 3f;
+        public static int maxPaths = 10000;
+        public static float seacrhRadius = 2f;
+        public static float createDistance = 3f;
+        public static float noCreateDistance = 6f;
+        private GlobalSpeedPath _globalSpeedPath;
+        public GlobalSpeedPath globalSpeedPath
+        {
+            get
+            {
+                if (_globalSpeedPath == null)
+                {
+                    _globalSpeedPath = Instantiate(Assets.GlobalSpeedPathPrefab, globalPathsHolder).GetComponent<GlobalSpeedPath>();
+                    _globalSpeedPath.speedPathDrawerComponent = this;
+                    globalSpeedPaths.Add(_globalSpeedPath);
+                }
+                return _globalSpeedPath;
+            }
+        }
+        public List<GlobalSpeedPath> globalSpeedPaths = [];
+        public bool foundPath;
+        public bool nearestPath;
+        public bool nearestFirstPath;
+        public List<SpeedPatchComponent> speedPatchComponents = [];
+        public Vector3 previousPosition;
+        public float velocity;
+        private int previousBuffCount;
+        private SpeedPatchComponent previousSpeedPatchComponent;
+        public void Start()
+        {
+            previousPosition = transform.position;
+        }
+        public void FixedUpdate()
+        {
+            if (!body) return;
+            int buffCount = FindNearestSpeedPath(transform.position);
+            if (foundPath && _globalSpeedPath)
+            {
+                _globalSpeedPath.Disconect();
+                _globalSpeedPath = null;
+            }
+            if (buffCount != previousBuffCount)
+            {
+                body.SetBuffCount(Buffs.SpeedPathSpeedBonus.buffIndex, buffCount);
+                previousBuffCount = buffCount;
+            }
+            if (nearestPath && !_globalSpeedPath)
+            {
+                previousPosition = transform.position;
+            }
+            if (!nearestFirstPath) SetPaths(transform.position);
+        }
+        public void SetPaths(Vector3 position)
+        {
+            Vector3 vector3 = previousPosition - position;
+            float sqrDistance = noCreateDistance * noCreateDistance;
+            while (vector3.sqrMagnitude > sqrDistance)
+            {
+                vector3 -= vector3.normalized * createDistance;
+                SetPositionAndCreateOrb(position + vector3);
+            }
+        }
+        public int FindNearestSpeedPath(Vector3 position)
+        {
+            foundPath = false;
+            nearestPath = false;
+            nearestFirstPath = false;
+            Collider[] colliders = Physics.OverlapSphere(position, noCreateDistance, LayerIndex.pickups.mask, QueryTriggerInteraction.Collide);
+            if (colliders == null) return 0;
+            float searchDistance = seacrhRadius * seacrhRadius;
+            float nearDistance = float.MaxValue;
+            foreach (Collider collider in colliders)
+            {
+                if (!collider.name.StartsWith("SpeedPath")) continue;
+                Vector3 vector3 = collider.transform.position - position;
+                float sqrMagn = vector3.sqrMagnitude;
+                if (!nearestPath && sqrMagn < nearDistance)
+                {
+                    nearestPath = true;
+                    nearDistance = sqrMagn;
+                    if (!collider.name.EndsWith("Charged")) nearestFirstPath = true;
+                }
+                if (!foundPath && sqrMagn < searchDistance)
+                {
+                    searchDistance = sqrMagn;
+                    foundPath = true;
+                }
+                if (nearestPath && foundPath) break;
+            }
+            if (foundPath) return stack;
+            return 0;
+        }
+        public void OnDestroy()
+        {
+            for (int i = 0; i < globalSpeedPaths.Count; i++)
+            {
+                GlobalSpeedPath globalSpeedPath = globalSpeedPaths[i];
+                if (!globalSpeedPath) continue;
+                Destroy(globalSpeedPath.gameObject);
+            }
+            if (!body) return;
+            body.SetBuffCount(Buffs.SpeedPathSpeedBonus.buffIndex, 0);
+        }
+        public void SetPositionAndCreateOrb(Vector3 orbPoision)
+        {
+            if (body)
+            {
+                if (body.characterMotor)
+                {
+                    velocity = body.characterMotor.velocity.magnitude;
+                }
+                else if (body.rigidbody)
+                {
+                    velocity = body.rigidbody.velocity.magnitude;
+                }
+            }
+            //if (!_globalSpeedPath) orbPoision = FindNearestSpeedPathAndConnect(orbPoision);
+            Vector3 vector3 = previousPosition;
+            previousPosition = orbPoision;
+            GameObject gameObject = Instantiate(Assets.SpeedPathPrefab, globalSpeedPath.transform);
+            gameObject.transform.position = (orbPoision + vector3) / 2f;
+            SpeedPatchComponent speedPatchComponent = gameObject.GetComponent<SpeedPatchComponent>();
+            if (!speedPatchComponent) return;
+            speedPatchComponent.globalSpeedPath = globalSpeedPath;
+            speedPatchComponent.speedPathDrawerComponent = this;
+            speedPatchComponent.Charge(previousSpeedPatchComponent);
+            speedPatchComponents.Add(speedPatchComponent);
+            if (speedPatchComponents.Count >= maxPaths)
+            {
+                SpeedPatchComponent speedPatchComponent1 = speedPatchComponents[0];
+                speedPatchComponents.RemoveAt(0);
+                Destroy(speedPatchComponent1.gameObject);
+            }
+            previousSpeedPatchComponent = speedPatchComponent;
+        }
+        public bool GroundCheck()
+        {
+            if ((body.characterMotor ? body.characterMotor.isGrounded : true) || Physics.SphereCast(new Ray(transform.position, Physics.gravity.normalized), body.radius, groundingDistance, LayerIndex.GetLayerIndex(LayerMask.LayerToName(gameObject.layer)).collisionMask)) return true;
+            return false;
+        }
+        public Vector3 FindNearestSpeedPathAndConnect(Vector3 position)
+        {
+            Vector3 vector31 = previousPosition;
+            Collider[] colliders = Physics.OverlapSphere(position, noCreateDistance, LayerIndex.pickups.mask, QueryTriggerInteraction.Collide);
+            if (colliders == null) return vector31;
+            float nearDistance = float.MaxValue;
+            foreach (Collider collider in colliders)
+            {
+                if (!collider.name.StartsWith("SpeedPath")) continue;
+                Vector3 vector3 = collider.transform.position - position;
+                float sqrMagn = vector3.sqrMagnitude;
+                if (sqrMagn < nearDistance)
+                {
+                    nearDistance = sqrMagn;
+                    vector31 = collider.transform.position;
+                }
+            }
+            return vector31;
+        }
+    }
+    public class SpeedPatchComponent : MonoBehaviour
+    {
+        public GlobalSpeedPath globalSpeedPath;
+        public SpeedPathDrawerComponent speedPathDrawerComponent;
+        public SpeedPatchComponent nextSpeedPatchComponent;
+        public void Charge(SpeedPatchComponent speedPatchComponent)
+        {
+            nextSpeedPatchComponent = speedPatchComponent;
+            if (speedPatchComponent)
+            {
+                speedPatchComponent.transform.position = (speedPatchComponent.transform.position + transform.position) / 2f;
+                speedPatchComponent.name += "Charged";
+            }
+            if (!speedPathDrawerComponent) return;
+            speedPathDrawerComponent.globalSpeedPath.AddPath(this);
+        }
+    }
+    public class GlobalSpeedPath : MonoBehaviour
+    {
+        public static float endEffectScale = 1f;
+        public static float endLineLengthSmoothTime = 1.5f;
+        public SpeedPathDrawerComponent speedPathDrawerComponent;
+        public LineRenderer lineRenderer;
+        private float endLineLength;
+        private float endLineLengthVelocity;
+        private List<Vector3> pathPositions = [];
+        private bool disconected;
+        private Transform endEffect;
+        private Transform startEffect;
+        public void AddPath(SpeedPatchComponent speedPatchComponent)
+        {
+            if (pathPositions.Count >= SpeedPathDrawerComponent.maxPaths)
+            {
+                pathPositions.RemoveRange(0, 2);
+                if (startEffect) startEffect.position = pathPositions[0];
+            }
+            Vector3 vector3 = speedPatchComponent.transform.position;
+            if (pathPositions.Count > 2)
+            {
+                pathPositions.Add((pathPositions[pathPositions.Count - 1] + vector3) / 2f);
+            }
+            pathPositions.Add(vector3);
+            lineRenderer.positionCount = pathPositions.Count;
+            lineRenderer.SetPositions(pathPositions.ToArray());
+            lineRenderer.positionCount++;
+            lineRenderer.positionCount++;
+            endLineLength = 0f;
+            if (!startEffect)
+            {
+                startEffect = Instantiate(Assets.SpeedPathEndPrefab, transform).transform;
+                startEffect.localScale = new Vector3(endEffectScale, endEffectScale, endEffectScale);
+                startEffect.position = pathPositions[0];
+            }
+            if (!endEffect)
+            {
+                endEffect = Instantiate(Assets.SpeedPathEndPrefab, transform).transform;
+                endEffect.localScale = new Vector3(endEffectScale, endEffectScale, endEffectScale);
+            }
+        }
+        public void Disconect()
+        {
+            if (lineRenderer.positionCount >= 2)
+            lineRenderer.positionCount--;
+            lineRenderer.positionCount--;
+            disconected = true;
+            if (endEffect) endEffect.position = pathPositions[pathPositions.Count - 1];
+        }
+        public void Update()
+        {
+            if (disconected || !speedPathDrawerComponent || !speedPathDrawerComponent.body || lineRenderer.positionCount <= 2) return;
+            endLineLength = Mathf.SmoothDamp(endLineLength, 1f, ref endLineLengthVelocity, endLineLengthSmoothTime / speedPathDrawerComponent.velocity, float.MaxValue, Time.deltaTime);
+            Vector3 vector3 = (speedPathDrawerComponent.previousPosition + speedPathDrawerComponent.body.transform.position) / 2f;
+            Vector3 vector31 = vector3 - speedPathDrawerComponent.previousPosition;
+            vector3 = speedPathDrawerComponent.previousPosition + vector31 * endLineLength;
+            if (endEffect) endEffect.position = vector3;
+            lineRenderer.SetPosition(lineRenderer.positionCount - 1, vector3);
+            lineRenderer.SetPosition(lineRenderer.positionCount - 2, (speedPathDrawerComponent.previousPosition + vector3) / 2f);
+        }
+    }
+    public class WormholeCreatorComponent : CharacterBody.ItemBehavior
     {
         public void FixedUpdate()
         {
@@ -587,7 +837,7 @@ namespace CaeliImperium
     public class HealReceivedDamageBehaviour : CharacterBody.ItemBehavior
     {
         public List<HealReceivedDamage> healReceivedDamageBits = [];
-        public class HealReceivedDamage
+        public class HealReceivedDamage : IDisposable
         {
             public HealReceivedDamage(float healAmount, float healTime)
             {
@@ -596,6 +846,9 @@ namespace CaeliImperium
             }
             public float healRate;
             public float healTime;
+            public void Dispose()
+            {
+            }
         }
         public void AddHealReceivedDamageBit(float healAmount, float time)
         {
@@ -604,13 +857,19 @@ namespace CaeliImperium
         }
         public void FixedUpdate()
         {
+            if (!body) return;
             HealthComponent healthComponent = body.healthComponent;
             for (int i = 0; i < healReceivedDamageBits.Count; i++)
             {
                 HealReceivedDamage healReceivedDamageBit = healReceivedDamageBits[i];
-                if (healthComponent) healthComponent.health += healReceivedDamageBit.healRate * Time.fixedDeltaTime;
+                if (healthComponent && healthComponent.health < healthComponent.body.maxHealth) healthComponent.Networkhealth += healReceivedDamageBit.healRate * Time.fixedDeltaTime;
                 healReceivedDamageBit.healTime -= Time.fixedDeltaTime;
-                if (healReceivedDamageBit.healTime <= 0) healReceivedDamageBits.Remove(healReceivedDamageBit);
+                if (healReceivedDamageBit.healTime <= 0)
+                {
+                    healReceivedDamageBits.Remove(healReceivedDamageBit);
+                    healReceivedDamageBit.Dispose();
+                }
+                
             }
         }
     }
@@ -787,5 +1046,16 @@ namespace CaeliImperium
     [CreateAssetMenu(menuName = "RoR2/CIItemDef")]
     public class CIItemDef : ItemDef
     {
+        public string configName;
+        public ConfigItemTier configItemTier;
+        public Sprite commonTierSprite;
+        public Sprite uncommonTierSprite;
+        public Sprite legendaryTierSprite;
+        public enum ConfigItemTier
+        {
+            WhiteCommon,
+            GreenUncommon,
+            RedLegendary
+        }
     }
 }

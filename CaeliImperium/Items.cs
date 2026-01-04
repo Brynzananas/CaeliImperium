@@ -10,20 +10,22 @@ namespace CaeliImperium
 {
     public class Items
     {
-        public static ItemDef CritUpgradeOnKill;
-        public static ItemDef ExtraEquipmentSlot;
-        public static ItemDef FireBulletOnPrimarySkill;
-        public static ItemDef PeriodicDamageIncrease;
-        public static ItemDef StunEnemyOnItsAttack;
-        public static ItemDef ChargeAtomicBeamOnSpecialSkill;
-        public static ItemDef CopyNearbyCharactersSkillsOnDeath;
-        public static ItemDef ImproveHealingAndRegen;
-        public static ItemDef SummonMercenary;
-        public static ItemDef SHareDamageToAll;
-        public static ItemDef DuplicateMainSkills;
-        public static ItemDef WoundEnemyOnContiniousHits;
-        public static ItemDef DropHealOrbsOnContiniousHits;
-        public static ItemDef TeleportAroundOpenedChests;
-        public static ItemDef TransferDamageOwnership;
+        public static CIItemDef CritUpgradeOnKill;
+        public static CIItemDef ExtraEquipmentSlot;
+        public static CIItemDef FireBulletOnPrimarySkill;
+        public static CIItemDef PeriodicDamageIncrease;
+        public static CIItemDef StunEnemyOnItsAttack;
+        public static CIItemDef ChargeAtomicBeamOnSpecialSkill;
+        public static CIItemDef CopyNearbyCharactersSkillsOnDeath;
+        public static CIItemDef ImproveHealingAndRegen;
+        public static CIItemDef SummonMercenary;
+        public static CIItemDef ShareDamageToAll;
+        public static CIItemDef DuplicateMainSkills;
+        public static CIItemDef WoundEnemyOnContiniousHits;
+        public static CIItemDef DropHealOrbsOnContiniousHits;
+        public static CIItemDef TeleportAroundOpenedChests;
+        public static CIItemDef DrawSpeedPath;
+        public static CIItemDef HealReceivedDamage;
+        public static CIItemDef TransferDamageOwnership;
     }
 }

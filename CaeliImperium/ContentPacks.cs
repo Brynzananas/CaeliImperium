@@ -5,7 +5,6 @@ using RoR2.Skills;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace CaeliImperium
@@ -13,7 +12,7 @@ namespace CaeliImperium
     public class ContentPacks : IContentPackProvider
     {
         internal ContentPack contentPack = new ContentPack();
-        public string identifier => Main.ModGuid + ".ContentProvider";
+        public string identifier => CaeliImperiumPlugin.ModGuid + ".ContentProvider";
         public static List<GameObject> bodies = new List<GameObject>();
         public static List<BuffDef> buffs = new List<BuffDef>();
         public static List<SkillDef> skills = new List<SkillDef>();

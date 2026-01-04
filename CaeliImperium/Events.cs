@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using CaeliImperium;
 using RoR2;
 using static CaeliImperium.Hooks;
 using static CaeliImperium.Items;
@@ -9,23 +7,15 @@ using static CaeliImperium.Buffs;
 using static CaeliImperium.Utils;
 using static R2API.RecalculateStatsAPI;
 using UnityEngine.Networking;
-using Rewired;
 using UnityEngine;
-using RoR2.Navigation;
-using Mono.Cecil;
 using R2API.Utils;
-using System.Security.Cryptography;
-using System.Linq;
-using System.Runtime.InteropServices;
 using BrynzaAPI;
-using R2API;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
-using System.Numerics;
 
 namespace CaeliImperium
 {
-    public class Events
+    public static class Events
     {
         public static void CritUpgradeOnKillEvents(ItemDef itemDef)
         {
@@ -409,7 +399,7 @@ namespace CaeliImperium
                 obj.AddItemBehavior<DuplicateMainSkillsBehaviour>(stacks);
             }
         }
-        public static void SHareDamageToAllEvents(ItemDef item)
+        public static void ShareDamageToAllEvents(ItemDef item)
         {
 
             /*
@@ -470,7 +460,7 @@ namespace CaeliImperium
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<ChalkComponent>(stacks);
+                obj.AddItemBehavior<WormholeCreatorComponent>(stacks);
             }
             OnPurchaseInteractionEnable += Events_OnPurchaseInteractionEnableAfter;
             void Events_OnPurchaseInteractionEnableAfter(PurchaseInteraction obj)
@@ -483,8 +473,52 @@ namespace CaeliImperium
                 WormholeComponent wormholeComponent = gameObject.AddComponent<WormholeComponent>();
             }
         }
-
-        public static void HealReceivedDamage(ItemDef itemDef)
+        public static void DrawSpeedPathEvents(ItemDef item)
+        {
+            SpeedPathSpeedBonus = Assets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/SpeedPathSpeedBonus.asset").RegisterBuffDef(SpeedPathSpeedBonusEvents);
+            OnInventoryChanged += Events_OnInventoryChangedAfter;
+            void Events_OnInventoryChangedAfter(CharacterBody obj)
+            {
+                int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
+                obj.AddItemBehavior<SpeedPathDrawerComponent>(stacks);
+            }
+            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
+            void OnPluginDestroyed()
+            {
+                OnInventoryChanged -= Events_OnInventoryChangedAfter;
+                CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
+            }
+        }
+        public static float SpeedPathSpeedBonusCoefficient => DrawSpeedPathConfigs.SpeedPathSpeedBonusCoefficient.Value;
+        public static float SpeedPathSpeedBonusStackCoefficient => DrawSpeedPathConfigs.SpeedPathSpeedBonusStackCoefficient.Value;
+        public static void SpeedPathSpeedBonusEvents(BuffDef buffDef)
+        {
+            GetStatCoefficients += Events_GetStatCoefficients;
+            void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
+            {
+                int buffCount = sender.GetBuffCount(buffDef);
+                args.moveSpeedMultAdd += buffCount.Stack(SpeedPathSpeedBonusCoefficient, SpeedPathSpeedBonusStackCoefficient);
+            }
+            OnBuffFirstStackGained += Events_OnBuffFirstStackGained;
+            void Events_OnBuffFirstStackGained(CharacterBody arg1, BuffDef arg2)
+            {
+                if (buffDef.buffIndex == Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(1);
+            }
+            OnBuffFinalStackLost += Events_OnBuffFinalStackLost;
+            void Events_OnBuffFinalStackLost(CharacterBody arg1, BuffDef arg2)
+            {
+                if (buffDef.buffIndex == Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(-1);
+            }
+            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
+            void OnPluginDestroyed()
+            {
+                GetStatCoefficients -= Events_GetStatCoefficients;
+                CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
+            }
+        }
+        public static float HealReceivedDamageTime => HealReceivedDamageConfigs.HealReceivedDamageTime.Value;
+        public static float HealReceivedDamageStackTimeReduction => HealReceivedDamageConfigs.HealReceivedDamageStackTimeReduction.Value;
+        public static void HealReceivedDamageEvents(ItemDef itemDef)
         {
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
@@ -492,16 +526,16 @@ namespace CaeliImperium
                 int stacks = obj.victimBody && obj.victimBody.inventory ? obj.victimBody.inventory.GetItemCount(itemDef) : 0;
                 if (stacks <= 0) return;
                 HealReceivedDamageBehaviour healReceivedDamageBehaviour = obj.victimBody.GetComponent<HealReceivedDamageBehaviour>();
-                if (healReceivedDamageBehaviour == null) return;
-                healReceivedDamageBehaviour.AddHealReceivedDamageBit(obj.damageDealt, 7f / stacks);
-
-
+                if (!healReceivedDamageBehaviour) return;
+                float time = HealReceivedDamageTime * Mathf.Pow(HealReceivedDamageStackTimeReduction / 100f, stacks - 1);
+                healReceivedDamageBehaviour.AddHealReceivedDamageBit(obj.damageDealt, time);
             }
             OnInventoryChanged += Events_OnInventoryChanged;
             void Events_OnInventoryChanged(CharacterBody obj)
             {
+                if (!NetworkServer.active) return;
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(itemDef) : 0;
-                obj.AddItemBehavior<ChalkComponent>(stacks);
+                obj.AddItemBehavior<HealReceivedDamageBehaviour>(stacks);
             }
         }
 
