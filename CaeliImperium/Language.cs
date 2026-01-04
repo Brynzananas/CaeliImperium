@@ -34,7 +34,7 @@ namespace CaeliImperium
             AddLanguageToken(DrawSpeedPath.nameToken, "Мел", "ru");
             AddLanguageToken(DrawSpeedPath.pickupToken, "Draw a path as you move that increases movement speed and grants flight.");
             AddLanguageToken(DrawSpeedPath.pickupToken, "Рисуйте путь пока передвигаетесь дающий свободное хождение с повышенной скоростью передвижения.", "ru");
-            AddLanguageToken(DrawSpeedPath.descriptionToken, $"Draw a path as you move{endPrefix}. While on this path, increase {utilityPrefix}movement speed{endPrefix} by {utilityPrefix}{Events.SpeedPathSpeedBonusCoefficient * 100f}%{endPrefix} {stackPrefix}(+{Events.SpeedPathSpeedBonusStackCoefficient * 100f}% per stack.){endPrefix} and {utilityPrefix}gain flight{endPrefix}.");
+            AddLanguageToken(DrawSpeedPath.descriptionToken, $"Draw a path as you move. While on this path, increase {utilityPrefix}movement speed{endPrefix} by {utilityPrefix}{Events.SpeedPathSpeedBonusCoefficient * 100f}%{endPrefix} {stackPrefix}(+{Events.SpeedPathSpeedBonusStackCoefficient * 100f}% per stack.){endPrefix} and {utilityPrefix}gain flight{endPrefix}.");
             AddLanguageToken(DrawSpeedPath.descriptionToken, $"Рисуйте путь пока передвигаетесь. Хождение по проложенному пути повышает {utilityPrefix}скорость передвижения{endPrefix} на {utilityPrefix}{Events.SpeedPathSpeedBonusCoefficient * 100f}%{endPrefix} {stackPrefix}(+{Events.SpeedPathSpeedBonusStackCoefficient * 100f}% за шт.){endPrefix} и {utilityPrefix}даёт полет{endPrefix}.", "ru");
         }
         public static void AddLanguageToken(string token, string text) => AddLanguageToken(token, text, "en");

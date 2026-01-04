@@ -16,8 +16,8 @@ namespace CaeliImperium
     {
         public static void Init()
         {
-            HealReceivedDamageTime = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time to fully heal received damage", 7f, "");
-            HealReceivedDamageStackTimeReduction = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time percentage reduction per stack", 10f, "");
+            HealReceivedDamageTime = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time to fully heal received damage", 12f, "");
+            HealReceivedDamageStackTimeReduction = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time percentage reduction per stack", 15f, "");
             HealReceivedDamageTime.SettingChanged += SettingChanged;
             HealReceivedDamageStackTimeReduction.SettingChanged += SettingChanged;
         }
