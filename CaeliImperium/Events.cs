@@ -502,17 +502,19 @@ namespace CaeliImperium
             OnBuffFirstStackGained += Events_OnBuffFirstStackGained;
             void Events_OnBuffFirstStackGained(CharacterBody arg1, BuffDef arg2)
             {
-                if (buffDef.buffIndex == Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(1);
+                if (arg2.buffIndex == buffDef.buffIndex) arg1.ModifyCharacterGravityParams(1);
             }
             OnBuffFinalStackLost += Events_OnBuffFinalStackLost;
             void Events_OnBuffFinalStackLost(CharacterBody arg1, BuffDef arg2)
             {
-                if (buffDef.buffIndex == Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(-1);
+                if (arg2.buffIndex == buffDef.buffIndex) arg1.ModifyCharacterGravityParams(-1);
             }
             CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
             void OnPluginDestroyed()
             {
                 GetStatCoefficients -= Events_GetStatCoefficients;
+                OnBuffFirstStackGained -= Events_OnBuffFirstStackGained;
+                OnBuffFinalStackLost -= Events_OnBuffFinalStackLost;
                 CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
             }
         }

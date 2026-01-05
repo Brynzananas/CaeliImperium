@@ -6,6 +6,7 @@ using BepInEx.Configuration;
 using RoR2.ExpansionManagement;
 using System;
 using RoR2;
+using BepInEx.Logging;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
@@ -25,16 +26,18 @@ namespace CaeliImperium
     {
         public const string ModGuid = "com.brynzananas.caeliimperium";
         public const string ModName = "Caeli Imperium";
-        public const string ModVer = "0.8.2";
+        public const string ModVer = "0.8.3";
         public const string ModPrefix = "CI";
         public static bool emotesEnabled;
         public static bool riskOfOptionsEnabled;
         public static ExpansionDef expansionDef;
         public static PluginInfo PluginInfo { get; private set; }
         public static ConfigFile configFile { get; private set; }
+        public static ManualLogSource Log { get; private set; }
         public static Action OnPluginDestroyed;
         public void Awake()
         {
+            Log = Logger;
             PluginInfo = Info;
             configFile = Config;
             riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ModCompatabilities.RiskOfOptionsCompatability.GUID);
