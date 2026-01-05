@@ -31,7 +31,13 @@ namespace CaeliImperium
         private static void CharacterBody_OnBuffFinalStackLost(On.RoR2.CharacterBody.orig_OnBuffFinalStackLost orig, CharacterBody self, BuffDef buffDef)
         {
             orig(self, buffDef);
-            _OnBuffFinalStackLost?.Invoke(self, buffDef);
+            try
+            {
+                _OnBuffFinalStackLost?.Invoke(self, buffDef);
+            }
+            catch (Exception e)
+            {
+            }
         }
         private static int _OnBuffFirstStackGainedHookAdded;
         private static event Action<CharacterBody, BuffDef> _OnBuffFirstStackGained;
@@ -53,13 +59,24 @@ namespace CaeliImperium
         private static void CharacterBody_OnBuffFirstStackGained(On.RoR2.CharacterBody.orig_OnBuffFirstStackGained orig, CharacterBody self, BuffDef buffDef)
         {
             orig(self, buffDef);
-            _OnBuffFirstStackGained?.Invoke(self, buffDef);
+            try
+            {
+                _OnBuffFirstStackGained?.Invoke(self, buffDef);
+            }
+            catch (Exception ex)
+            {
+            }
         }
-
         private static void GenericSkill_RecalculateMaxStock(On.RoR2.GenericSkill.orig_RecalculateMaxStock orig, GenericSkill self)
         {
             orig(self);
-            _OnRecalculateMaxStock?.Invoke(self);
+            try
+            {
+                _OnRecalculateMaxStock?.Invoke(self);
+            }
+            catch (Exception ex)
+            {
+            }
         }
         private static int _OnRecalculateMaxStockHookAdded;
         private static event Action<GenericSkill> _OnRecalculateMaxStock;
@@ -81,7 +98,13 @@ namespace CaeliImperium
         private static void CombatDirector_Init(On.RoR2.CombatDirector.orig_Init orig)
         {
             orig();
-            _OnCombatDirectorInit?.Invoke();
+            try
+            {
+                _OnCombatDirectorInit?.Invoke();
+            }
+            catch (Exception ex)
+            {
+            }
         }
         private static int _OnCombatDirectorInitHookAdded;
         private static event Action _OnCombatDirectorInit;
@@ -103,7 +126,13 @@ namespace CaeliImperium
         private static void PurchaseInteraction_OnEnable(On.RoR2.PurchaseInteraction.orig_OnEnable orig, PurchaseInteraction self)
         {
             orig(self);
-            _OnPurchaseInteractionEnable?.Invoke(self);
+            try
+            {
+                _OnPurchaseInteractionEnable?.Invoke(self);
+            }
+            catch (Exception ex)
+            {
+            }
         }
         private static int _OnPurchaseInteractionEnableHookAdded;
         private static event Action<PurchaseInteraction> _OnPurchaseInteractionEnable;
@@ -163,19 +192,25 @@ namespace CaeliImperium
         }
         private static bool EquipmentSlot_PerformEquipmentAction(On.RoR2.EquipmentSlot.orig_PerformEquipmentAction orig, EquipmentSlot self, EquipmentDef equipmentDef)
         {
-            if (equipmentActions.ContainsKey(equipmentDef))
+            try
             {
-                if (equipmentActions[equipmentDef] != null)
+                if (equipmentActions.ContainsKey(equipmentDef))
                 {
-                    if (equipmentActions[equipmentDef](self, equipmentDef))
+                    if (equipmentActions[equipmentDef] != null)
                     {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
+                        if (equipmentActions[equipmentDef](self, equipmentDef))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
             }
             return orig(self, equipmentDef);
         }
@@ -183,7 +218,13 @@ namespace CaeliImperium
         private static void CharacterBody_OnInventoryChanged(On.RoR2.CharacterBody.orig_OnInventoryChanged orig, CharacterBody self)
         {
             orig(self);
-            _OnInventoryChanged?.Invoke(self);
+            try
+            {
+                _OnInventoryChanged?.Invoke(self);
+            }
+            catch (Exception ex)
+            {
+            }
         }
         private static int _OnInventoryChangedHookAdded;
         private static event Action<CharacterBody> _OnInventoryChanged;
