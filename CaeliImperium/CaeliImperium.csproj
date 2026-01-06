@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<LangVersion>preview</LangVersion>
-		<BaseOutputPath>D:\r2modman\RiskOfRain2\profiles\my_mod\BepInEx\plugins\CaeliImperium</BaseOutputPath>
+		<BaseOutputPath>C:\Users\1\AppData\Roaming\com.kesomannen.gale\riskofrain2\profiles\Default2\BepInEx\plugins\cAELIiMPERIUM</BaseOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +16,7 @@
 		<PackageReference Include="Rune580.Mods.RiskOfRain2.RiskOfOptions" Version="2.8.2" />
 		<Reference Include="Brynzananas-BrynzaAPI">
 			<Private>false</Private>
-			<HintPath>D:\r2modman\RiskOfRain2\profiles\my_mod\BepInEx\plugins\BrynzaAPI\Debug\netstandard2.1\BrynzaAPI.dll</HintPath>
+			<HintPath>C:\Users\1\Downloads\Brynzananas-Brynza_API-1.8.1\plugins\BrynzaAPI.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

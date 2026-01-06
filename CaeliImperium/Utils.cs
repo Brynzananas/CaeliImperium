@@ -1,6 +1,5 @@
 ﻿using BepInEx.Configuration;
 using BrynzaAPI;
-using R2API;
 using RoR2;
 using RoR2.ExpansionManagement;
 using RoR2.UI;
@@ -46,7 +45,7 @@ namespace CaeliImperium
             itemDef.name = ModPrefix + name;
             string name2 = name.ToUpper().Replace(" ", "");
             string nameToken = ModPrefix + "_" + name2 + NamePrefix;
-            LanguageAPI.Add(nameToken, name);
+            //LanguageAPI.Add(nameToken, name);
             itemDef.nameToken = nameToken;
             itemDef.descriptionToken = ModPrefix + "_" + name2 + DescriptionPrefix;
             itemDef.loreToken = ModPrefix + "_" + name2 + LorePrefix;
@@ -68,7 +67,7 @@ namespace CaeliImperium
             equipmentDef.name = ModPrefix + name;
             string name2 = name.ToUpper().Replace(" ", "");
             string nameToken = ModPrefix + "_" + name2 + NamePrefix;
-            LanguageAPI.Add(nameToken, name);
+            //LanguageAPI.Add(nameToken, name);
             equipmentDef.nameToken = nameToken;
             equipmentDef.pickupToken = ModPrefix + "_" + name2 + PickupPrefix;
             equipmentDef.descriptionToken = ModPrefix + "_" + name2 + DescriptionPrefix;
@@ -109,7 +108,7 @@ namespace CaeliImperium
             eliteDef.eliteEquipmentDef = equipmentDef;
             string modifierToken = ModPrefix + name2 + "_MODIFIER";
             eliteDef.modifierToken = modifierToken;
-            LanguageAPI.Add(modifierToken, name + " {0}");
+            //LanguageAPI.Add(modifierToken, name + " {0}");
             eliteDef.healthBoostCoefficient = healthBoostCoefficient;
             eliteDef.damageBoostCoefficient = damageBoostCoefficient;
             buffDef.eliteDef = eliteDef;
@@ -140,8 +139,7 @@ namespace CaeliImperium
             }
             return eliteDef;
         }
-
-        public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, Action<DotController.DotDef> onDOTAdded = null)
+        /*public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, Action<DotController.DotDef> onDOTAdded = null)
         {
             DotController.DotDef dotDef = new DotController.DotDef
             {
@@ -154,8 +152,7 @@ namespace CaeliImperium
             dotIndex = DotAPI.RegisterDotDef(dotDef, customDotBehaviour, customDotVisual, customDotDamageEvaluation);
             onDOTAdded?.Invoke(dotDef);
             return dotDef;
-
-        }
+        }*/
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int SuperRoll(float chance)
         {

@@ -1,6 +1,5 @@
 ﻿using EntityStates.AffixVoid;
 using HG;
-using R2API;
 using RoR2;
 using System;
 using System.Collections.Generic;

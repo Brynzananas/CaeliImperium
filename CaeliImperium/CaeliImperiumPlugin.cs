@@ -26,7 +26,7 @@ namespace CaeliImperium
     {
         public const string ModGuid = "com.brynzananas.caeliimperium";
         public const string ModName = "Caeli Imperium";
-        public const string ModVer = "0.8.3";
+        public const string ModVer = "0.8.4";
         public const string ModPrefix = "CI";
         public static bool emotesEnabled;
         public static bool riskOfOptionsEnabled;

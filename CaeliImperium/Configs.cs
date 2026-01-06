@@ -16,7 +16,7 @@ namespace CaeliImperium
     {
         public static void Init()
         {
-            HealReceivedDamageTime = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time to fully heal received damage", 12f, "");
+            HealReceivedDamageTime = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time to fully heal received damage", 15f, "");
             HealReceivedDamageStackTimeReduction = CreateConfig(ItemName + Items.HealReceivedDamage.configName, "Time percentage reduction per stack", 15f, "");
             HealReceivedDamageTime.SettingChanged += SettingChanged;
             HealReceivedDamageStackTimeReduction.SettingChanged += SettingChanged;
@@ -31,8 +31,8 @@ namespace CaeliImperium
     {
         public static void Init()
         {
-            SpeedPathSpeedBonusCoefficient = CreateConfig(ItemName + Items.DrawSpeedPath.configName, "Movement speed increase", 1f, "");
-            SpeedPathSpeedBonusStackCoefficient = CreateConfig(ItemName + Items.DrawSpeedPath.configName, "Movement speed increase per stack", 1f, "");
+            SpeedPathSpeedBonusCoefficient = CreateConfig(ItemName + Items.DrawSpeedPath.configName, "Movement speed increase", 0.5f, "");
+            SpeedPathSpeedBonusStackCoefficient = CreateConfig(ItemName + Items.DrawSpeedPath.configName, "Movement speed increase per stack", 0.5f, "");
             SpeedPathSpeedBonusCoefficient.SettingChanged += SettingChanged;
             SpeedPathSpeedBonusStackCoefficient.SettingChanged += SettingChanged;
         }

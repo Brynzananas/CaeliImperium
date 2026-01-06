@@ -529,7 +529,8 @@ namespace CaeliImperium
                 if (stacks <= 0) return;
                 HealReceivedDamageBehaviour healReceivedDamageBehaviour = obj.victimBody.GetComponent<HealReceivedDamageBehaviour>();
                 if (!healReceivedDamageBehaviour) return;
-                float time = HealReceivedDamageTime * Mathf.Pow(HealReceivedDamageStackTimeReduction / 100f, stacks - 1);
+                float time = HealReceivedDamageTime;
+                for (int i = 0; i < stacks - 1; i++) time -= time * (HealReceivedDamageStackTimeReduction / 100f);
                 healReceivedDamageBehaviour.AddHealReceivedDamageBit(obj.damageDealt, time);
             }
             OnInventoryChanged += Events_OnInventoryChanged;
@@ -540,7 +541,6 @@ namespace CaeliImperium
                 obj.AddItemBehavior<HealReceivedDamageBehaviour>(stacks);
             }
         }
-
         public static void HastingEvents(EliteDef eliteDef)
         {
             GetStatCoefficients += Events_GetStatCoefficients;
