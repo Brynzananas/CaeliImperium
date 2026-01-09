@@ -45,7 +45,7 @@ namespace CaeliImperium.Items
                 c.EmitDelegate(HandleInfiniteSecondarySkillCharges);
             }
         }
-        private static int HandleInfiniteSecondarySkillCharges(int stockToConsume, GenericSkill genericSkill)
+        public static int HandleInfiniteSecondarySkillCharges(int stockToConsume, GenericSkill genericSkill)
         {
             if (!Check(genericSkill)) return stockToConsume;
             CharacterBody characterBody = genericSkill.characterBody;
