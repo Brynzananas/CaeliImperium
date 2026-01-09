@@ -22,10 +22,6 @@ using CaeliImperium.Components;
 
 namespace CaeliImperium
 {
-    public static class Keywords
-    {
-        public const string ItemName = "Item: ";
-    }
     public static class Utils
     {
         public const string NamePrefix = "_NAME";
@@ -44,107 +40,6 @@ namespace CaeliImperium
             if (extraEquipmentSlotBehaviour) foreach (EquipmentIndex equipmentIndex1 in extraEquipmentSlotBehaviour.equipments) if (equipmentIndex == equipmentIndex1) count++;
             return count;*/
         }
-        public static ItemDef CreateItem(string name, Sprite pickupIcon, GameObject pickupObject, bool canRemove, ItemTier itemTier, ItemTag[] itemTags = null, ExpansionDef expansionDef = null, OnItemAdded onItemAdded = null)
-        {
-            ItemDef itemDef = ScriptableObject.CreateInstance<ItemDef>();
-            itemDef.name = ModPrefix + name;
-            string name2 = name.ToUpper().Replace(" ", "");
-            string nameToken = ModPrefix + "_" + name2 + NamePrefix;
-            LanguageAPI.Add(nameToken, name);
-            itemDef.nameToken = nameToken;
-            itemDef.descriptionToken = ModPrefix + "_" + name2 + DescriptionPrefix;
-            itemDef.loreToken = ModPrefix + "_" + name2 + LorePrefix;
-            itemDef.pickupToken = ModPrefix + "_" + name2 + PickupPrefix;
-            itemDef.deprecatedTier = itemTier;
-            itemDef.pickupIconSprite = pickupIcon;
-            itemDef.pickupModelPrefab = pickupObject;
-            itemDef.canRemove = canRemove;
-            itemDef.requiredExpansion = expansionDef;
-            itemDef.tags = itemTags;
-            items.Add(itemDef);
-            if (onItemAdded != null) onItemAdded(itemDef);
-            return itemDef;
-        }
-        public delegate void OnEquipmentAdded(EquipmentDef equipmentDef);
-        public static EquipmentDef CreateEquipment(string name, Sprite pickupIcon, GameObject pickupObject, bool appearsInMultiplayer, bool appearsInSinglePlayer, float cooldown, bool canDrop = true, ExpansionDef expansionDef = null, OnEquipmentAdded onEquipmentAdded = null)
-        {
-            EquipmentDef equipmentDef = ScriptableObject.CreateInstance<EquipmentDef>();
-            equipmentDef.name = ModPrefix + name;
-            string name2 = name.ToUpper().Replace(" ", "");
-            string nameToken = ModPrefix + "_" + name2 + NamePrefix;
-            LanguageAPI.Add(nameToken, name);
-            equipmentDef.nameToken = nameToken;
-            equipmentDef.pickupToken = ModPrefix + "_" + name2 + PickupPrefix;
-            equipmentDef.descriptionToken = ModPrefix + "_" + name2 + DescriptionPrefix;
-            equipmentDef.loreToken = ModPrefix + "_" + name2 + LorePrefix;
-            equipmentDef.pickupIconSprite = pickupIcon;
-            equipmentDef.pickupModelPrefab = pickupObject;
-            equipmentDef.appearsInMultiPlayer = appearsInMultiplayer;
-            equipmentDef.appearsInSinglePlayer = appearsInSinglePlayer;
-            equipmentDef.cooldown = cooldown;
-            equipmentDef.requiredExpansion = expansionDef;
-            equipmentDef.canDrop = canDrop;
-            equipments.Add(equipmentDef);
-            if (onEquipmentAdded != null) onEquipmentAdded(equipmentDef);
-            return equipmentDef;
-        }
-        public delegate void OnBuffAdded(BuffDef buffDef);
-        public static BuffDef CreateBuff(string name, Sprite icon, Color color, bool canStack, bool isDebuff, bool isCooldown, bool isHidden, bool ignoreGrowthNectar, OnBuffAdded onBuffAdded = null)
-        {
-            BuffDef buffDef = ScriptableObject.CreateInstance<BuffDef>();
-            buffDef.name = ModPrefix + name;
-            buffDef.buffColor = color;
-            buffDef.canStack = canStack;
-            buffDef.isDebuff = isDebuff;
-            buffDef.ignoreGrowthNectar = ignoreGrowthNectar;
-            buffDef.iconSprite = icon;
-            buffDef.isHidden = isHidden;
-            buffDef.isCooldown = isCooldown;
-            buffs.Add(buffDef);
-            return buffDef;
-        }
-        public delegate void OnEliteAdded(EliteDef eliteDef);
-        public static EliteDef CreateElite(string name, BuffDef buffDef, Sprite affixIcon, float equipmentCooldown, float healthBoostCoefficient, float damageBoostCoefficient, int tier, ExpansionDef expansionDef = null, OnEliteAdded onEliteAdded = null)
-        {
-            string name2 = name.ToUpper().Replace(" ", "");
-            EliteDef eliteDef = ScriptableObject.CreateInstance<EliteDef>();
-            EquipmentDef equipmentDef = CreateEquipment("Affix" + name, affixIcon, null, true, true, equipmentCooldown, false, expansionDef);
-            eliteDef.color = Color.white;
-            eliteDef.eliteEquipmentDef = equipmentDef;
-            string modifierToken = ModPrefix + name2 + "_MODIFIER";
-            eliteDef.modifierToken = modifierToken;
-            LanguageAPI.Add(modifierToken, name + " {0}");
-            eliteDef.healthBoostCoefficient = healthBoostCoefficient;
-            eliteDef.damageBoostCoefficient = damageBoostCoefficient;
-            buffDef.eliteDef = eliteDef;
-            elites.Add(eliteDef);
-            if (onEliteAdded != null) onEliteAdded(eliteDef);
-            Hooks.OnCombatDirectorInit += Hooks_OnCombatDirectorInitAfter;
-            void Hooks_OnCombatDirectorInitAfter()
-            {
-                EliteDef index = RoR2Content.Elites.Ice;
-                switch (tier)
-                {
-                    case 1: index = RoR2Content.Elites.Ice; break;
-                    case 2: index = DLC2Content.Elites.Aurelionite; break;
-                    case 3: index = RoR2Content.Elites.Poison; break;
-                    default: index = RoR2Content.Elites.Ice; break;
-
-                }
-                foreach (EliteTierDef eliteIndex in eliteTiers)
-                {
-                    if (eliteIndex.eliteTypes.Contains(index))
-                    {
-                        EliteTierDef targetTier = eliteIndex;
-                        List<EliteDef> elites = targetTier.eliteTypes.ToList();
-                        elites.Add(eliteDef);
-                        targetTier.eliteTypes = elites.ToArray();
-                    }
-                }
-            }
-            return eliteDef;
-        }
-
         public static DotController.DotDef CreateDOT(BuffDef buffDef, out DotController.DotIndex dotIndex , bool resetTimerOnAdd, float interval, float damageCoefficient, DamageColorIndex damageColorIndex, CustomDotBehaviour customDotBehaviour, CustomDotVisual customDotVisual = null, CustomDotDamageEvaluation customDotDamageEvaluation = null, Action<DotController.DotDef> onDOTAdded = null)
         {
             DotController.DotDef dotDef = new DotController.DotDef
