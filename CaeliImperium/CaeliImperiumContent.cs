@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using CaeliImperium.Items;
+using RoR2;
 using RoR2.ContentManagement;
 using RoR2.ExpansionManagement;
 using RoR2.Skills;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 namespace CaeliImperium
 {
-    public class ContentPacks : IContentPackProvider
+    public class CaeliImperiumContent : IContentPackProvider
     {
         internal ContentPack contentPack = new ContentPack();
         public string identifier => CaeliImperiumPlugin.ModGuid + ".ContentProvider";
@@ -60,6 +61,50 @@ namespace CaeliImperium
             contentPack.eliteDefs.Add([.. elites]);
             contentPack.expansionDefs.Add([.. expansions]);
             yield break;
+        }
+        public static class Items
+        {
+            public static CIItemDef CritUpgradeOnKill;
+            public static CIItemDef ExtraEquipmentSlot;
+            public static CIItemDef FireBulletOnPrimarySkill;
+            public static CIItemDef PeriodicDamageIncrease;
+            public static CIItemDef StunEnemyOnItsAttack;
+            public static CIItemDef ChargeAtomicBeamOnSpecialSkill;
+            public static CIItemDef CopyNearbyCharactersSkillsOnDeath;
+            public static CIItemDef ImproveHealingAndRegen;
+            public static CIItemDef SummonMercenary;
+            public static CIItemDef ShareDamageToAll;
+            public static CIItemDef DuplicateMainSkills;
+            public static CIItemDef WoundEnemyOnContiniousHits;
+            public static CIItemDef DropHealOrbsOnContiniousHits;
+            public static CIItemDef TeleportAroundOpenedChests;
+            public static CIItemDef DrawSpeedPath;
+            public static CIItemDef HealReceivedDamage;
+            public static CIItemDef InfiniteSecondarySkillCharges;
+            public static CIItemDef TransferDamageOwnership;
+        }
+        public static class Buffs
+        {
+            public static BuffDef IncreaseCritChanceAndDamage;
+            public static BuffDef IncreaseDamagePereodically;
+            public static BuffDef TaoPunchReady;
+            public static BuffDef TaoPunchCooldown;
+            public static BuffDef SpeedPathSpeedBonus;
+            public static BuffDef IncreaseSecondarySkillDamage;
+            public static BuffDef AffixSpeedster;
+            public static BuffDef IrradiatedBuff;
+            public static DotController.DotDef IrradiatedDot;
+            public static DotController.DotIndex IrradiatedDotIndex;
+        }
+        public static class Elites
+        {
+            public static EliteDef HastingElite;
+        }
+        public static class Equipments
+        {
+            public static EquipmentDef Necronomicon;
+            public static EquipmentDef SpeedsterEquipment;
+            public static EquipmentDef DamageAllEnemies;
         }
     }
 }

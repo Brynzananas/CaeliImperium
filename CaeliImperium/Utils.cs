@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx;
+using BepInEx.Configuration;
 using BrynzaAPI;
 using R2API;
 using RoR2;
@@ -12,10 +13,12 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using static CaeliImperium.CaeliImperiumPlugin;
-using static CaeliImperium.ContentPacks;
+using static CaeliImperium.CaeliImperiumContent;
 using static CaeliImperium.Utils;
 using static R2API.DotAPI;
 using static RoR2.CombatDirector;
+using CaeliImperium.Items;
+using CaeliImperium.Components;
 
 namespace CaeliImperium
 {
@@ -33,12 +36,13 @@ namespace CaeliImperium
         public static int GetEquipmentCount(this CharacterBody characterBody, EquipmentDef equipmentDef) => characterBody.GetEquipmentCount(equipmentDef.equipmentIndex);
         public static int GetEquipmentCount(this CharacterBody characterBody, EquipmentIndex equipmentIndex)
         {
-            int count = 0;
+            return 0;
+            /*int count = 0;
             Inventory inventory = characterBody.inventory;
             if (inventory) foreach (EquipmentState equipmentState in inventory.equipmentStateSlots) if (equipmentState.equipmentIndex == equipmentIndex) count++;
             ExtraEquipmentSlotBehaviour extraEquipmentSlotBehaviour = characterBody.GetComponent<ExtraEquipmentSlotBehaviour>();
             if (extraEquipmentSlotBehaviour) foreach (EquipmentIndex equipmentIndex1 in extraEquipmentSlotBehaviour.equipments) if (equipmentIndex == equipmentIndex1) count++;
-            return count;
+            return count;*/
         }
         public static ItemDef CreateItem(string name, Sprite pickupIcon, GameObject pickupObject, bool canRemove, ItemTier itemTier, ItemTag[] itemTags = null, ExpansionDef expansionDef = null, OnItemAdded onItemAdded = null)
         {
@@ -191,7 +195,7 @@ namespace CaeliImperium
         {
             Transform transform = HUD.instancesList[0] && HUD.instancesList[0].mainContainer ? HUD.instancesList[0].mainContainer.transform : null;
             if (transform == null) return null;
-            EquipmentPicker equipmentPicker = GameObject.Instantiate(Assets.EquipmentPicker, HUD.instancesList[0].mainContainer.transform).GetComponent<EquipmentPicker>();
+            EquipmentPicker equipmentPicker = GameObject.Instantiate(CaeliImperiumAssets.EquipmentPicker, HUD.instancesList[0].mainContainer.transform).GetComponent<EquipmentPicker>();
             return equipmentPicker;
         }
         public static void ModifyCharacterGravityParams(this CharacterBody characterBody, int i)
@@ -230,44 +234,46 @@ namespace CaeliImperium
             if (CaeliImperiumPlugin.riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.AddConfig(entry);
             return entry;
         }
-    }
-    public static class Extensions
-    {
-        public static T RegisterItemDef<T>(this T itemDef, Action<T> onItemDefAdded = null) where T : ItemDef
+        public static T RegisterItemDef<T>(this T itemDef) where T : ItemDef => RegisterItemDef(itemDef, null);
+        public static T RegisterItemDef<T>(this T itemDef, Action<T> onItemDefAdded) where T : ItemDef
         {
             if (itemDef is CIItemDef ciItemDef)
             {
-                string sectionName = Keywords.ItemName + ciItemDef.configName;
-                ConfigEntry<bool> enableConfig = CreateConfig(sectionName, "Enable", true, "Enable this item AKA \"" + (itemDef as ScriptableObject).name + "\"?");
-                ConfigEntry<CIItemDef.ConfigItemTier> tierConfig = CreateConfig(sectionName, "Tier", ciItemDef.configItemTier, "Select tier for this item");
-                Sprite sprite;
-                ItemTier itemTier;
-                switch (tierConfig.Value)
+                string sectionName = ciItemDef.configName;
+                if (!sectionName.IsNullOrWhiteSpace())
                 {
-                    case CIItemDef.ConfigItemTier.WhiteCommon:
-                        itemTier = ItemTier.Tier1;
-                        sprite = ciItemDef.commonTierSprite;
-                        break;
-                    case CIItemDef.ConfigItemTier.GreenUncommon:
-                        itemTier = ItemTier.Tier2;
-                        sprite = ciItemDef.uncommonTierSprite;
-                        break;
-                    case CIItemDef.ConfigItemTier.RedLegendary:
-                        itemTier = ItemTier.Tier3;
-                        sprite = ciItemDef.legendaryTierSprite;
-                        break;
-                    default:
-                        itemTier = ciItemDef.deprecatedTier;
-                        sprite = ciItemDef.pickupIconSprite;
-                        break;
+                    ConfigEntry<bool> enableConfig = CreateConfig(sectionName, "Enable", true, "Enable this item AKA \"" + (itemDef as ScriptableObject).name + "\"?");
+                    if (!enableConfig.Value) return null;
+                    ConfigEntry<CIItemDef.ConfigItemTier> tierConfig = CreateConfig(sectionName, "Tier", ciItemDef.configItemTier, "Select tier for this item");
+                    Sprite sprite;
+                    ItemTier itemTier;
+                    switch (tierConfig.Value)
+                    {
+                        case CIItemDef.ConfigItemTier.WhiteCommon:
+                            itemTier = ItemTier.Tier1;
+                            sprite = ciItemDef.commonTierSprite;
+                            break;
+                        case CIItemDef.ConfigItemTier.GreenUncommon:
+                            itemTier = ItemTier.Tier2;
+                            sprite = ciItemDef.uncommonTierSprite;
+                            break;
+                        case CIItemDef.ConfigItemTier.RedLegendary:
+                            itemTier = ItemTier.Tier3;
+                            sprite = ciItemDef.legendaryTierSprite;
+                            break;
+                        default:
+                            itemTier = ciItemDef.deprecatedTier;
+                            sprite = ciItemDef.pickupIconSprite;
+                            break;
+                    }
+                    ciItemDef.deprecatedTier = itemTier;
+                    ciItemDef.pickupIconSprite = sprite;
                 }
-                ciItemDef.deprecatedTier = itemTier;
-                ciItemDef.pickupIconSprite = sprite;
-                if (!enableConfig.Value) return itemDef;
             }
             items.Add(itemDef);
             onItemDefAdded?.Invoke(itemDef);
             return itemDef;
+
         }
         public static T RegisterEquipmentDef<T>(this T equipmentDef, Action<T> onEquipmentDefAdded = null) where T : EquipmentDef
         {

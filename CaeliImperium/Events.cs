@@ -1,17 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using BrynzaAPI;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using R2API.Networking;
+using R2API.Networking.Interfaces;
+using R2API.Utils;
+using Rewired;
 using RoR2;
+using RoR2.Skills;
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using CaeliImperium.ItemBehaviours;
+using CaeliImperium.Components;
+using static CaeliImperium.CaeliImperiumContent.Buffs;
+using static CaeliImperium.Events;
 using static CaeliImperium.Hooks;
-using static CaeliImperium.Items;
-using static CaeliImperium.Buffs;
+using static CaeliImperium.CaeliImperiumContent.Items;
 using static CaeliImperium.Utils;
 using static R2API.RecalculateStatsAPI;
-using UnityEngine.Networking;
-using UnityEngine;
-using R2API.Utils;
-using BrynzaAPI;
-using MonoMod.Cil;
-using Mono.Cecil.Cil;
 
 namespace CaeliImperium
 {
@@ -139,7 +146,7 @@ namespace CaeliImperium
                 {
                     origin = self.characterBody.corePosition,
                 };
-                EffectManager.SpawnEffect(Assets.stunEffect, effectData, true);
+                EffectManager.SpawnEffect(CaeliImperiumAssets.stunEffect, effectData, true);
                 if (!self.stateMachine) return false;
                 self.stateMachine.state = new EntityStates.StunState { stunDuration = 1f};
                 return false;
@@ -154,7 +161,7 @@ namespace CaeliImperium
                 {
                     origin = skillSlot.characterBody.corePosition,
                 };
-                EffectManager.SpawnEffect(Assets.stunEffect, effectData, true);
+                EffectManager.SpawnEffect(CaeliImperiumAssets.stunEffect, effectData, true);
                 if (!skillSlot.stateMachine) return;
                 EntityStates.StunState stunState = new EntityStates.StunState();
                 stunState.stunDuration = 1f;
@@ -223,15 +230,15 @@ namespace CaeliImperium
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
             void GlobalEventManager_onServerDamageDealt(DamageReport obj)
             {
-                DamageAllEnemiesComponent attackerComponent = obj.attacker ? obj.attacker.GetComponent<DamageAllEnemiesComponent>() : null;
-                DamageAllEnemiesComponent victimComponent = obj.victim ? obj.victim.GetComponent<DamageAllEnemiesComponent>() : null;
+                DamageAllEnemiesBehaviour attackerComponent = obj.attacker ? obj.attacker.GetComponent<DamageAllEnemiesBehaviour>() : null;
+                DamageAllEnemiesBehaviour victimComponent = obj.victim ? obj.victim.GetComponent<DamageAllEnemiesBehaviour>() : null;
                 if (attackerComponent) attackerComponent.outcomingDamage += obj.damageDealt;
                 if (victimComponent) victimComponent.receivedDamage += obj.damageDealt;
             }
             equipmentActions.Add(equip, FireDamageAllEnemies);
             bool FireDamageAllEnemies(EquipmentSlot equipmentSlot, EquipmentDef equipmentDef)
             {
-                DamageAllEnemiesComponent damageAllEnemiesComponent = equipmentSlot.GetComponent<DamageAllEnemiesComponent>();
+                DamageAllEnemiesBehaviour damageAllEnemiesComponent = equipmentSlot.GetComponent<DamageAllEnemiesBehaviour>();
                 if (!damageAllEnemiesComponent) return false;
                 damageAllEnemiesComponent.DamageAll();
                 return true;
@@ -366,7 +373,7 @@ namespace CaeliImperium
                 origin = blastAttack.position,
                 scale = blastAttack.radius,
             };
-            EffectManager.SpawnEffect(Assets.igniteOnkillExplosion, effectData, true);
+            EffectManager.SpawnEffect(CaeliImperiumAssets.igniteOnkillExplosion, effectData, true);
         }
         public static void SummonMercenaryEvents(ItemDef item)
         {
@@ -375,13 +382,13 @@ namespace CaeliImperium
             {
                 if(NetworkServer.instance == null) return;
                 int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<SummonMercenaryComponent>(stacks);
+                obj.AddItemBehavior<SummonMercenaryBehaviour>(stacks);
             }
         }
         public static void TransferDamageOwnershipEvents(ItemDef item)
         {
             OnTakeDamageProcess += Events_OnTakeDamageProcessBefore;
-            void Events_OnTakeDamageProcessBefore(HealthComponent arg1, DamageInfo arg2, CharacterBody attackerBody)
+            void Events_OnTakeDamageProcessBefore(HealthComponent arg1, DamageInfo arg2, CharacterBody attackerBody, ref float damage)
             {
                 if (attackerBody && attackerBody.master && attackerBody.master.minionOwnership && attackerBody.master.minionOwnership.ownerMaster && attackerBody.inventory && attackerBody.inventory.GetItemCount(item) > 0)
                 {
@@ -459,8 +466,8 @@ namespace CaeliImperium
             OnInventoryChanged += Events_OnInventoryChangedAfter;
             void Events_OnInventoryChangedAfter(CharacterBody obj)
             {
-                int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<WormholeCreatorComponent>(stacks);
+                int stacks = obj.inventory ? obj.inventory.GetItemCountEffective(item) : 0;
+                obj.AddItemBehavior<TeleportAroundOpenedChestsBehaviour>(stacks);
             }
             OnPurchaseInteractionEnable += Events_OnPurchaseInteractionEnableAfter;
             void Events_OnPurchaseInteractionEnableAfter(PurchaseInteraction obj)
@@ -473,74 +480,6 @@ namespace CaeliImperium
                 WormholeComponent wormholeComponent = gameObject.AddComponent<WormholeComponent>();
             }
         }
-        public static void DrawSpeedPathEvents(ItemDef item)
-        {
-            SpeedPathSpeedBonus = Assets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/SpeedPathSpeedBonus.asset").RegisterBuffDef(SpeedPathSpeedBonusEvents);
-            OnInventoryChanged += Events_OnInventoryChangedAfter;
-            void Events_OnInventoryChangedAfter(CharacterBody obj)
-            {
-                int stacks = obj.inventory ? obj.inventory.GetItemCount(item) : 0;
-                obj.AddItemBehavior<SpeedPathDrawerComponent>(stacks);
-            }
-            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
-            void OnPluginDestroyed()
-            {
-                OnInventoryChanged -= Events_OnInventoryChangedAfter;
-                CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
-            }
-        }
-        public static float SpeedPathSpeedBonusCoefficient => DrawSpeedPathConfigs.SpeedPathSpeedBonusCoefficient.Value;
-        public static float SpeedPathSpeedBonusStackCoefficient => DrawSpeedPathConfigs.SpeedPathSpeedBonusStackCoefficient.Value;
-        public static void SpeedPathSpeedBonusEvents(BuffDef buffDef)
-        {
-            GetStatCoefficients += Events_GetStatCoefficients;
-            void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
-            {
-                int buffCount = sender.GetBuffCount(buffDef);
-                args.moveSpeedMultAdd += buffCount.Stack(SpeedPathSpeedBonusCoefficient, SpeedPathSpeedBonusStackCoefficient);
-            }
-            OnBuffFirstStackGained += Events_OnBuffFirstStackGained;
-            void Events_OnBuffFirstStackGained(CharacterBody arg1, BuffDef arg2)
-            {
-                if (arg2.buffIndex == buffDef.buffIndex) arg1.ModifyCharacterGravityParams(1);
-            }
-            OnBuffFinalStackLost += Events_OnBuffFinalStackLost;
-            void Events_OnBuffFinalStackLost(CharacterBody arg1, BuffDef arg2)
-            {
-                if (arg2.buffIndex == buffDef.buffIndex) arg1.ModifyCharacterGravityParams(-1);
-            }
-            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
-            void OnPluginDestroyed()
-            {
-                GetStatCoefficients -= Events_GetStatCoefficients;
-                OnBuffFirstStackGained -= Events_OnBuffFirstStackGained;
-                OnBuffFinalStackLost -= Events_OnBuffFinalStackLost;
-                CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
-            }
-        }
-        public static float HealReceivedDamageTime => HealReceivedDamageConfigs.HealReceivedDamageTime.Value;
-        public static float HealReceivedDamageStackTimeReduction => HealReceivedDamageConfigs.HealReceivedDamageStackTimeReduction.Value;
-        public static void HealReceivedDamageEvents(ItemDef itemDef)
-        {
-            GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
-            void GlobalEventManager_onServerDamageDealt(DamageReport obj)
-            {
-                int stacks = obj.victimBody && obj.victimBody.inventory ? obj.victimBody.inventory.GetItemCount(itemDef) : 0;
-                if (stacks <= 0) return;
-                HealReceivedDamageBehaviour healReceivedDamageBehaviour = obj.victimBody.GetComponent<HealReceivedDamageBehaviour>();
-                if (!healReceivedDamageBehaviour) return;
-                float time = HealReceivedDamageTime * Mathf.Pow(HealReceivedDamageStackTimeReduction / 100f, stacks - 1);
-                healReceivedDamageBehaviour.AddHealReceivedDamageBit(obj.damageDealt, time);
-            }
-            OnInventoryChanged += Events_OnInventoryChanged;
-            void Events_OnInventoryChanged(CharacterBody obj)
-            {
-                if (!NetworkServer.active) return;
-                int stacks = obj.inventory ? obj.inventory.GetItemCount(itemDef) : 0;
-                obj.AddItemBehavior<HealReceivedDamageBehaviour>(stacks);
-            }
-        }
-
         public static void HastingEvents(EliteDef eliteDef)
         {
             GetStatCoefficients += Events_GetStatCoefficients;

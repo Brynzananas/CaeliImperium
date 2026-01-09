@@ -1,10 +1,15 @@
 ﻿using EntityStates.AffixVoid;
 using HG;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using R2API;
+using R2API.Utils;
 using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 using static RoR2.DotController;
 
 namespace CaeliImperium
@@ -152,28 +157,76 @@ namespace CaeliImperium
             }
         }
         private static int _OnTakeDamageProcessHookAdded;
-        private static event Action<HealthComponent, DamageInfo, CharacterBody> _OnTakeDamageProcess;
-        public static event Action<HealthComponent, DamageInfo, CharacterBody> OnTakeDamageProcess
+        public delegate void HealthComponent_TakeDamageProcess_Delegate(HealthComponent healthComponent, DamageInfo damageInfo, CharacterBody characterBody, ref float damage);
+        private static event HealthComponent_TakeDamageProcess_Delegate _OnTakeDamageProcess;
+        public static event HealthComponent_TakeDamageProcess_Delegate OnTakeDamageProcess
         {
             add
             {
-                if (_OnTakeDamageProcessHookAdded == 0) On.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
+                if (_OnTakeDamageProcessHookAdded == 0) IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
                 _OnTakeDamageProcess += value;
                 _OnTakeDamageProcessHookAdded++;
             }
             remove
             {
-                if (_OnTakeDamageProcessHookAdded == 1) On.RoR2.HealthComponent.TakeDamageProcess -= HealthComponent_TakeDamageProcess;
+                if (_OnTakeDamageProcessHookAdded == 1) IL.RoR2.HealthComponent.TakeDamageProcess -= HealthComponent_TakeDamageProcess;
                 _OnTakeDamageProcess -= value;
                 _OnTakeDamageProcessHookAdded--;
             }
         }
-        private static void HealthComponent_TakeDamageProcess(On.RoR2.HealthComponent.orig_TakeDamageProcess orig, HealthComponent self, DamageInfo damageInfo)
+        private static FieldReference ThatFuckingField;
+        private static TypeDefinition ThatFuckingStructThatIHate;
+        private static void HealthComponent_TakeDamageProcess(ILContext il)
         {
-            CharacterBody characterBody = damageInfo.attacker ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-            _OnTakeDamageProcess?.Invoke(self, damageInfo, characterBody);
-            orig(self, damageInfo);
+            ILCursor c = new ILCursor(il);
+            int locid = 10;
+            if (c.TryGotoNext(MoveType.After,
+                    x => x.MatchLdloc(0),
+                    x => x.MatchLdfld(out ThatFuckingField),
+                    x => x.MatchCallvirt(typeof(CharacterBody).GetPropertyGetter(nameof(CharacterBody.master))),
+                    x => x.MatchStloc(out _)
+                ))
+            {
+                ThatFuckingStructThatIHate = ThatFuckingField.DeclaringType.Resolve();
+                if (c.TryGotoPrev(MoveType.After,
+                    x => x.MatchLdloc(0),
+                    x => x.MatchLdfld(out _),
+                    x => x.MatchLdfld<DamageInfo>(nameof(DamageInfo.damage)),
+                    x => x.MatchStloc(out locid)
+                ))
+                {
+                    c.Emit(OpCodes.Ldarg_0);
+                    c.Emit(OpCodes.Ldloc_0);
+                    c.Emit(OpCodes.Ldfld, ThatFuckingStructThatIHate.Fields[2]);
+                    c.Emit(OpCodes.Ldloc_0);
+                    c.Emit(OpCodes.Ldfld, ThatFuckingStructThatIHate.Fields[1]);
+                    c.Emit(OpCodes.Ldloc, locid);
+                    c.EmitDelegate(Event);
+                    float Event(HealthComponent healthComponent, DamageInfo damageInfo, CharacterBody attackerBody, float damage)
+                    {
+                        try
+                        {
+                            _OnTakeDamageProcess?.Invoke(healthComponent, damageInfo, attackerBody, ref damage);
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                        return damage;
+                    }
+                    c.Emit(OpCodes.Stloc, locid);
+                }
+                else
+                {
+                    CaeliImperiumPlugin.Log.LogError(il.Method.Name + " IL Hook 2 failed!");
+                }
+
+            }
+            else
+            {
+                CaeliImperiumPlugin.Log.LogError(il.Method.Name + " IL Hook 1 failed!");
+            }
         }
+
         private static bool _equipmentActionsAdded;
         public delegate bool PerformEquipmentAction(EquipmentSlot equipmentSlot, EquipmentDef equipmentDef);
         private static Dictionary<EquipmentDef, PerformEquipmentAction> _equipmentActions = [];

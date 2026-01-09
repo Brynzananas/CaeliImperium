@@ -1,67 +1,14 @@
-﻿using EntityStates;
+﻿using CaeliImperium;
+using EntityStates;
 using RoR2;
+using System;
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace CaeliImperium
+namespace CaeliImperiumEntityStates
 {
-    public class FireSkullGun : BaseState
-    {
-        public int stack;
-        public override void OnEnter()
-        {
-            base.OnEnter();
-            Fire();
-            if (isAuthority) outer.SetNextStateToMain();
-        }
-        public void Fire()
-        {
-            Ray ray = GetAimRay();
-            Util.PlaySound(EntityStates.Commando.CommandoWeapon.FirePistol2.firePistolSoundString, base.gameObject);
-            if (EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab)
-            {
-                EffectData effectData = new EffectData
-                {
-                    origin = ray.origin,
-                    rotation = Quaternion.LookRotation(ray.direction),
-                };
-                EffectManager.SpawnEffect(EntityStates.Commando.CommandoWeapon.FirePistol2.muzzleEffectPrefab, effectData, true);
-            }
-
-            if (isAuthority)
-            {
-                new BulletAttack
-                {
-                    owner = base.gameObject,
-                    weapon = base.gameObject,
-                    origin = ray.origin,
-                    aimVector = ray.direction,
-                    minSpread = 0f,
-                    maxSpread = 0f,
-                    damage = damageStat * stack,
-                    force = 0f,
-                    tracerEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.tracerEffectPrefab,
-                    //muzzleName = targetMuzzle,
-                    hitEffectPrefab = EntityStates.Commando.CommandoWeapon.FirePistol2.hitEffectPrefab,
-                    isCrit = RollCrit(),
-                    radius = 0.1f,
-                    smartCollision = true,
-                    trajectoryAimAssistMultiplier = EntityStates.Commando.CommandoWeapon.FirePistol2.trajectoryAimAssistMultiplier,
-                    damageType = DamageTypeCombo.GenericPrimary
-                }.Fire();
-            }
-        }
-        public override void OnSerialize(NetworkWriter writer)
-        {
-            base.OnSerialize(writer);
-            writer.Write(stack);
-        }
-        public override void OnDeserialize(NetworkReader reader)
-        {
-            base.OnDeserialize(reader);
-            stack = reader.ReadInt32();
-        }
-    }
     public class FireAtomicBeam : BaseState
     {
         public static float maxDamageMultiplier = 50f;
@@ -83,7 +30,7 @@ namespace CaeliImperium
                     maxSpread = 0f,
                     damage = characterBody.damage * Utils.ConvertAmplificationPercentageIntoReductionPercentage(charge, maxDamageMultiplier),
                     force = 0f,
-                    tracerEffectPrefab = Assets.fireSnipeSuperTracer,
+                    tracerEffectPrefab = CaeliImperium.CaeliImperiumAssets.fireSnipeSuperTracer,
                     //muzzleName = targetMuzzle,
                     hitEffectPrefab = null,
                     isCrit = RollCrit(),
@@ -105,7 +52,7 @@ namespace CaeliImperium
                             totalDamage = characterBody.damage,
                             damageMultiplier = stack,
                             duration = dotDuration,
-                            dotIndex = Buffs.IrradiatedDotIndex,
+                            dotIndex = CaeliImperiumContent.Buffs.IrradiatedDotIndex,
 
                         };
                         DotController.InflictDot(ref dotInfo);
@@ -114,7 +61,7 @@ namespace CaeliImperium
                 }
             }
         }
-        public override void OnSerialize(NetworkWriter writer)
+        /*public override void OnSerialize(NetworkWriter writer)
         {
             base.OnSerialize(writer);
             writer.Write(stack);
@@ -125,6 +72,6 @@ namespace CaeliImperium
             base.OnDeserialize(reader);
             stack = reader.ReadInt32();
             charge = reader.ReadSingle();
-        }
+        }*/
     }
 }

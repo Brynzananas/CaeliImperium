@@ -1,17 +1,15 @@
 ﻿using RoR2;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using static CaeliImperium.Items;
-using static CaeliImperium.Buffs;
-using static CaeliImperium.Equipments;
-using static CaeliImperium.Elites;
+using static CaeliImperium.CaeliImperiumContent.Items;
 using static CaeliImperium.Events;
 using RoR2.ExpansionManagement;
 using RoR2.ContentManagement;
+using CaeliImperium.Items;
 
 namespace CaeliImperium
 {
-    public class Assets
+    public static class CaeliImperiumAssets
     {
         public static AssetBundle assetBundle;
         public static GameObject stunEffect = LegacyResourcesAPI.Load<GameObject>("Prefabs/Effects/ImpactEffects/ImpactStunGrenade");
@@ -73,8 +71,9 @@ namespace CaeliImperium
             Necronomicon = assetBundle.LoadAsset<EquipmentDef>("Assets/CaeliImperium/Equipments/Necronomicon.asset").RegisterEquipmentDef(NecronomiconEvents);
             SpeedsterEquipment = assetBundle.LoadAsset<EquipmentDef>("Assets/CaeliImperium/Equipments/SpeedsterEquipment.asset").RegisterEquipmentDef();
             HastingElite = assetBundle.LoadAsset<EliteDef>("Assets/CaeliImperium/Elites/Speedster.asset").RegisterEliteDef(HastingEvents);*/
-            DrawSpeedPath = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/DrawSpeedPath.asset").RegisterItemDef(DrawSpeedPathEvents);
-            HealReceivedDamage = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/HealReceivedDamage.asset").RegisterItemDef(HealReceivedDamageEvents);
+            DrawSpeedPath = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/DrawSpeedPath.asset").RegisterItemDef(DrawSpeedPathEvents.Init);
+            HealReceivedDamage = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/HealReceivedDamage.asset").RegisterItemDef(HealReceivedDamageEvents.Init);
+            InfiniteSecondarySkillCharges = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/InfiniteSecondarySkillCharges.asset").RegisterItemDef(Items.InfiniteSecondarySkillChargesEvents.Init);
             CaeliImperiumPlugin.expansionDef = assetBundle.LoadAsset<ExpansionDef>("Assets/CaeliImperium/CaeliImperiumExpansion.asset").RegisterExpansionDef();
             CaeliImperiumPlugin.expansionDef.disabledIconSprite = Addressables.LoadAssetAsync<Sprite>("RoR2/Base/Common/MiscIcons/texUnlockIcon.png").WaitForCompletion();
             //mercenaryGhostDeployable = DeployableAPI.RegisterDeployableSlot(GetMercenaryDeployableSlot);
@@ -84,7 +83,7 @@ namespace CaeliImperium
             //}
             ContentManager.collectContentPackProviders += (addContentPackProvider) =>
             {
-                addContentPackProvider(new ContentPacks());
+                addContentPackProvider(new CaeliImperiumContent());
             };
         }
     }
