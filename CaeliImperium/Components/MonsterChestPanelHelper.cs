@@ -150,7 +150,7 @@ namespace CaeliImperium.Components
         public void AddQuantityToPickerButton(MPButton button, PickupDef pickupDef)
         {
             ItemIndex itemIndex = pickupDef.itemIndex;
-            if (itemIndex != ItemIndex.None)
+            /*if (itemIndex != ItemIndex.None)
             {
                 ItemDef itemDef = ItemCatalog.GetItemDef(pickupDef.itemIndex);
                 if (itemDef)
@@ -160,7 +160,7 @@ namespace CaeliImperium.Components
                         button.gameObject.SetActive(false); // I have no idea how to exclude boss items from picker panel so I made this shitass solution. TODO
                     }
                 }
-            }
+            }*/
             if (this.cachedBodyInventory)
             {
                 int itemCountPermanent = this.cachedBodyInventory.GetItemCountPermanent(itemIndex);
