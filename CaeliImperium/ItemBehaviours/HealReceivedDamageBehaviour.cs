@@ -1,4 +1,6 @@
 ﻿using CaeliImperium.Items;
+using CaeliImperium.NetworkMessages;
+using R2API.Networking.Interfaces;
 using RoR2;
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,8 @@ namespace CaeliImperium.ItemBehaviours
     public class HealReceivedDamageBehaviour : CharacterBody.ItemBehavior
     {
         public List<HealReceivedDamage> healReceivedDamageBits = [];
+        private float healRate;
+        private float previousHealRate;
         public class HealReceivedDamage : IDisposable
         {
             public HealReceivedDamage(float healAmount, float healTime)
@@ -37,6 +41,7 @@ namespace CaeliImperium.ItemBehaviours
         }
         public void OnDisable()
         {
+            new HealReceivedDamageHealRateReportMessage(body.networkIdentity, 0f, 0f);
             GlobalEventManager.onServerDamageDealt -= GlobalEventManager_onServerDamageDealt;
         }
         public void AddHealReceivedDamageBit(float healAmount, float time)
@@ -48,9 +53,12 @@ namespace CaeliImperium.ItemBehaviours
         {
             if (!body) return;
             HealthComponent healthComponent = body.healthComponent;
+            if (!healthComponent) return;
+            healRate = 0f;
             for (int i = 0; i < healReceivedDamageBits.Count; i++)
             {
                 HealReceivedDamage healReceivedDamageBit = healReceivedDamageBits[i];
+                healRate += healReceivedDamageBit.healRate;
                 if (healthComponent && healthComponent.health < healthComponent.body.maxHealth) healthComponent.Networkhealth += healReceivedDamageBit.healRate * Time.fixedDeltaTime;
                 healReceivedDamageBit.healTime -= Time.fixedDeltaTime;
                 if (healReceivedDamageBit.healTime <= 0)
@@ -58,6 +66,11 @@ namespace CaeliImperium.ItemBehaviours
                     healReceivedDamageBits.Remove(healReceivedDamageBit);
                     healReceivedDamageBit.Dispose();
                 }
+            }
+            if (healRate != previousHealRate)
+            {
+                new HealReceivedDamageHealRateReportMessage(body.networkIdentity, healRate, healRate / body.maxHealth).Send(R2API.Networking.NetworkDestination.Clients);
+                previousHealRate = healRate;
             }
         }
     }

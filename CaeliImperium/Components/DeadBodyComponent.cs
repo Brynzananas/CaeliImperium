@@ -10,6 +10,7 @@ namespace CaeliImperium.Components
 {
     public class DeadBodyComponent : MonoBehaviour
     {
+        public static List<DeadBodyComponent> instances = [];
         public Inventory inventory;
         public Loadout loadout;
         public string bodyName;
@@ -24,11 +25,11 @@ namespace CaeliImperium.Components
         }
         public void OnEnable()
         {
-            Events.deadBodyComponents.Add(this);
+            instances.Add(this);
         }
         public void OnDisable()
         {
-            Events.deadBodyComponents.Remove(this);
+            instances.Remove(this);
         }
         public void Update()
         {

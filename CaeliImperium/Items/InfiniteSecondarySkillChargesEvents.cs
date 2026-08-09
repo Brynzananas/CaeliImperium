@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine.AddressableAssets;
-using static CaeliImperium.Hooks;
+using static CaeliImperium.CaeliImperiumHooks;
 namespace CaeliImperium.Items
 {
     public static class InfiniteSecondarySkillChargesEvents
@@ -16,7 +16,8 @@ namespace CaeliImperium.Items
         public static float buffDamage => InfiniteSecondarySkillChargesConfigs.InfiniteSecondarySkillChargesDamagePerCharge.Value;
         public static float itemDamage => InfiniteSecondarySkillChargesConfigs.InfiniteSecondarySkillChargesDamage.Value;
         public static float itemDamagePerStack => InfiniteSecondarySkillChargesConfigs.InfiniteSecondarySkillChargesDamagePerStack.Value;
-        private static List<SkillDef> blacklistedSkillDefs = [];
+        private static HashSet<SkillDef> blacklistedSkillDefs = [];
+        private static bool inited;
         public static void SkillDef_OnExecute(ILContext il)
         {
             ILCursor c = new ILCursor(il);
@@ -98,19 +99,21 @@ namespace CaeliImperium.Items
         }
         public static void Init(ItemDef itemDef)
         {
-            CaeliImperiumContent.Buffs.IncreaseSecondarySkillDamage = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/IncreaseSecondarySkillDamage.asset").RegisterBuffDef();
-            BlacklistSkillDef(Addressables.LoadAssetAsync<SkillDef>("RoR2/DLC1/Railgunner/RailgunnerBodyScopeHeavy.asset").WaitForCompletion());
-            BlacklistSkillDef(Addressables.LoadAssetAsync<SkillDef>("RoR2/DLC1/Railgunner/RailgunnerBodyScopeLight.asset").WaitForCompletion());
             On.RoR2.Skills.SkillDef.HasRequiredStockAndDelay += SkillDef_HasRequiredStockAndDelay;
             IL.RoR2.Skills.SkillDef.OnExecute += Patch;
             IL.RoR2.Skills.DrifterSkillDef.OnExecute += Patch;
             OnTakeDamageProcess += Events_OnTakeDamageProcess;
-            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
+            CaeliImperiumPlugin.onPluginDestroyed += OnPluginDestroyed;
+            if (inited) return;
+            inited = true;
+            CaeliImperiumContent.Buffs.IncreaseSecondarySkillDamage = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/IncreaseSecondarySkillDamage.asset").RegisterBuffDef();
+            BlacklistSkillDef(Addressables.LoadAssetAsync<SkillDef>("RoR2/DLC1/Railgunner/RailgunnerBodyScopeHeavy.asset").WaitForCompletion());
+            BlacklistSkillDef(Addressables.LoadAssetAsync<SkillDef>("RoR2/DLC1/Railgunner/RailgunnerBodyScopeLight.asset").WaitForCompletion());
         }
 
         public static void OnPluginDestroyed()
         {
-            CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
+            CaeliImperiumPlugin.onPluginDestroyed -= OnPluginDestroyed;
             IL.RoR2.Skills.SkillDef.OnExecute -= Patch;
             IL.RoR2.Skills.DrifterSkillDef.OnExecute -= Patch;
             On.RoR2.Skills.SkillDef.HasRequiredStockAndDelay += SkillDef_HasRequiredStockAndDelay;

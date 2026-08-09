@@ -28,7 +28,7 @@ namespace CaeliImperiumEntityStates
                     aimVector = ray.direction,
                     minSpread = 0f,
                     maxSpread = 0f,
-                    damage = characterBody.damage * Utils.ConvertAmplificationPercentageIntoReductionPercentage(charge, maxDamageMultiplier),
+                    damage = characterBody.damage * CaeliImperiumUtils.ConvertAmplificationPercentageIntoReductionPercentage(charge, maxDamageMultiplier),
                     force = 0f,
                     tracerEffectPrefab = CaeliImperium.CaeliImperiumAssets.fireSnipeSuperTracer,
                     //muzzleName = targetMuzzle,

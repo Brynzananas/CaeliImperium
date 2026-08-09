@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace CaeliImperium.Items
 {
-    [CreateAssetMenu(menuName = "RoR2/CIItemDef")]
+    [CreateAssetMenu(menuName = "RoR2/CaeliImperium/CIItemDef")]
     public class CIItemDef : ItemDef
     {
         public string configName;

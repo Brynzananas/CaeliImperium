@@ -13,15 +13,28 @@ namespace CaeliImperium.Items
         public static float HealReceivedHealCoefficientPerStack => HealReceivedDamageConfigs.HealReceivedDamageHealCoefficientPerStack.Value;
         public static float HealReceivedDamageTime => HealReceivedDamageConfigs.HealReceivedDamageTime.Value;
         public static float HealReceivedDamageStackTimeReduction => HealReceivedDamageConfigs.HealReceivedDamageStackTimeReduction.Value;
+        public static float neededHealRateToTypeBeat = 0.25f;
+        public static Material HealMaterial;
+        public static EffectDef TypeBeatEffect;
+        private static bool inited;
         public static void Init(ItemDef itemDef)
         {
-            Hooks.OnInventoryChanged += Events_OnInventoryChanged;
-            CaeliImperiumPlugin.OnPluginDestroyed += OnPluginDestroyed;
+            CaeliImperiumHooks.OnInventoryChanged += Events_OnInventoryChanged;
+            CaeliImperiumAssets.onMaterialFound += OnMaterialFound;
+            CaeliImperiumPlugin.onPluginDestroyed += OnPluginDestroyed;
+            if (inited) return;
+            inited = true;
+            TypeBeatEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Effects/EmergencyMedicalTreatmentTypeBeatEffect.prefab").RegisterEffect();
+        }
+        private static void OnMaterialFound(Material material)
+        {
+            if (material.name == "matEmergencyMedicalTreatmentHealing") HealMaterial = material;
         }
         private static void OnPluginDestroyed()
         {
-            Hooks.OnInventoryChanged -= Events_OnInventoryChanged;
-            CaeliImperiumPlugin.OnPluginDestroyed -= OnPluginDestroyed;
+            CaeliImperiumHooks.OnInventoryChanged -= Events_OnInventoryChanged;
+            CaeliImperiumAssets.onMaterialFound -= OnMaterialFound;
+            CaeliImperiumPlugin.onPluginDestroyed -= OnPluginDestroyed;
         }
         public static void Events_OnInventoryChanged(CharacterBody obj)
         {

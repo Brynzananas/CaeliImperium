@@ -28,6 +28,7 @@ namespace CaeliImperium
         public static List<ItemDef> items = new List<ItemDef>();
         public static List<EquipmentDef> equipments = new List<EquipmentDef>();
         public static List<EliteDef> elites = new List<EliteDef>();
+        public static List<EffectDef> effects = new List<EffectDef>();
         public static List<ExpansionDef> expansions = new List<ExpansionDef>();
         public IEnumerator FinalizeAsync(FinalizeAsyncArgs args)
         {
@@ -60,6 +61,7 @@ namespace CaeliImperium
             contentPack.equipmentDefs.Add([.. equipments]);
             contentPack.eliteDefs.Add([.. elites]);
             contentPack.expansionDefs.Add([.. expansions]);
+            contentPack.effectDefs.Add([.. effects]);
             yield break;
         }
         public static class Items
@@ -81,6 +83,8 @@ namespace CaeliImperium
             public static CIItemDef DrawSpeedPath;
             public static CIItemDef HealReceivedDamage;
             public static CIItemDef InfiniteSecondarySkillCharges;
+            public static CIItemDef BribeEnemiesAndBuffMinions;
+            public static CIItemDef InflictIrradiatedOnHit;
             public static CIItemDef TransferDamageOwnership;
         }
         public static class Buffs

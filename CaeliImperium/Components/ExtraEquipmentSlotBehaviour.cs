@@ -26,7 +26,7 @@ namespace CaeliImperium.Components
             characterMaster = GetComponent<CharacterMaster>();
             characterMaster.onBodyStart += CharacterMaster_onBodyStart;
             GetBodyComponents();
-            if (equipmentPicker == null) equipmentPicker = Utils.CreateEquipmentPicker();
+            if (equipmentPicker == null) equipmentPicker = CaeliImperiumUtils.CreateEquipmentPicker();
             if (equipmentPicker) equipmentPicker.extraEquipmentSlotBehaviour = this;
         }
         public void Start()

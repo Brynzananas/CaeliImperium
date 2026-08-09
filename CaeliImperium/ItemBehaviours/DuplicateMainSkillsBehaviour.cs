@@ -21,7 +21,7 @@ namespace CaeliImperium.ItemBehaviours
                 if (skill == null) continue;
                 CharacterBody body = skill.characterBody;
                 if (body == null) continue;
-                GenericSkill genericSkill = Utils.CopyGenericSkill(skill, body, "DragonStyle");
+                GenericSkill genericSkill = CaeliImperiumUtils.CopyGenericSkill(skill, body, "DragonStyle");
                 genericSkills.Add(genericSkill);
                 body.onSkillActivatedServer += Body_onSkillActivatedServer;
                 onSkillActivatedEvents.Add(Body_onSkillActivatedServer);

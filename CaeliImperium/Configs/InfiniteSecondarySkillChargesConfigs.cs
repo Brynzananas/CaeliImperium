@@ -9,14 +9,14 @@ namespace CaeliImperium.Configs
     {
         public static void Init()
         {
-            InfiniteSecondarySkillChargesDamage = Utils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase", 1f, "");
-            InfiniteSecondarySkillChargesDamagePerStack = Utils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase per stack", 1f, "");
-            InfiniteSecondarySkillChargesDamagePerCharge = Utils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase per charge consumed", 1f, "");
+            InfiniteSecondarySkillChargesDamage = CaeliImperiumUtils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase", 1f, "");
+            InfiniteSecondarySkillChargesDamagePerStack = CaeliImperiumUtils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase per stack", 1f, "");
+            InfiniteSecondarySkillChargesDamagePerCharge = CaeliImperiumUtils.CreateConfig(CaeliImperiumContent.Items.InfiniteSecondarySkillCharges.configName, "Secondary damage increase per charge consumed", 1f, "");
             InfiniteSecondarySkillChargesDamage.SettingChanged += SettingChanged;
             InfiniteSecondarySkillChargesDamagePerStack.SettingChanged += SettingChanged;
             InfiniteSecondarySkillChargesDamagePerCharge.SettingChanged += SettingChanged;
         }
-        private static void SettingChanged(object sender, System.EventArgs e) => Language.InitInfiniteSecondarySkillCharges();
+        private static void SettingChanged(object sender, System.EventArgs e) => CaeliImperiumLanguage.InitInfiniteSecondarySkillCharges();
 
         public static ConfigEntry<float> InfiniteSecondarySkillChargesDamage;
         public static ConfigEntry<float> InfiniteSecondarySkillChargesDamagePerStack;

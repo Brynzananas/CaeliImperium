@@ -20,6 +20,10 @@ namespace CaeliImperium
     [BepInPlugin(ModGuid, ModName, ModVer)]
     [BepInDependency(R2API.R2API.PluginGUID)]
     [BepInDependency(R2API.RecalculateStatsAPI.PluginGUID)]
+    [BepInDependency(R2API.SoundAPI.PluginGUID)]
+    [BepInDependency(R2API.ItemAPI.PluginGUID)]
+    [BepInDependency(R2API.DirectorAPI.PluginGUID)]
+    [BepInDependency(R2API.Networking.NetworkingAPI.PluginGUID)]
     [BepInDependency(BrynzaAPI.BrynzaAPI.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(ModCompatabilities.RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [System.Serializable]
@@ -27,7 +31,7 @@ namespace CaeliImperium
     {
         public const string ModGuid = "com.brynzananas.caeliimperium";
         public const string ModName = "Caeli Imperium";
-        public const string ModVer = "0.9.0";
+        public const string ModVer = "0.10.0";
         public const string ModPrefix = "CI";
         public static bool emotesEnabled;
         public static bool riskOfOptionsEnabled;
@@ -35,24 +39,36 @@ namespace CaeliImperium
         public static PluginInfo PluginInfo { get; private set; }
         public static ConfigFile configFile { get; private set; }
         public static ManualLogSource Log { get; private set; }
-        public static Action OnPluginDestroyed;
+        public static BaseUnityPlugin instance { get; private set; }
+        public static event Action onPluginDestroyed;
         public void Awake()
         {
             Log = Logger;
             PluginInfo = Info;
             configFile = Config;
+            instance = this;
             riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ModCompatabilities.RiskOfOptionsCompatability.GUID);
             CaeliImperiumAssets.Init();
             if (riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.Init();
             DrawSpeedPathConfigs.Init();
             HealReceivedDamageConfigs.Init();
             InfiniteSecondarySkillChargesConfigs.Init();
-            RoR2Application.onLoad += Language.Init;
+            BomberWispConfigs.Init();
+            MonsterChestConfigs.Init();
+            RoR2Application.onLoad += CaeliImperiumLanguage.Init;
         }
         public void OnDestroy()
         {
-            RoR2Application.onLoad -= Language.Init;
-            OnPluginDestroyed?.Invoke();
+            RoR2Application.onLoad -= CaeliImperiumLanguage.Init;
+            onPluginDestroyed?.Invoke();
+        }
+        public void AddCustomMusic()
+        {
+
+        }
+        public void RemoveCustomMusic()
+        {
+
         }
     }
 }

@@ -3,6 +3,7 @@ using RoR2;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -24,7 +25,7 @@ namespace CaeliImperium.ItemBehaviours
             }
         }
         public static float groundingDistance = 3f;
-        public static int maxPaths = 10000;
+        public static int maxPaths = 64;
         public static float seacrhRadius = 2f;
         public static float createDistance = 3f;
         public static float noCreateDistance = 6f;
@@ -37,6 +38,7 @@ namespace CaeliImperium.ItemBehaviours
                 {
                     _globalSpeedPath = Instantiate(CaeliImperiumAssets.GlobalSpeedPathPrefab, globalPathsHolder).GetComponent<GlobalSpeedPath>();
                     _globalSpeedPath.speedPathDrawerComponent = this;
+                    _globalSpeedPath.id = GlobalSpeedPath.instances.Count - 1;
                     globalSpeedPaths.Add(_globalSpeedPath);
                 }
                 return _globalSpeedPath;
@@ -47,8 +49,10 @@ namespace CaeliImperium.ItemBehaviours
         public bool nearestPath;
         public bool nearestFirstPath;
         public List<SpeedPathComponent> speedPathComponents = [];
+        public int index;
         public Vector3 previousPosition;
         public float velocity;
+        public Action onOldSpeedPathDestroyed;
         private int previousBuffCount;
         private SpeedPathComponent previousSpeedPathComponent;
         public void Start()
@@ -62,6 +66,7 @@ namespace CaeliImperium.ItemBehaviours
             if (foundPath && _globalSpeedPath)
             {
                 _globalSpeedPath.Disconect();
+                index = 0;
                 _globalSpeedPath = null;
             }
             if (buffCount != previousBuffCount)
@@ -90,12 +95,19 @@ namespace CaeliImperium.ItemBehaviours
             foundPath = false;
             nearestPath = false;
             nearestFirstPath = false;
-            Collider[] colliders = Physics.OverlapSphere(position, noCreateDistance, LayerIndex.pickups.mask, QueryTriggerInteraction.Collide);
-            if (colliders == null) return 0;
+            Collider[] colliders;
+            int num = HGPhysics.OverlapSphere(out colliders, position, noCreateDistance, LayerIndex.pickups.mask, QueryTriggerInteraction.Collide);
+            if (colliders == null || colliders.Length == 0)
+            {
+                HGPhysics.ReturnResults(colliders);
+                return 0;
+            }
             float searchDistance = seacrhRadius * seacrhRadius;
             float nearDistance = float.MaxValue;
-            foreach (Collider collider in colliders)
+            for (int i = 0; i < num; i++)
             {
+                Collider collider = colliders[i];
+                string name = collider.name;
                 if (!collider.name.StartsWith("SpeedPath")) continue;
                 Vector3 vector3 = collider.transform.position - position;
                 float sqrMagn = vector3.sqrMagnitude;
@@ -112,7 +124,12 @@ namespace CaeliImperium.ItemBehaviours
                 }
                 if (nearestPath && foundPath) break;
             }
-            if (foundPath) return stack;
+            if (foundPath)
+            {
+                HGPhysics.ReturnResults(colliders);
+                return stack;
+            }
+            HGPhysics.ReturnResults(colliders);
             return 0;
         }
         public void OnDestroy()
@@ -146,16 +163,29 @@ namespace CaeliImperium.ItemBehaviours
             gameObject.transform.position = (orbPoision + vector3) / 2f;
             SpeedPathComponent speedPatchComponent = gameObject.GetComponent<SpeedPathComponent>();
             if (!speedPatchComponent) return;
+            //speedPatchComponent.index = index;
+            //index++;
             speedPatchComponent.globalSpeedPath = globalSpeedPath;
             speedPatchComponent.speedPathDrawerComponent = this;
-            speedPatchComponent.Charge(previousSpeedPathComponent);
             speedPathComponents.Add(speedPatchComponent);
             if (speedPathComponents.Count >= maxPaths)
             {
                 SpeedPathComponent speedPatchComponent1 = speedPathComponents[0];
                 speedPathComponents.RemoveAt(0);
-                Destroy(speedPatchComponent1.gameObject);
+                if (speedPatchComponent1.transform.parent.childCount == 4)
+                {
+                    Transform transform = speedPatchComponent1.transform.parent;
+                    Destroy(transform.gameObject);
+                }
+                else
+                {
+                    Destroy(speedPatchComponent1.gameObject);
+
+                }
+                //foreach (SpeedPathComponent speedPatchComponent2 in speedPathComponents) speedPatchComponent2.index--;
+                //index--;
             }
+            speedPatchComponent.Charge(previousSpeedPathComponent);
             previousSpeedPathComponent = speedPatchComponent;
         }
         public bool GroundCheck()
