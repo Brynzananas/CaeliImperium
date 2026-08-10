@@ -170,7 +170,7 @@ namespace CaeliImperium.Interactables
         }
         private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj)
         {
-            if (!Run.instance || !SceneInfo.instance || !SceneInfo.instance.sceneDef || !SceneInfo.instance.sceneDef.allowItemsToSpawnObjects) return;
+            if (!Run.instance || !SceneInfo.instance || !SceneInfo.instance.sceneDef) return;
             SceneDef sceneDef = SceneInfo.instance.sceneDef;
             MonsterChestSpawnRules monsterChestSpawnRules = MonsterChestConfigs.monsterChestSpawnRules;
             if (monsterChestSpawnRules == null) monsterChestSpawnRules = MonsterChestSpawnRules.Default;
