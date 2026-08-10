@@ -12,8 +12,8 @@ namespace CaeliImperium
     public class CaeliImperiumExpansionRunComponent : MonoBehaviour
     {
         public static CaeliImperiumExpansionRunComponent instance;
-        public static float minSuperSecretScreamTimerAdd = 300f;
-        public static float maxSuperSecretScreamTimerAdd = 600f;
+        public static float minSuperSecretScreamTimerAdd = 600f;
+        public static float maxSuperSecretScreamTimerAdd = 3000f;
         public static float minSuperSecretScreamTimerOnStageBegin = 60f;
         public float superSecretScreamTimer;
         public static event Action<CaeliImperiumExpansionRunComponent> onFixedUpdate;
