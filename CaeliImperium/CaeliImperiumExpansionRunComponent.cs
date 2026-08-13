@@ -1,4 +1,5 @@
 ﻿using CaeliImperium.Components;
+using CaeliImperium.Configs;
 using RoR2;
 using RoR2.UI;
 using System;
@@ -79,7 +80,7 @@ namespace CaeliImperium
         }
         public void Update()
         {
-            if (SuperSecretScreamComponent.count > 0)
+            if (SuperSecretScreamComponent.count > 0 && CaeliImperiumConfigs.Screaming.Value)
             {
                 foreach (HUD hUD in HUD.instancesList)
                 {

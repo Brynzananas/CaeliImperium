@@ -31,7 +31,7 @@ namespace CaeliImperiumEntityStates.BomberWisp
         public override void OnEnter()
         {
             base.OnEnter();
-            duration = baseDuration / attackSpeedStat;
+            duration = BomberWisp2Events.projectileImpactCapsuleExplosion ? BomberWisp2Events.projectileImpactCapsuleExplosion.lifetime : baseDuration;
             animator = GetModelAnimator();
             if (animator)
             {
