@@ -14,6 +14,10 @@ namespace CaeliImperium.Configs
             SpeedPathSpeedBonusCoefficient.SettingChanged += SettingChanged;
             SpeedPathSpeedBonusStackCoefficient = CreateConfig( CaeliImperiumContent.Items.DrawSpeedPath.configName, "Movement speed increase per stack", 0.5f, "");
             SpeedPathSpeedBonusStackCoefficient.SettingChanged += SettingChanged;
+            SpeedPathAutosprint = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Autosprint", true, "");
+            SpeedPathAutosprint.SettingChanged += SettingChanged;
+            SpeedPathFlight = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Flight", true, "");
+            SpeedPathFlight.SettingChanged += SettingChanged;
             SpeedPathMaxPathLength = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length", 240f, "");
             SpeedPathMaxPathLength.SettingChanged += SettingChanged;
             SpeedPathMaxPathLengthStack = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length increase per stack", 120f, "");
@@ -23,6 +27,8 @@ namespace CaeliImperium.Configs
         private static void SettingChanged(object sender, System.EventArgs e) => CaeliImperiumLanguage.InitDrawSpeedPath();
         public static ConfigEntry<float> SpeedPathSpeedBonusCoefficient;
         public static ConfigEntry<float> SpeedPathSpeedBonusStackCoefficient;
+        public static ConfigEntry<bool> SpeedPathAutosprint;
+        public static ConfigEntry<bool> SpeedPathFlight;
         public static ConfigEntry<float> SpeedPathMaxPathLength;
         public static ConfigEntry<float> SpeedPathMaxPathLengthStack;
         public static ConfigEntry<float> SpeedPathRenderDistance;

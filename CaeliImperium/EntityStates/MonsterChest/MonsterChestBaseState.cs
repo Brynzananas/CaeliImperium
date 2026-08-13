@@ -10,13 +10,7 @@ namespace CaeliImperiumEntityStates.MonsterChest
 {
     public class MonsterChestBaseState : BaseState
     {
-        public virtual bool enableInteraction
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public virtual bool enableInteraction => true;
         public override void OnEnter()
         {
             base.OnEnter();

@@ -13,13 +13,15 @@ namespace CaeliImperium
     {
         public static CaeliImperiumExpansionRunComponent instance;
         public static float minSuperSecretScreamTimerAdd = 600f;
-        public static float maxSuperSecretScreamTimerAdd = 3000f;
+        public static float maxSuperSecretScreamTimerAdd = 9000f;
         public static float minSuperSecretScreamTimerOnStageBegin = 60f;
         public float superSecretScreamTimer;
-        public static event Action<CaeliImperiumExpansionRunComponent> onFixedUpdate;
-        public static event Action<CaeliImperiumExpansionRunComponent> onUpdate;
         public static float hudAlphaSmoothTime = 0.2f;
+        public static List<CaeliImperiumRunAction> caeliImperiumRunActions = [];
         public float hudAlphaVelocity;
+        public PlayerCharacterMasterController currentPlayerCharacterMasterController;
+        public CharacterMaster currentCharacterMaster;
+        public CharacterBody currentCharacterBody;
         public void OnEnable()
         {
             Stage.onServerStageBegin += Stage_onServerStageBegin;
@@ -32,7 +34,6 @@ namespace CaeliImperium
         {
             superSecretScreamTimer = Mathf.Max(superSecretScreamTimer, minSuperSecretScreamTimerOnStageBegin);
         }
-
         public void Awake()
         {
             instance = this;
@@ -40,8 +41,8 @@ namespace CaeliImperium
         }
         public void Scream()
         {
-            EffectManager.SpawnEffect(CaeliImperiumAssets.SuperSecretScreamEffect.index, new EffectData(), true);
             superSecretScreamTimer = UnityEngine.Random.Range(minSuperSecretScreamTimerAdd, maxSuperSecretScreamTimerAdd);
+            EffectManager.SpawnEffect(CaeliImperiumAssets.SuperSecretScreamEffect.index, new EffectData(), true);
         }
         public void FixedUpdate()
         {
@@ -56,7 +57,25 @@ namespace CaeliImperium
                     superSecretScreamTimer -= Time.fixedDeltaTime;
                 }
             }
-            onFixedUpdate?.Invoke(this);
+            currentPlayerCharacterMasterController = null;
+            currentCharacterMaster = null;
+            currentCharacterBody = null;
+            if (PlayerCharacterMasterController.instances != null && PlayerCharacterMasterController.instances.Count > 0)
+            {
+                currentPlayerCharacterMasterController = PlayerCharacterMasterController.instances[0];
+                currentCharacterMaster = currentPlayerCharacterMasterController.master;
+                if (currentCharacterMaster)
+                {
+                    currentCharacterBody = currentCharacterMaster.GetBody();
+                }
+            }
+            foreach (CaeliImperiumRunAction caeliImperiumRunAction in caeliImperiumRunActions)
+            {
+                if (caeliImperiumRunAction == null) continue;
+                caeliImperiumRunAction.caeliImperiumExpansionRunComponent = this;
+                caeliImperiumRunAction.FixedUpdate();
+            }
+            
         }
         public void Update()
         {
@@ -78,7 +97,12 @@ namespace CaeliImperium
                     canvasGroup.alpha = Mathf.SmoothDamp(canvasGroup.alpha, 1f, ref hudAlphaVelocity, hudAlphaSmoothTime);
                 }
             }
-            onUpdate?.Invoke(this);
+            foreach (CaeliImperiumRunAction caeliImperiumRunAction in caeliImperiumRunActions)
+            {
+                if (caeliImperiumRunAction == null) continue;
+                caeliImperiumRunAction.caeliImperiumExpansionRunComponent = this;
+                caeliImperiumRunAction.Update();
+            }
         }
     }
 }

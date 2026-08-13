@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using CaeliImperium.Configs;
+using RoR2;
 using RoR2.UI;
 using System;
 using System.Collections.Generic;
@@ -19,6 +20,8 @@ namespace CaeliImperium.Components
         public Image expectedFillImage;
         public Transform stripContainer;
         public GameObject stripPrefab;
+        public Transform fillbar;
+        public MonsterChestFilledMessageController monsterChestFilledMessageController;
 
         public float maxValue = 100f;
         public float currentValue = 100f;
@@ -50,6 +53,8 @@ namespace CaeliImperium.Components
         public void Init(MonsterChestController monsterChestController)
         {
             this.monsterChestController = monsterChestController;
+            UpdateValues();
+            expectedValue = currentValue;
             if (!spewedItemInspectPanelController || !monsterChestController) return;
             if (monsterChestController.sacrificesCount >= monsterChestController.neededSacrifices && monsterChestController.expectItem)
             {
@@ -59,9 +64,12 @@ namespace CaeliImperium.Components
                     spewedItemInspectPanelController.gameObject.SetActive(true);
                     spewedItemInspectPanelController.Show(itemDef, false, this.GetUserProfile());
                 }
+                if (monsterChestFilledMessageController && MonsterChestConfigs.MonsterChestCanSpewMessage.Value) monsterChestFilledMessageController.gameObject.SetActive(true);
+                if (fillbar) fillbar.gameObject.SetActive(false);
             }
             else
             {
+                if (fillbar) fillbar.gameObject.SetActive(true);
                 spewedItemInspectPanelController.gameObject.SetActive(false);
             }
         }
@@ -125,7 +133,7 @@ namespace CaeliImperium.Components
         }
         public void ShowInfo(MPButton button, PickupDef pickupDef)
         {
-            this.inspectPanelController.Show(pickupDef, false, this.GetUserProfile());
+            //this.inspectPanelController.Show(pickupDef, false, this.GetUserProfile());
             int? sacrificeCount = null;
             ItemIndex itemIndex = pickupDef.itemIndex;
             if (monsterChestController && itemIndex != ItemIndex.None)

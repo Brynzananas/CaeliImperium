@@ -15,6 +15,7 @@ namespace CaeliImperiumEntityStates.MonsterChest
         public static float dropForwardVelocityStrength = 16f;
         private static int SpewStateHash = Animator.StringToHash("Spew");
         private static int SpewParamHash = Animator.StringToHash("Spew.playbackRate");
+        public override bool enableInteraction => false;
         public override void OnEnter()
         {
             base.OnEnter();

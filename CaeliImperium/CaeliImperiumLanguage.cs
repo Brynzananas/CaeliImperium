@@ -85,6 +85,8 @@ namespace CaeliImperium
             AddLanguageToken("CI_MONSTERCHEST_CONTEXT", "Кормить", "ru");
             AddLanguageToken("CI_MONSTERCHEST_DESC", "Allows survivors to sacrifice items in exchange for a boss item.");
             AddLanguageToken("CI_MONSTERCHEST_DESC", "Позволяет обменять предметы на предмет босса.", "ru");
+            AddLanguageToken("CI_MONSTERCHEST_CANSPEW", "Boss item can be spewed");
+            AddLanguageToken("CI_MONSTERCHEST_CANSPEW", "Предмет босса готов к выдачи", "ru");
         }
         public static void AddLanguageToken(string token, string text) => AddLanguageToken(token, text, "en");
         public static void AddLanguageToken(string token, string text, string lang)

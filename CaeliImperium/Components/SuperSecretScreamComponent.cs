@@ -1,4 +1,5 @@
-﻿using RoR2;
+﻿using CaeliImperium.Configs;
+using RoR2;
 using RoR2.UI;
 using System;
 using System.Collections.Generic;
@@ -32,12 +33,18 @@ namespace CaeliImperium.Components
 
         private static void MusicController_pickTrackHook(MusicController musicController, ref MusicTrackDef newTrack)
         {
+            if (!CaeliImperiumConfigs.Screaming.Value) return;
             newTrack = null;
         }
 
         public void OnEnable()
         {
             count++;
+            if (!CaeliImperiumConfigs.Screaming.Value)
+            {
+                gameObject.SetActive(false);
+                return;
+            }
             Camera camera = Camera.main;
             if (!camera) return;
             Util.PlaySound("Play_SuperSecretScream", camera.gameObject);

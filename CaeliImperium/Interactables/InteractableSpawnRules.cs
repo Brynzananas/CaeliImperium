@@ -2,21 +2,22 @@
 using RoR2;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 
 namespace CaeliImperium.Interactables
 {
-    public class MonsterChestSpawnRules
+    public class InteractableSpawnRules
     {
-        private static MonsterChestSpawnRules _default;
-        public static MonsterChestSpawnRules Default
+        private static InteractableSpawnRules _default;
+        public static InteractableSpawnRules Default
         {
             get
             {
                 if (_default == null)
                 {
-                    _default = new MonsterChestSpawnRules();
+                    _default = new InteractableSpawnRules();
                     _default.spawnRules = new SpawnRule[] {
                     new SpawnRule
                     {
@@ -33,9 +34,9 @@ namespace CaeliImperium.Interactables
                 return Clone(_default);
             }
         }
-        public static MonsterChestSpawnRules Clone(MonsterChestSpawnRules monsterChestSpawnRules)
+        public static InteractableSpawnRules Clone(InteractableSpawnRules monsterChestSpawnRules)
         {
-            return new MonsterChestSpawnRules
+            return new InteractableSpawnRules
             {
                 spawnRules = monsterChestSpawnRules.spawnRules
             };
@@ -52,13 +53,13 @@ namespace CaeliImperium.Interactables
             public SceneType[] allowedSceneTypes;
         }
         public XDocument ToXml() => ToXml(this);
-        public static XDocument ToXml(MonsterChestSpawnRules monsterChestSpawnRules)
+        public static XDocument ToXml(InteractableSpawnRules monsterChestSpawnRules)
         {
             List<object> list = [];
             XElement xelement = new XElement("SpawnRules");
             list.Add(xelement);
             if (monsterChestSpawnRules.spawnRules != null)
-                foreach (MonsterChestSpawnRules.SpawnRule spawnRule in monsterChestSpawnRules.spawnRules)
+                foreach (InteractableSpawnRules.SpawnRule spawnRule in monsterChestSpawnRules.spawnRules)
                 {
                     XElement xelement1 = new XElement("SpawnRule");
                     xelement.Add(xelement1);
@@ -84,16 +85,16 @@ namespace CaeliImperium.Interactables
                 }
             return new XDocument(list.ToArray());
         }
-        public static MonsterChestSpawnRules FromXml(XDocument xDocument)
+        public static InteractableSpawnRules FromXml(XDocument xDocument)
         {
             try
             {
-                MonsterChestSpawnRules monsterChestSpawnRules = new MonsterChestSpawnRules();
+                InteractableSpawnRules monsterChestSpawnRules = new InteractableSpawnRules();
                 XElement root = xDocument.Root;
-                List<MonsterChestSpawnRules.SpawnRule> spawnRules = [];
+                List<InteractableSpawnRules.SpawnRule> spawnRules = [];
                 foreach (XElement xElement in root.Elements("SpawnRule"))
                 {
-                    MonsterChestSpawnRules.SpawnRule spawnRule = new MonsterChestSpawnRules.SpawnRule();
+                    InteractableSpawnRules.SpawnRule spawnRule = new InteractableSpawnRules.SpawnRule();
                     XElement xElement1 = xElement.Element("UseStageName");
                     if (xElement1 != null && bool.TryParse(xElement1.Value, out bool useStageName)) spawnRule.useStageName = useStageName;
                     XElement xElement2 = xElement.Element("StageName");
@@ -105,7 +106,7 @@ namespace CaeliImperium.Interactables
                     XElement xElement7 = xElement.Element("SpawnCount");
                     if (xElement7 != null && int.TryParse(xElement7.Value, out int spawnCount)) spawnRule.spawnCount = spawnCount;
                     XElement xElement8 = xElement.Element("SpawnChance");
-                    if (xElement8 != null && float.TryParse(xElement8.Value, out float spawnChance)) spawnRule.spawnChance = spawnChance;
+                    if (xElement8 != null && float.TryParse(xElement8.Value, NumberStyles.Any, CultureInfo.InvariantCulture, out float spawnChance)) spawnRule.spawnChance = spawnChance;
                     XElement xElement5 = xElement.Element("AllowedSceneTypes");
                     if (xElement5 != null)
                     {
@@ -124,7 +125,7 @@ namespace CaeliImperium.Interactables
             catch (Exception e)
             {
                 CaeliImperiumPlugin.Log.LogError(e);
-                return MonsterChestSpawnRules.Default;
+                return InteractableSpawnRules.Default;
             }
         }
     }

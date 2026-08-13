@@ -15,7 +15,7 @@ using static RoR2.DotController;
 
 namespace CaeliImperium
 {
-    public static class CaeliImperiumHooks
+    public static class CaeliImperiumHooks 
     {
         private static int _OnPickupPickerControllerOnDisplayBeginHookAdded;
         private static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> _OnPickupPickerControllerOnDisplayBegin;

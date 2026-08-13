@@ -28,8 +28,8 @@ namespace CaeliImperium.Items
         public static float SpeedPathClusterRadius = 20f;
         public static float SpeedPathMaxLength => DrawSpeedPathConfigs.SpeedPathMaxPathLength.Value;
         public static float SpeedPathMaxLengthStack => DrawSpeedPathConfigs.SpeedPathMaxPathLengthStack.Value;
-        public static float SpeedPathSearchRadius = 6f;
-        public static float SpeedPathSearchRadiusExcludeFromEnd = 9f;
+        public static float SpeedPathSearchRadius = 4f;
+        public static float SpeedPathSearchRadiusExcludeFromEnd = 12f;
         public static float SpeedPathRenderDistance => DrawSpeedPathConfigs.SpeedPathRenderDistance.Value;
         public static float SpeedPathFadeDistance = 3f;
         public static GameObject SpeedPathLine;
@@ -38,25 +38,27 @@ namespace CaeliImperium.Items
         public static float gradientExtraRange = 32f;
         public static float gradientCoefficient = 32f;
         public static bool inited { private set; get; }
+        private static DrawSpeedPathRunAction drawSpeedPathRunAction;
         public static void Init(ItemDef itemDef)
         {
             CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
             GetStatCoefficients += Events_GetStatCoefficients;
             OnBuffFirstStackGained += Events_OnBuffFirstStackGained;
             OnBuffFinalStackLost += Events_OnBuffFinalStackLost;
-            CaeliImperiumExpansionRunComponent.onFixedUpdate += FixedUpdate;
-            //BrynzaAPI.BrynzaAPI.onFootstep += OnFootstep;
+            drawSpeedPathRunAction = new DrawSpeedPathRunAction();
+            CaeliImperiumExpansionRunComponent.caeliImperiumRunActions.Add(drawSpeedPathRunAction);
             R2API.FootstepAPI.OnFootstep += FootstepAPI_OnFootstep;
             CharacterBodyAPI.AddAlwaysSprintCondition(AlwaysSprint);
             CaeliImperiumPlugin.onPluginDestroyed += OnPluginDestroyed;
             if (inited) return;
             inited = true;
             CaeliImperiumContent.Buffs.SpeedPathSpeedBonus = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/SpeedPathSpeedBonus.asset").RegisterBuffDef();
+            CaeliImperiumContent.Buffs.SpeedPathGravityWell = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Buffs/SpeedPathGravityWell.asset").RegisterBuffDef();
             ChalkFootstep = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Effects/ChalkFootstep.prefab").RegisterEffect();
             SpeedPathLine = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/SpeedPathLine.prefab");
         }
 
-        private static bool AlwaysSprint(CharacterBody characterBody) => characterBody.HasBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus);
+        private static bool AlwaysSprint(CharacterBody characterBody) => DrawSpeedPathConfigs.SpeedPathAutosprint.Value ? characterBody.HasBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus) : false;
 
         public static void OnPluginDestroyed()
         {
@@ -65,8 +67,8 @@ namespace CaeliImperium.Items
             GetStatCoefficients -= Events_GetStatCoefficients;
             OnBuffFirstStackGained -= Events_OnBuffFirstStackGained;
             OnBuffFinalStackLost -= Events_OnBuffFinalStackLost;
-            CaeliImperiumExpansionRunComponent.onFixedUpdate -= FixedUpdate;
-            //BrynzaAPI.BrynzaAPI.onFootstep -= OnFootstep;
+            CaeliImperiumExpansionRunComponent.caeliImperiumRunActions.Remove(drawSpeedPathRunAction);
+            drawSpeedPathRunAction = null;
             R2API.FootstepAPI.OnFootstep -= FootstepAPI_OnFootstep;
         }
         private static void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody obj)
@@ -88,122 +90,6 @@ namespace CaeliImperium.Items
             public float distance= float.MaxValue;
             public Transform globalSpeedPath;
         }
-        public static List<SpeedPathGradient> FindNearestSpeedPath(Vector3 position)
-        {
-            Collider[] colliders;
-            int num = HGPhysics.OverlapSphere(out colliders, position, gradientExtraRange, LayerIndex.pickups.mask, QueryTriggerInteraction.Collide);
-            if (colliders == null || colliders.Length == 0)
-            {
-                HGPhysics.ReturnResults(colliders);
-                return null;
-            }
-            List<SpeedPathGradient> speedPathGradients = [];
-            Dictionary<Transform, SpeedPathGradient> keyValuePairs = [];
-            //float nearDistance = float.MaxValue;
-            for (int i = 0; i < num; i++)
-            {
-                Collider collider2 = colliders[i];
-                if (!collider2.name.StartsWith("SpeedPath")) continue;
-                Transform parent = collider2.transform.parent;
-                if (!parent) continue;
-                SpeedPathGradient speedPathGradient;
-                if (keyValuePairs.TryGetValue(parent, out speedPathGradient))
-                {
-
-                }
-                else
-                {
-                    speedPathGradient = new SpeedPathGradient
-                    {
-                        nearestSpeedPath = collider2,
-                        globalSpeedPath = parent,
-                        distance = float.MaxValue,
-                    };
-                    keyValuePairs.Add(parent, speedPathGradient);
-                    speedPathGradients.Add(speedPathGradient);
-                }
-                Vector3 vector3 = collider2.transform.position - position;
-                float sqrMagn = vector3.sqrMagnitude;
-                if (sqrMagn < speedPathGradient.distance)
-                {
-                    speedPathGradient.nearestSpeedPath = collider2;
-                    speedPathGradient.distance = sqrMagn;
-                }
-            }
-            HGPhysics.ReturnResults(colliders);
-            return speedPathGradients;
-        }
-        public static void HandleFunctionality2()
-        {
-            if (!Run.instance) return;
-            ReadOnlyCollection<DrawSpeedPath2Behaviour> drawSpeedPath2Behaviours = DrawSpeedPath2Behaviour.readOnlyInstances;
-            if (drawSpeedPath2Behaviours == null) return;
-            ReadOnlyCollection<PlayerCharacterMasterController> playerCharacterMasterControllers = PlayerCharacterMasterController.instances;
-            if (playerCharacterMasterControllers == null || playerCharacterMasterControllers.Count <= 0) return;
-            PlayerCharacterMasterController playerCharacterMasterController = playerCharacterMasterControllers[0];
-            if (!playerCharacterMasterController) return;
-            CharacterBody characterBody = playerCharacterMasterController.body;
-            if (!characterBody) return;
-            int buffCount = 0;
-            foreach (DrawSpeedPath2Behaviour drawSpeedPath in drawSpeedPath2Behaviours)
-            {
-                if (!drawSpeedPath.TeamCheck(characterBody)) continue;
-                drawSpeedPath.UpdateLineGradient(characterBody.transform.position);
-                if (!drawSpeedPath.IsNearPathExcludingEnd(characterBody.transform.position, SpeedPathSearchRadius, 0f, SpeedPathSearchRadiusExcludeFromEnd)) continue;
-                if (buffCount < drawSpeedPath.stack) buffCount = drawSpeedPath.stack;
-            }
-            if (buffCount == 0 && characterBody.HasBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus))
-            {
-                characterBody.ApplyBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex, 0);
-            }
-            else if (buffCount != characterBody.GetBuffCount(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus))
-            {
-                characterBody.ApplyBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex, buffCount);
-            }
-        }
-        public static void HandleFunctionality()
-        {
-            if (!Run.instance || !NetworkServer.active) return;
-            ReadOnlyCollection<PlayerCharacterMasterController> playerCharacterMasterControllers = PlayerCharacterMasterController.instances;
-            if (playerCharacterMasterControllers == null) return;
-            ReadOnlyCollection<DrawSpeedPath2Behaviour> drawSpeedPath2Behaviours = DrawSpeedPath2Behaviour.readOnlyInstances;
-            if (drawSpeedPath2Behaviours == null) return;
-            foreach (PlayerCharacterMasterController playerCharacterMasterController in playerCharacterMasterControllers)
-            {
-                if (!playerCharacterMasterController) continue;
-                CharacterBody characterBody = playerCharacterMasterController.body;
-                if (!characterBody) continue;
-                int buffCount = 0;
-                foreach (DrawSpeedPath2Behaviour drawSpeedPath in drawSpeedPath2Behaviours)
-                {
-                    if (!drawSpeedPath.TeamCheck(characterBody) || !drawSpeedPath.IsNearPathExcludingEnd(characterBody.transform.position, SpeedPathSearchRadius, 0f, SpeedPathSearchRadiusExcludeFromEnd)) continue;
-                    buffCount = drawSpeedPath.stack;
-                    break;
-                }
-                if (buffCount == 0 && characterBody.HasBuff(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus))
-                {
-                    characterBody.SetBuffCount(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex, 0);
-                }
-                else if (buffCount != characterBody.GetBuffCount(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus))
-                {
-                    characterBody.SetBuffCount(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex, buffCount);
-                }
-            }
-        }
-        public static void FixedUpdate(CaeliImperiumExpansionRunComponent component)
-        {
-            HandleFunctionality2();
-            /*CharacterBody body = Utils.GetPlayerBody();
-            List<SpeedPathGradient> speedPathGradients = body ? FindNearestSpeedPath(body.transform.position) : null;
-            if (speedPathGradients != null)
-            {
-                foreach (SpeedPathGradient speedPathGradient in speedPathGradients)
-                {
-                    GlobalSpeedPath globalSpeedPath = GlobalSpeedPath.instances[speedPathGradient.globalSpeedPath.transform.GetSiblingIndex()];
-                    if (globalSpeedPath) globalSpeedPath.SetGradientValues(speedPathGradient, body.transform.position);
-                }
-            }*/
-        }
         public static void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
         {
             int buffCount = sender.GetBuffCount(CaeliImperiumContent.Buffs.SpeedPathSpeedBonus);
@@ -211,11 +97,21 @@ namespace CaeliImperium.Items
         }
         public static void Events_OnBuffFinalStackLost(CharacterBody arg1, BuffDef arg2)
         {
-            if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(-1);
+            if (!arg1) return;
+            if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathGravityWell.buffIndex) arg1.ModifyCharacterGravityParams(-1);
+            if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex && DrawSpeedPathConfigs.SpeedPathAutosprint.Value)
+            {
+                arg1.isSprinting = true;
+                if (arg1.inputBank)
+                {
+                    arg1.inputBank.sprint.down = true;
+                }
+            }
         }
         public static void Events_OnBuffFirstStackGained(CharacterBody arg1, BuffDef arg2)
         {
-            if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex) arg1.ModifyCharacterGravityParams(1);
+            if (!arg1) return;
+            if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathGravityWell.buffIndex) arg1.ModifyCharacterGravityParams(1);
         }
     }
 }

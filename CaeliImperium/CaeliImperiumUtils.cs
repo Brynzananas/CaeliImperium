@@ -2,6 +2,7 @@
 using BepInEx.Configuration;
 using BrynzaAPI;
 using CaeliImperium.Components;
+using CaeliImperium.Configs;
 using CaeliImperium.Items;
 using EntityStates;
 using Newtonsoft.Json;
@@ -131,7 +132,7 @@ namespace CaeliImperium
         {
             ConfigDefinition configDefinition = new ConfigDefinition(section, key);
             object value = null;
-            if (overrideValueIfDefaultValueChanged && BrynzaAPI.BrynzaAPI.defaultConfigValues.TryGetValue(configFile, out Dictionary<ConfigDefinition, string> keyValuePairs) &&
+            if (overrideValueIfDefaultValueChanged && CaeliImperiumConfigs.OverrideConfigValuesOnUpdate.Value && BrynzaAPI.BrynzaAPI.defaultConfigValues.TryGetValue(configFile, out Dictionary<ConfigDefinition, string> keyValuePairs) &&
                 keyValuePairs.TryGetValue(configDefinition, out string oldDefaultValue) && configFile.OrphanedEntries.TryGetValue(configDefinition, out string oldValue))
             {
                 if (oldDefaultValue != defaultValue.ToString() && oldDefaultValue == oldValue) value = defaultValue;
@@ -211,6 +212,12 @@ namespace CaeliImperium
             onEffectDefAdded?.Invoke(effectDef);
             return effectDef;
         }
+        public static GameObject RegisterNetworkPrefab(this GameObject gameObject, Action<GameObject> onEffectDefAdded, string configSectionName)
+        {
+            ConfigEntry<bool> enableConfig = CreateConfig(configSectionName, "Enable", true, "Enable " + gameObject.name + "?");
+            if (enableConfig.Value) return gameObject.RegisterNetworkPrefab(onEffectDefAdded);
+            return gameObject;
+        }
         public static GameObject RegisterNetworkPrefab(this GameObject gameObject, Action<GameObject> onEffectDefAdded = null)
         {
             networkPrefabs.Add(gameObject);
@@ -221,6 +228,12 @@ namespace CaeliImperium
         {
             projectiles.Add(gameObject);
             onproejctileAdded?.Invoke(gameObject);
+            return gameObject;
+        }
+        public static GameObject RegisterBody(this GameObject gameObject, Action<GameObject> onBodyAdded, string configSectionName)
+        {
+            ConfigEntry<bool> enableConfig = CreateConfig(configSectionName, "Enable", true, "Enable " + gameObject.name + " body?");
+            if (enableConfig.Value) return gameObject.RegisterBody(onBodyAdded);
             return gameObject;
         }
         public static GameObject RegisterBody(this GameObject gameObject, Action<GameObject> onBodyAdded = null)
@@ -334,52 +347,30 @@ namespace CaeliImperium
         }
         public static string FindMostSimilar(string target, string[] candidates)
         {
-            if (candidates == null || candidates.Length == 0)
-                return null;
-
-            if (string.IsNullOrEmpty(target))
-                return candidates[0];
-
+            if (candidates == null || candidates.Length == 0) return null;
+            if (target.IsNullOrWhiteSpace()) return candidates[0];
             string mostSimilar = candidates[0];
             int minDistance = int.MaxValue;
-
             foreach (string candidate in candidates)
             {
-                if (candidate == null)
-                    continue;
-
+                if (candidate == null) continue;
                 int distance = LevenshteinDistance(target.ToLower(), candidate.ToLower());
-
                 if (distance < minDistance)
                 {
                     minDistance = distance;
                     mostSimilar = candidate;
                 }
             }
-
             return mostSimilar;
         }
-        public static string FindBestMatchBySimilarity(string[] sourceArray, string[] candidatesArray)
-        {
-            if (sourceArray == null || candidatesArray == null || candidatesArray.Length == 0)
-                return string.Empty;
-            string combinedSource = string.Join("_", sourceArray.Where(s => !string.IsNullOrEmpty(s)));
-            return candidatesArray
-                .Where(candidate => !string.IsNullOrEmpty(candidate))
-                .OrderBy(candidate => LevenshteinDistance(combinedSource, candidate))
-                .FirstOrDefault() ?? string.Empty;
-        }
-        private static int LevenshteinDistance(string s, string t)
+        public static int LevenshteinDistance(string s, string t)
         {
             int n = s.Length, m = t.Length;
             int[,] d = new int[n + 1, m + 1];
-
             if (n == 0) return m;
             if (m == 0) return n;
-
             for (int i = 0; i <= n; d[i, 0] = i++) { }
             for (int j = 0; j <= m; d[0, j] = j++) { }
-
             for (int i = 1; i <= n; i++)
             {
                 for (int j = 1; j <= m; j++)
@@ -391,30 +382,6 @@ namespace CaeliImperium
                 }
             }
             return d[n, m];
-        }
-        public static string FindBestMatch(string[] sourceArray, string[] candidatesArray)
-        {
-            if (sourceArray == null || candidatesArray == null || candidatesArray.Length == 0) return string.Empty;
-            HashSet<char> targetChars = sourceArray
-                .Where(s => s != null)
-                .SelectMany(s => s)
-                .ToHashSet();
-            string bestMatch = candidatesArray
-                .Where(candidate => candidate != null)
-                .OrderByDescending(candidate => candidate.Distinct().Count(c => targetChars.Contains(c)))
-                .ThenBy(candidate => candidate.Length)
-                .FirstOrDefault();
-            return bestMatch ?? string.Empty;
-        }
-        public static string Base64Encode(this string plainText)
-        {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes);
-        }
-        public static string Base64Decode(this string base64EncodedData)
-        {
-            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         public static string SHA256Encode(this string value)
         {
@@ -433,15 +400,30 @@ namespace CaeliImperium
         }
         public static string ConvertToString(this XDocument doc, bool disableFormatting = false)
         {
-            if (doc == null)
-                throw new ArgumentNullException(nameof(doc));
+            if (doc == null) throw new ArgumentNullException(nameof(doc));
             return doc.ToString(disableFormatting ? SaveOptions.DisableFormatting : SaveOptions.None);
         }
         public static XDocument ConvertToXDocument(this string xmlString, bool preserveWhitespace = false)
         {
-            if (xmlString.IsNullOrWhiteSpace())
-                throw new ArgumentException("XML string cannot be null or empty.", nameof(xmlString));
+            if (xmlString.IsNullOrWhiteSpace()) throw new ArgumentException("XML string cannot be null or empty.", nameof(xmlString));
             return XDocument.Parse(xmlString, preserveWhitespace ? LoadOptions.PreserveWhitespace : LoadOptions.None);
+        }
+        public static Vector3 BezierGetPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            t = Mathf.Clamp01(t);
+            float oneMinusT = 1f - t;
+            return oneMinusT * oneMinusT * oneMinusT * p0 + 3f * oneMinusT * oneMinusT * t * p1 + 3f * oneMinusT * t * t * p2 + t * t * t * p3;
+        }
+        public static Vector3 BezierGetFirstDerivative(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            t = Mathf.Clamp01(t);
+            float oneMinusT = 1f - t;
+            return 3f * oneMinusT * oneMinusT * (p1 - p0) + 6f * oneMinusT * t * (p2 - p1) + 3f * t * t * (p3 - p2);
+        }
+        public static Ray GetAimRay(this CharacterBody characterBody)
+        {
+            if (characterBody.inputBank) return new Ray(characterBody.inputBank.aimOrigin, characterBody.inputBank.aimDirection);
+            return new Ray(characterBody.transform.position, characterBody.transform.forward);
         }
     }
 }

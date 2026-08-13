@@ -94,6 +94,7 @@ namespace CaeliImperium
             public static BuffDef TaoPunchReady;
             public static BuffDef TaoPunchCooldown;
             public static BuffDef SpeedPathSpeedBonus;
+            public static BuffDef SpeedPathGravityWell;
             public static BuffDef IncreaseSecondarySkillDamage;
             public static BuffDef AffixSpeedster;
             public static BuffDef IrradiatedBuff;

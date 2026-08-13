@@ -24,14 +24,14 @@ namespace CaeliImperium
     [BepInDependency(R2API.ItemAPI.PluginGUID)]
     [BepInDependency(R2API.DirectorAPI.PluginGUID)]
     [BepInDependency(R2API.Networking.NetworkingAPI.PluginGUID)]
-    [BepInDependency(BrynzaAPI.BrynzaAPI.ModGuid, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(BrynzaAPI.BrynzaAPI.ModGuid)]
     [BepInDependency(ModCompatabilities.RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
     [System.Serializable]
     public class CaeliImperiumPlugin : BaseUnityPlugin
     {
         public const string ModGuid = "com.brynzananas.caeliimperium";
         public const string ModName = "Caeli Imperium";
-        public const string ModVer = "0.10.0";
+        public const string ModVer = "0.11.0";
         public const string ModPrefix = "CI";
         public static bool emotesEnabled;
         public static bool riskOfOptionsEnabled;
@@ -48,13 +48,10 @@ namespace CaeliImperium
             configFile = Config;
             instance = this;
             riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ModCompatabilities.RiskOfOptionsCompatability.GUID);
+            CaeliImperiumConfigs.OverrideConfigValuesOnUpdate = Config.Bind(CaeliImperiumConfigs.sectionName, "Override config values on update", true, "Update config values with new default values if existing config value matches old default value on mod update?");
             CaeliImperiumAssets.Init();
             if (riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.Init();
-            DrawSpeedPathConfigs.Init();
-            HealReceivedDamageConfigs.Init();
-            InfiniteSecondarySkillChargesConfigs.Init();
-            BomberWispConfigs.Init();
-            MonsterChestConfigs.Init();
+            CaeliImperiumConfigs.Init();
             RoR2Application.onLoad += CaeliImperiumLanguage.Init;
         }
         public void OnDestroy()

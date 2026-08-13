@@ -16,7 +16,6 @@ using System.Xml.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
-using static CaeliImperium.Interactables.MonsterChestSpawnRules;
 
 namespace CaeliImperium.Interactables
 {
@@ -93,6 +92,7 @@ namespace CaeliImperium.Interactables
             MonsterChestSpawnCard = CaeliImperiumAssets.assetBundle.LoadAsset<InteractableSpawnCard>("Assets/CaeliImperium/Interactables/MonsterChest/iscMonsterChest.asset");
             typeof(Eat).RegisterEntityState();
             typeof(Spew).RegisterEntityState();
+            typeof(Idle).RegisterEntityState();
         }
 
         private static void Hooks_OnPickupPickerControllerOnDisplayBegin(PickupPickerController arg1, NetworkUIPromptController arg2, LocalUser arg3, CameraRigController arg4)
@@ -172,12 +172,12 @@ namespace CaeliImperium.Interactables
         {
             if (!Run.instance || !SceneInfo.instance || !SceneInfo.instance.sceneDef) return;
             SceneDef sceneDef = SceneInfo.instance.sceneDef;
-            MonsterChestSpawnRules monsterChestSpawnRules = MonsterChestConfigs.monsterChestSpawnRules;
-            if (monsterChestSpawnRules == null) monsterChestSpawnRules = MonsterChestSpawnRules.Default;
+            InteractableSpawnRules monsterChestSpawnRules = MonsterChestConfigs.monsterChestSpawnRules;
+            if (monsterChestSpawnRules == null) monsterChestSpawnRules = InteractableSpawnRules.Default;
             if (monsterChestSpawnRules.spawnRules == null) return;
             int spawnCount = 0;
             float spawmChance = 0f;
-            foreach (SpawnRule spawnRule in monsterChestSpawnRules.spawnRules)
+            foreach (InteractableSpawnRules.SpawnRule spawnRule in monsterChestSpawnRules.spawnRules)
             {
                 SceneType[] sceneTypes = spawnRule.allowedSceneTypes;
                 if (sceneTypes != null)
