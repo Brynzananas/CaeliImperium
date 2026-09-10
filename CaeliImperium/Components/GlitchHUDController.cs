@@ -19,34 +19,47 @@ public class GlitchHUDController : MonoBehaviour
     [Serializable]
     public struct GlitchValues
     {
-        public GlitchValues()
-        {
-        }
         public int enableCount;
-        public bool enableShake = true;
-        public float shakeIntensity = 15f;
-        public float shakeSpeed = 30f;
-        public bool enableFlicker = true;
-        public float totalAlpha = 0f;
-        public float minAlpha = 0.1f;
-        public float maxAlpha = 1f;
-        public float dropProbability = 0.15f;
+        public bool enableShake;
+        public float shakeIntensity;
+        public float shakeSpeed;
+        public bool enableFlicker;
+        public float totalAlpha;
+        public float minAlpha;
+        public float maxAlpha;
+        public float dropProbability;
         public bool randomizeFillAmount;
-        public float minFillAmount = 0.1f;
-        public float maxFillAmount = 1f;
-        public float minNormalDuration = 0.2f;
-        public float maxNormalDuration = 1.5f;
-        public float minGlitchDuration = 0.05f;
-        public float maxGlitchDuration = 0.25f;
-        public float changeImageChance = 40f;
-        public float changeTextChance = 50f;
-        public bool eitherImageOrText = true;
+        public float minFillAmount;
+        public float maxFillAmount;
+        public float minNormalDuration;
+        public float maxNormalDuration;
+        public float minGlitchDuration;
+        public float maxGlitchDuration;
+        public float changeImageChance;
+        public float changeTextChance;
+        public bool eitherImageOrText;
         public float postProcessWeight;
     }
     public delegate void UpdateGlitchValues(GlitchHUDController glitchHUDController, ref GlitchValues glitchValues);
     public static event UpdateGlitchValues globalUpdateGlitchValues;
     public event UpdateGlitchValues updateGlitchValues;
-    public GlitchValues glitchValues;
+    public GlitchValues glitchValues = new GlitchValues
+    {
+        enableShake = true,
+        shakeIntensity = 500f,
+        shakeSpeed = 50f,
+        enableFlicker = true,
+        minAlpha = 0.01f,
+        maxAlpha = 0.2f,
+        minFillAmount = 0.1f,
+        maxFillAmount = 1f,
+        minNormalDuration = 0.25f,
+        maxNormalDuration = 1.5f,
+        minGlitchDuration = 0.25f,
+        maxGlitchDuration = 0.5f,
+        changeImageChance = 40f,
+        changeTextChance = 60f
+    };
     public int enableCount
     {
         get => currentGlitchValues.enableCount;
@@ -155,8 +168,6 @@ public class GlitchHUDController : MonoBehaviour
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private Vector2 originalPosition;
-    private Sprite defaultSprite;
-    private string defaultTextLanguageToken;
     private GlitchValues currentGlitchValues;
 
     public void Awake()
@@ -166,8 +177,6 @@ public class GlitchHUDController : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         originalPosition = rectTransform.anchoredPosition;
-        if (targetImage) defaultSprite = targetImage.sprite;
-        if (targetText) defaultTextLanguageToken = targetText.text;
     }
     public void OnDestroy()
     {
@@ -251,13 +260,11 @@ public class GlitchHUDController : MonoBehaviour
         canvasGroup.alpha = 0f;
         if (targetImage)
         {
-            if (defaultSprite) targetImage.sprite = defaultSprite;
-            if (randomizeFillAmount && targetImage.type == Image.Type.Filled) targetImage.fillAmount = 1f;
+            if (targetImage.type == Image.Type.Filled) targetImage.fillAmount = 1f;
             targetImage.gameObject.SetActive(false);
         }
-        if (targetText && defaultTextLanguageToken != null)
+        if (targetText)
         {
-            targetText.text = Language.GetString(defaultTextLanguageToken);
             targetText.gameObject.SetActive(false);
         }
     }
