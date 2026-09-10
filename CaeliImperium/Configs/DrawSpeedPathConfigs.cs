@@ -18,9 +18,9 @@ namespace CaeliImperium.Configs
             SpeedPathAutosprint.SettingChanged += SettingChanged;
             SpeedPathFlight = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Flight", true, "");
             SpeedPathFlight.SettingChanged += SettingChanged;
-            SpeedPathMaxPathLength = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length", 240f, "");
+            SpeedPathMaxPathLength = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length", 512f, "");
             SpeedPathMaxPathLength.SettingChanged += SettingChanged;
-            SpeedPathMaxPathLengthStack = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length increase per stack", 120f, "");
+            SpeedPathMaxPathLengthStack = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Max speed path length increase per stack", 128f, "");
             SpeedPathMaxPathLengthStack.SettingChanged += SettingChanged;
             SpeedPathRenderDistance = CreateConfig(CaeliImperiumContent.Items.DrawSpeedPath.configName, "Speed path render distance", 60f, "");
         }

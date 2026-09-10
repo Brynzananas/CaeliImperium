@@ -13,11 +13,14 @@ public class PipeMeshGenerator : MonoBehaviour
     public int radialSegments = 12;
     public int curveSegments = 20;
     public bool generateCaps = true;
+    public bool setCollider = true;
     public MeshFilter meshFilter;
+    public MeshCollider meshCollider;
     private Mesh mesh;
     public void Awake()
     {
         if (!meshFilter) meshFilter = GetComponent<MeshFilter>();
+        if (!meshCollider) meshCollider = GetComponent<MeshCollider>();
         mesh = new Mesh { name = "PipeMesh" };
         meshFilter.mesh = mesh;
     }
@@ -53,7 +56,7 @@ public class PipeMeshGenerator : MonoBehaviour
             lastTangent = tangent;
             for (int j = 0; j < ringVertexCount; j++)
             {
-                float radAngle = ((float)j / radialSegments) * Mathf.PI * 2f;
+                float radAngle = (float)j / radialSegments * Mathf.PI * 2f;
                 float cos = Mathf.Cos(radAngle);
                 float sin = Mathf.Sin(radAngle);
                 Vector3 localDir = (cos * normal + sin * binormal).normalized;
@@ -75,12 +78,12 @@ public class PipeMeshGenerator : MonoBehaviour
                 int next = current + ringVertexCount;
 
                 triangles[triIdx++] = current;
-                triangles[triIdx++] = next;
                 triangles[triIdx++] = current + 1;
+                triangles[triIdx++] = next;
 
                 triangles[triIdx++] = current + 1;
-                triangles[triIdx++] = next;
                 triangles[triIdx++] = next + 1;
+                triangles[triIdx++] = next;
             }
         }
         if (generateCaps)
@@ -118,5 +121,6 @@ public class PipeMeshGenerator : MonoBehaviour
         mesh.uv = uvs;
         mesh.triangles = triangles;
         mesh.RecalculateBounds();
+        if (meshCollider && setCollider) meshCollider.sharedMesh = mesh;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using CaeliImperium.Configs;
 using CaeliImperium.Interactables;
+using CaeliImperium.NetworkMessages;
 using RoR2;
 using RoR2.Hologram;
 using System;
@@ -136,7 +137,9 @@ namespace CaeliImperium.Components
             }
             else
             {
-                CmdSpew();
+                MonsterChestControllerSpewNetMessage.SendToServer(netId);
+                //ClientToServerMessenger clientToServerMessenger = CaeliImperiumUtils.GetClientToServerMessenger();
+                //if (clientToServerMessenger) clientToServerMessenger.CmdMonsterChestSpew(netId);
             }
         }
         [Command]

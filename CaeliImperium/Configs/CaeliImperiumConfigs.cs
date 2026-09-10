@@ -17,6 +17,7 @@ public static class CaeliImperiumConfigs
         InfiniteSecondarySkillChargesConfigs.Init();
         BomberWispConfigs.Init();
         MonsterChestConfigs.Init();
+        PipelineRefineryConfigs.Init();
     }
     public static ConfigEntry<bool> OverrideConfigValuesOnUpdate;
     public static ConfigEntry<bool> Screaming;

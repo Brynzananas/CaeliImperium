@@ -2,6 +2,7 @@
 using CaeliImperium.Components;
 using CaeliImperium.Configs;
 using CaeliImperium.Items;
+using CaeliImperium.NetworkMessages;
 using CaeliImperiumEntityStates.MonsterChest;
 using Newtonsoft.Json.Utilities;
 using R2API;
@@ -93,6 +94,7 @@ namespace CaeliImperium.Interactables
             typeof(Eat).RegisterEntityState();
             typeof(Spew).RegisterEntityState();
             typeof(Idle).RegisterEntityState();
+            R2API.Networking.NetworkingAPI.RegisterMessageType<MonsterChestControllerSpewNetMessage>();
         }
 
         private static void Hooks_OnPickupPickerControllerOnDisplayBegin(PickupPickerController arg1, NetworkUIPromptController arg2, LocalUser arg3, CameraRigController arg4)
@@ -168,55 +170,7 @@ namespace CaeliImperium.Interactables
         {
             for (int i = 0; i < amount; i++) SpawnMonsterChest(sceneDirector);
         }
-        private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj)
-        {
-            if (!Run.instance || !SceneInfo.instance || !SceneInfo.instance.sceneDef) return;
-            SceneDef sceneDef = SceneInfo.instance.sceneDef;
-            InteractableSpawnRules monsterChestSpawnRules = MonsterChestConfigs.monsterChestSpawnRules;
-            if (monsterChestSpawnRules == null) monsterChestSpawnRules = InteractableSpawnRules.Default;
-            if (monsterChestSpawnRules.spawnRules == null) return;
-            int spawnCount = 0;
-            float spawmChance = 0f;
-            foreach (InteractableSpawnRules.SpawnRule spawnRule in monsterChestSpawnRules.spawnRules)
-            {
-                SceneType[] sceneTypes = spawnRule.allowedSceneTypes;
-                if (sceneTypes != null)
-                {
-                    bool allow = false;
-                    foreach (SceneType sceneType in sceneTypes)
-                    {
-                        if (sceneType == sceneDef.sceneType) allow = true; break;
-                    }
-                    if (!allow) continue;
-                }
-                if (spawnRule.useStageName && !spawnRule.stageName.IsNullOrWhiteSpace())
-                {
-                    Scene scene = SceneManager.GetActiveScene();
-                    if (scene != null && !scene.name.IsNullOrWhiteSpace() &&  scene.name == spawnRule.stageName)
-                    {
-                        spawnCount = spawnRule.spawnCount;
-                        spawmChance = spawnRule.spawnChance;
-                        break;
-                    }
-                }
-                if (spawnRule.useStageCount)
-                {
-                    if (Run.instance.stageClearCountInCurrentLoop + 1 == spawnRule.stageCount)
-                    {
-                        spawnCount = spawnRule.spawnCount;
-                        spawmChance = spawnRule.spawnChance;
-                        break;
-                    }
-                }
-            }
-            if (spawnCount <= 0 || spawmChance <= 0f) return;
-            for (int i = 0; i < spawnCount; i++)
-            {
-                if (spawmChance < 100f && !Util.CheckRoll(spawmChance)) continue;
-                SpawnMonsterChest(obj);
-            }
-        }
-
+        private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj) => CaeliImperiumUtils.SimulateInteractableSpawnUsingSpawnRules(obj, MonsterChestConfigs.monsterChestSpawnRules, InteractableSpawnRules.Default, SpawnMonsterChest, null);
         private static void CaeliImperiumPlugin_onPluginDestroyed()
         {
             CaeliImperiumPlugin.onPluginDestroyed -= CaeliImperiumPlugin_onPluginDestroyed;

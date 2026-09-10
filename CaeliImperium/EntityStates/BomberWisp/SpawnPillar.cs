@@ -75,16 +75,16 @@ namespace CaeliImperiumEntityStates.BomberWisp
                 }
                 if (count >= minProjectilesForCustomAIAiming)
                 {
-                    CharacterMotor characterMotor = enemyObject.GetComponent<CharacterMotor>();
-                    if (characterMotor)
+                    CharacterBody characterBody = enemyObject.GetComponent<CharacterBody>();
+                    if (characterBody)
                     {
-                        shootPos = characterMotor.transform.position + characterMotor.GetPositionDelta();
+                        shootPos = characterBody.transform.position + characterBody.GetPositionDelta();
                     }
                     else
                     {
                         shootPos = enemyObject.transform.position;
                     }
-                    ProjectileExplosion projectileExplosion = BomberWisp2Events.BombProjectile.GetComponent<ProjectileExplosion>();
+                    ProjectileExplosion projectileExplosion = BomberWisp2Events.projectileImpactCapsuleExplosion;
                     if (projectileExplosion)
                     {
                         float radius = projectileExplosion.blastRadius * distanceMultiplier * (count - 1);

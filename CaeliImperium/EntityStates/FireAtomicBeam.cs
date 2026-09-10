@@ -30,7 +30,7 @@ namespace CaeliImperiumEntityStates
                     maxSpread = 0f,
                     damage = characterBody.damage * CaeliImperiumUtils.ConvertAmplificationPercentageIntoReductionPercentage(charge, maxDamageMultiplier),
                     force = 0f,
-                    tracerEffectPrefab = CaeliImperium.CaeliImperiumAssets.fireSnipeSuperTracer,
+                    tracerEffectPrefab = null,
                     //muzzleName = targetMuzzle,
                     hitEffectPrefab = null,
                     isCrit = RollCrit(),

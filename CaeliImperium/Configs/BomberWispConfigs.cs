@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using CaeliImperium.Bodies;
+using R2API.SpawnCardCloning;
 using RoR2;
 using System;
 using System.Collections.Generic;
@@ -18,9 +19,15 @@ namespace CaeliImperium.Configs
             ProjectileStageRules = CreateConfig(sectionName, "Projectile Stage Rules", BomberWispStageRules.Default.ToXml().ConvertToString(), "");
             ProjectileStageRules.SettingChanged += ProjectileStageRules_SettingChanged;
             UpdateBomberWispStageRules();
+            SelectionWeightMultiplier = CreateConfig(sectionName, "Selection weight multiplier", 1f, "");
+            CreditsCostMultiplier = CreateConfig(sectionName, "Credits cost multiplier", 1.5f, "");
+            SelectionWeightMultiplier.SettingChanged += SelectionWeightMultiplier_SettingChanged;
+            CreditsCostMultiplier.SettingChanged += SelectionWeightMultiplier_SettingChanged;
+            UpdateSpawnCardClone();
             SpawnInArena = CreateConfig(sectionName, "Spawn in void fields", false, "Requires restart if void fields are visited once");
             SparksInProjectileGhost = CreateConfig(sectionName, "Projectile sparks", true, "Enable visual sparks?", false);
             LinesInProjectileGhost = CreateConfig(sectionName, "Projectile lines", true, "Enable visual lines?", false);
+            ExplosionLight = CreateConfig(sectionName, "Explosion light", true, "Enable explosion light?", false);
             SpawnStateDuration = CreateConfig(sectionName, "Spawn duration", 2f, "");
             SpawnPillarDamageCoefficient = CreateConfig(sectionName, "Spawn pillar damage coefficient", 5f, "");
             SpawnPillarProcCoefficient = CreateConfig(sectionName, "Spawn pillar proc coefficient", 1f, "");
@@ -38,7 +45,12 @@ namespace CaeliImperium.Configs
             DeathStateFalloffModel = CreateConfig(sectionName, "Death explosion falloff", BlastAttack.FalloffModel.Linear, "");
         }
 
-        private static void ProjectileStageRules_SettingChanged(object sender, EventArgs e)
+        private static void SelectionWeightMultiplier_SettingChanged(object sender, EventArgs e)
+        {
+            UpdateSpawnCardClone();
+        }
+
+        public static void ProjectileStageRules_SettingChanged(object sender, EventArgs e)
         {
             UpdateBomberWispStageRules();
         }
@@ -56,11 +68,22 @@ namespace CaeliImperium.Configs
                 if (bomberWispStageRules == null) bomberWispStageRules = BomberWispStageRules.Default;
             }
         }
-        private static void SettingChanged(object sender, System.EventArgs e) => CaeliImperiumLanguage.InitBomberWisp();
+        public static void SettingChanged(object sender, System.EventArgs e) => CaeliImperiumLanguage.InitBomberWisp();
+        public static void UpdateSpawnCardClone()
+        {
+            CharacterSpawnCardClone characterSpawnCardClone = BomberWisp2Events.characterSpawnCardClone;
+            if (!characterSpawnCardClone) return;
+            characterSpawnCardClone.selectionWeightMultiplier = SelectionWeightMultiplier.Value;
+            characterSpawnCardClone.costMultiplier = CreditsCostMultiplier.Value;
+            characterSpawnCardClone.UpdateValuesForClonedSpawnCards();
+        }
         public static ConfigEntry<string> ProjectileStageRules;
+        public static ConfigEntry<float> CreditsCostMultiplier;
+        public static ConfigEntry<float> SelectionWeightMultiplier;
         public static ConfigEntry<bool> SpawnInArena;
         public static ConfigEntry<bool> SparksInProjectileGhost;
         public static ConfigEntry<bool> LinesInProjectileGhost;
+        public static ConfigEntry<bool> ExplosionLight;
         public static ConfigEntry<float> ChargeBombDuration;
         public static ConfigEntry<float> DeathStateMinExplosionDamageCoefficient;
         public static ConfigEntry<float> DeathStateMaxExplosionDamageCoefficient;

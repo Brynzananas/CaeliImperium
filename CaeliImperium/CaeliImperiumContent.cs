@@ -30,6 +30,8 @@ namespace CaeliImperium
         public static List<EliteDef> elites = new List<EliteDef>();
         public static List<EffectDef> effects = new List<EffectDef>();
         public static List<ExpansionDef> expansions = new List<ExpansionDef>();
+        public static List<SceneDef> scenes = new List<SceneDef>();
+        public static List<MusicTrackDef> musics = new List<MusicTrackDef>();
         public IEnumerator FinalizeAsync(FinalizeAsyncArgs args)
         {
             args.ReportProgress(1f);
@@ -62,6 +64,8 @@ namespace CaeliImperium
             contentPack.eliteDefs.Add([.. elites]);
             contentPack.expansionDefs.Add([.. expansions]);
             contentPack.effectDefs.Add([.. effects]);
+            contentPack.sceneDefs.Add([.. scenes]);
+            contentPack.musicTrackDefs.Add([.. musics]);
             yield break;
         }
         public static class Items

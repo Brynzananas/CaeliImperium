@@ -28,7 +28,7 @@ namespace CaeliImperium.ItemBehaviours
                     {
                         position = destination,
                         ignoreTeamMemberLimit = true,
-                        masterPrefab = CaeliImperiumAssets.mercMaster,
+                        masterPrefab = CaeliImperiumAssets.MercMaster,
                         summonerBodyObject = body.gameObject,
                         teamIndexOverride = body.teamComponent ? body.teamComponent.teamIndex : TeamIndex.None,
                         rotation = Quaternion.identity,

@@ -1,4 +1,5 @@
-﻿using EntityStates.AffixVoid;
+﻿using CaeliImperium.Components;
+using EntityStates.AffixVoid;
 using HG;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -9,6 +10,7 @@ using RoR2;
 using RoR2.Projectile;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using UnityEngine;
 using static RoR2.DotController;
@@ -17,6 +19,93 @@ namespace CaeliImperium
 {
     public static class CaeliImperiumHooks 
     {
+        private static bool _saveHooksSet;
+        private static bool _ziprailHooksSet;
+        public static void SetZiprailHooks()
+        {
+            if (_ziprailHooksSet) return;
+            _ziprailHooksSet = true;
+            On.RoR2.ZiprailController.GetInteractability += ZiprailController_GetInteractability;
+        }
+        public static void UnsetZiprailHooks()
+        {
+            if (!_ziprailHooksSet) return;
+            _ziprailHooksSet = false;
+            On.RoR2.ZiprailController.GetInteractability -= ZiprailController_GetInteractability;
+        }
+
+        private static Interactability ZiprailController_GetInteractability(On.RoR2.ZiprailController.orig_GetInteractability orig, ZiprailController self, Interactor activator)
+        {
+            Interactability interactability = orig(self, activator);
+            if (self is ZiprailControllerWithInactivityDuration ziprailControllerWithInactivityDuration && ziprailControllerWithInactivityDuration.duration > 0f) return Interactability.Disabled;
+            return interactability;
+        }
+
+        public static void SetSaveHooks()
+        {
+            if (_saveHooksSet) return;
+            _saveHooksSet = true;
+            IL.RoR2.XmlUtility.ToXml += XmlUtility_ToXml;
+            On.RoR2.SaveSystem.Copy += SaveSystem_Copy;
+            On.RoR2.XmlUtility.FromXml += XmlUtility_FromXml;
+        }
+
+        private static UserProfile XmlUtility_FromXml(On.RoR2.XmlUtility.orig_FromXml orig, System.Xml.Linq.XDocument doc)
+        {
+            UserProfile userProfile = orig(doc);
+            try
+            {
+                CaeliImperiumSave.ReadXElement(doc.Root, userProfile);
+            }
+            catch (Exception e)
+            {
+                CaeliImperiumPlugin.Log.LogError(e);
+            }
+            return userProfile;
+        }
+
+        public static void UnsetSaveHooks()
+        {
+            if (!_saveHooksSet) return;
+            _saveHooksSet = false;
+            IL.RoR2.XmlUtility.ToXml -= XmlUtility_ToXml;
+            On.RoR2.SaveSystem.Copy -= SaveSystem_Copy;
+            On.RoR2.XmlUtility.FromXml -= XmlUtility_FromXml;
+        }
+        private static void SaveSystem_Copy(On.RoR2.SaveSystem.orig_Copy orig, UserProfile src, UserProfile dest)
+        {
+            orig(src, dest);
+            if (!CaeliImperiumSave.keyValuePairs.TryGetValue(src, out CaeliImperiumSave caeliImperiumSave)) return;
+            CaeliImperiumSave caeliImperiumSave1 = new CaeliImperiumSave();
+            caeliImperiumSave1.pipelineRefineriesCompletedCount = caeliImperiumSave.pipelineRefineriesCompletedCount;
+            if (CaeliImperiumSave.keyValuePairs.ContainsKey(dest))
+            {
+                CaeliImperiumSave.keyValuePairs[dest] = caeliImperiumSave1;
+            }
+            else
+            {
+                CaeliImperiumSave.keyValuePairs.Add(dest, caeliImperiumSave1);
+            }
+        }
+        private static void XmlUtility_ToXml(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            ILLabel iLLabel = null;
+            int firstArrayLocId = 0;
+            int secondArrayLocId = 1;
+            if (!c.TryGotoNext(MoveType.After,
+                    x => x.MatchLdloc(out firstArrayLocId),
+                    x => x.MatchLdloc(out secondArrayLocId),
+                    x => x.MatchCall(typeof(Enumerable), nameof(Enumerable.Append))
+                ))
+            {
+                CaeliImperiumPlugin.Log.LogError(il.Method.Name + " IL Hook failed!");
+                return;
+            }
+            c.Emit(OpCodes.Ldarg_0);
+            c.EmitDelegate(AddCaeliImperiumSaveData);
+        }
+        private static IEnumerable<object> AddCaeliImperiumSaveData(IEnumerable<object> objects, UserProfile userProfile) => objects.Append(CaeliImperiumSave.CreateXElement(userProfile));
         private static int _OnPickupPickerControllerOnDisplayBeginHookAdded;
         private static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> _OnPickupPickerControllerOnDisplayBegin;
         public static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> OnPickupPickerControllerOnDisplayBegin

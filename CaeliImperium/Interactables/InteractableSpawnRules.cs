@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
+using UnityEngine.SceneManagement;
 
 namespace CaeliImperium.Interactables
 {
@@ -51,6 +52,43 @@ namespace CaeliImperium.Interactables
             public int spawnCount;
             public float spawnChance;
             public SceneType[] allowedSceneTypes;
+        }
+        public static SpawnRule DefaultSpawnRule => new SpawnRule
+        {
+        };
+        public SpawnRule GetSpawnRule(int stageCount, string stageName, SceneDef sceneDef)
+        {
+            SpawnRule spawnRule1 = DefaultSpawnRule;
+            foreach (SpawnRule spawnRule in spawnRules)
+            {
+                SceneType[] sceneTypes = spawnRule.allowedSceneTypes;
+                if (sceneTypes != null)
+                {
+                    bool allow = false;
+                    foreach (SceneType sceneType in sceneTypes)
+                    {
+                        if (sceneType == sceneDef.sceneType) allow = true; break;
+                    }
+                    if (!allow) continue;
+                }
+                if (spawnRule.useStageName && !spawnRule.stageName.IsNullOrWhiteSpace())
+                {
+                    if (!stageName.IsNullOrWhiteSpace() && stageName == spawnRule.stageName)
+                    {
+                        spawnRule1 = spawnRule;
+                        break;
+                    }
+                }
+                if (spawnRule.useStageCount)
+                {
+                    if (stageCount == spawnRule.stageCount)
+                    {
+                        spawnRule1 = spawnRule;
+                        break;
+                    }
+                }
+            }
+            return spawnRule1;
         }
         public XDocument ToXml() => ToXml(this);
         public static XDocument ToXml(InteractableSpawnRules monsterChestSpawnRules)

@@ -38,8 +38,9 @@ namespace CaeliImperium.Bodies
             CaeliImperiumHooks.OnSetProjectilePrefabsIndividualPrefab += Hooks_OnSetProjectilePrefabsIndividualPrefab;
             Stage.onStageStartGlobal += Stage_onStageStartGlobal;
             if (inited) return;
-            BodyPrefab = gameObject;
             inited = true;
+            GameObject WispBody = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Wisp/WispBody.prefab").WaitForCompletion();
+            if (WispBody) gameObject.CopyAKBank(WispBody);
             Body = CaeliImperiumUtils.HandleBody(gameObject);
             MasterPrefab = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/BomberWisp2/CIBomberWisp2Master.prefab").RegisterMaster();
             Primary = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/BomberWisp2/CIBomberWisp2Primary.asset").RegisterSkillFamily();

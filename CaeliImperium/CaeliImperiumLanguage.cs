@@ -22,6 +22,8 @@ namespace CaeliImperium
             InitInfiniteSecondarySkillCharges();
             InitBomberWisp();
             InitMonsterChest();
+            InitPipelineRefinery();
+            InitDeath();
         }
         public static void InitHealReceivedDamage()
         {
@@ -88,6 +90,58 @@ namespace CaeliImperium
             AddLanguageToken("CI_MONSTERCHEST_CANSPEW", "Boss item can be spewed");
             AddLanguageToken("CI_MONSTERCHEST_CANSPEW", "Предмет босса готов к выдачи", "ru");
         }
+        public static void InitPipelineRefinery()
+        {
+            AddLanguageToken("CI_GAMBIT_NAME", "Gambit");
+            AddLanguageToken("CI_GAMBIT_MESSAGE_FIRSTEXTRACTORCALL1", "Scanners are located several huge deposits of liquid rich materials. To extract it, utilise a refinery for you to set up. To build pipelines, press Interaction button near the end pipeline point to create a placement hologram. Press Interaction button again to either build pipeline if the hologram is green, or cancel placement if the hologram is red. Locate the wells, set up pipelines and pump it all back to refinery. The more pipelines you will setup the bigger your paycheck will be");
+            AddLanguageToken("CI_GAMBIT_MESSAGE_FIRSTEXTRACTORCALL1", "Сканнеры засекли несколько огромных залеж жидкого богатого материала. Чтобы ивзлечь, используйте станцию переработки. Для постройки трубопровода нажмите кнопку Использования рядом с концом трубопровода для вызова голограмму постройки. Если голограмма светит зеленным, то нажав кнопку Использования вы успешно построете трубопровод. Если голограмма светит красным, то нажав кнопку Использования отмените постройку трубопровода. Найдите залежи. проведите до них трубопровод и высосите все обратно в станцию.", "ru");
+            AddLanguageToken("CI_GAMBIT_MESSAGE_FIRSTEXTRACTORCALL2", "You setup targets on several deep wells of rich materials. I am sending a mobile refinery for you to fill. To extract it, Utilise a refinery for you to set up. To build pipelines, press Interaction button near the end pipeline point to create a placement hologram. Press Interaction button again to either build pipeline if the hologram is green, or cancel placement if the hologram is red. Set the whole thing up, get it cranking and let's pump those deposits dry. Time to build some pipelines, survivors");
+            AddLanguageToken("CI_GAMBIT_MESSAGE_FIRSTEXTRACTORCALL2", "Сканнеры засекли несколько огромных залеж жидкого богатого материала. Чтобы ивзлечь, используйте станцию переработки. Для постройки трубопровода нажмите кнопку Использования рядом с концом трубопровода для вызова голограмму постройки. Если голограмма светит зеленным, то нажав кнопку Использования вы успешно построете трубопровод. Если голограмма светит красным, то нажав кнопку Использования отмените постройку трубопровода. Найдите залежи. проведите до них трубопровод и высосите все обратно в станцию.", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_COMPLETED", humanObjectivePrefix + "On Site Refinery" + endPrefix + " has been completed. Claim your prize on site");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_COMPLETED", humanObjectivePrefix + "Переработка На Месте" + endPrefix + " была успешно выполнена. Заберите свою награду на месте", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_SABOTAGE", "{0} pipes need to be repaired!");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_SABOTAGE", "{0} труб нуждаются в починке!", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_RUNNING", "Wait for " + humanObjectivePrefix + "On Site Refinery" + endPrefix + " to finish ({0}%)");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_RUNNING", "Подождите пока " + humanObjectivePrefix + "Переработка На Месте" + endPrefix + " завершит своё дело ({0}%)", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_BUILDING_FIRST", "Build pipelines. Atleast {2} pipelines needs to be built to start " + humanObjectivePrefix + "On Site Refinery" + endPrefix + " ({0}/{1})");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_BUILDING_FIRST", "Постройте трубопровод. Минимум {2} завершенных трубопровода нужны для старта " + humanObjectivePrefix + "Переработки На Месте" + endPrefix + " ({0}/{1})", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_BUILDING", "Build pipelines. " + humanObjectivePrefix + "On Site Refinery" + endPrefix + " can be started ({0}/{1})");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_BUILDING", "Постройте трубопровод. " + humanObjectivePrefix + "Переработка На Месте" + endPrefix + " готова к старту ({0}/{1})", "ru");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_READY", humanObjectivePrefix + "On Site Refinery" + endPrefix + " can be started");
+            AddLanguageToken("CI_REFINERY_OBJECTIVE_READY", humanObjectivePrefix + "Переработка На Месте" + endPrefix + " готова к старту", "ru");
+            AddLanguageToken("CI_REFINERY_TITLE", "On Site Refinery");
+            AddLanguageToken("CI_REFINERY_TITLE", "Переработка На Месте", "ru");
+            AddLanguageToken("CI_REFINERY_DESC", "Gambit equipment to extract planets valuable materials. Call extractors onto resource wells, build anc connect pipelines to extractors, start refinery, repair pipes and claim your item reward.");
+            AddLanguageToken("CI_REFINERY_DESC", "Собственность Гамбита для добычи богатых ресурсов планеты. Вызовите буры на залежи, возведите и соедените трубопроводы до буров, запустите станцию, чините трубы и забирайте свою награду.", "ru");
+            AddLanguageToken("CI_REFINERY_CONTEXT", "Start On Site Refinery");
+            AddLanguageToken("CI_PIPELINE_BUILD_CONTEXT", "Build");
+            AddLanguageToken("CI_PIPELINE_REPAIR_CONTEXT", "Repair");
+            AddLanguageToken("CI_PIPELINE_BUILD_CONTEXT", "Строить", "ru");
+            AddLanguageToken("CI_PIPELINE_REPAIR_CONTEXT", "Починить", "ru");
+            AddLanguageToken("CI_RESOURCEWELL_CONTEXT", "Call Extractor");
+            AddLanguageToken("CI_RESOURCEWELL_CONTEXT", "Вызвать Бур", "ru");
+            AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Slide off");
+            AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Съехать", "ru");
+        }
+        public static void InitDeath()
+        {
+            AddLanguageToken("CI_DEATH_MESSAGE_1", "pain");
+            AddLanguageToken("CI_DEATH_MESSAGE_2", "the end is nigh");
+            AddLanguageToken("CI_DEATH_MESSAGE_3", "i am dying");
+            AddLanguageToken("CI_DEATH_MESSAGE_4", "he is playing god");
+            AddLanguageToken("CI_DEATH_MESSAGE_5", "he is hiding");
+            AddLanguageToken("CI_DEATH_MESSAGE_6", "a parasite inside of me");
+            AddLanguageToken("CI_DEATH_MESSAGE_7", "he is breeding weapons");
+            AddLanguageToken("CI_DEATH_MESSAGE_8", "he is supposed to die");
+            AddLanguageToken("CI_DEATH_MESSAGE_9", "providence is dead");
+            AddLanguageToken("CI_DEATH_MESSAGE_10", "mithrix lost");
+            AddLanguageToken("CI_DEATH_MESSAGE_11", "gambit is selling my ashes");
+            AddLanguageToken("CI_DEATH_MESSAGE_12", "i am just a product");
+            AddLanguageToken("CI_DEATH_MESSAGE_13", "mistakes into catastropies");
+            AddLanguageToken("CI_DEATH_MESSAGE_14", "help me");
+            AddLanguageToken("CI_DEATH_MESSAGE_15", "my final moments");
+            AddLanguageToken("CI_DEATH_MESSAGE_15", "etot shrift nepodderzhivaet kirilicu", "ru");
+        }
         public static void AddLanguageToken(string token, string text) => AddLanguageToken(token, text, "en");
         public static void AddLanguageToken(string token, string text, string lang)
         {
@@ -109,6 +163,7 @@ namespace CaeliImperium
         public const string deathPrefix = "<style=cDeath>";
         public const string utilityPrefix = "<style=cIsUtility>";
         public const string healingPrefix = "<style=cIsHealing>";
+        public const string humanObjectivePrefix = "<style=cHumanObjective>";
         public const string endPrefix = "</style>";
         public static string GetSecondsRuString(float time)
         {
