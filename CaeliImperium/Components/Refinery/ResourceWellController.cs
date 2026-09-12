@@ -59,7 +59,7 @@ public class ResourceWellController : NetworkBehaviour, IInteractable
     [ClientRpc]
     public void RpcPlayVoiceMessage(int index)
     {
-        if (CaeliImperiumUtils.HasCompletedPipelineRefinery()) return;
+        //if (CaeliImperiumUtils.HasCompletedPipelineRefinery()) return;
         if (voiceMessages == null || voiceMessages.Length == 0) return;
         if (index < 0 || index >= voiceMessages.Length) return;
         VoiceMessageDef voiceMessageDef = voiceMessages[index];

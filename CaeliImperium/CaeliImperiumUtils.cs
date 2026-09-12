@@ -675,8 +675,8 @@ public static class CaeliImperiumUtils
         basicBezierSpline.BuildKeyFrames();
         return basicBezierSpline;
     }
-    public static CaeliImperiumSave GetOrCreateCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetOrCreateModdedUserProfileSaveData<CaeliImperiumSave>();
-    public static CaeliImperiumSave GetCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetModdedUserProfileSaveData<CaeliImperiumSave>();
+    //public static CaeliImperiumSave GetOrCreateCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetOrCreateModdedUserProfileSaveData<CaeliImperiumSave>();
+    //public static CaeliImperiumSave GetCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetModdedUserProfileSaveData<CaeliImperiumSave>();
     public static void SimulateInteractableSpawnUsingSpawnRules(SceneDirector sceneDirector, InteractableSpawnRules interactableSpawnRules, InteractableSpawnRules defaultInteractableSpawnRules, Action<SceneDirector> actionPerSpawnCount, Action<SceneDirector, int> actionOneTime)
     {
         if (!Run.instance || !SceneInfo.instance) return;
@@ -702,7 +702,7 @@ public static class CaeliImperiumUtils
         }
         actionOneTime?.Invoke(sceneDirector, successfullSpawnCount);
     }
-    public static bool HasCompletedPipelineRefinery()
+    /*public static bool HasCompletedPipelineRefinery()
     {
         PlayerCharacterMasterController playerCharacterMasterController = CaeliImperiumUtils.GetPlayerCharacterMasterController();
         if (!playerCharacterMasterController) return false;
@@ -716,7 +716,7 @@ public static class CaeliImperiumUtils
         if (caeliImperiumSave == null) return false;
         if (caeliImperiumSave.pipelineRefineriesCompletedCount > 0) return true;
         return false;
-    }
+    }*/
     public static ClientToServerMessenger GetClientToServerMessenger(this PlayerCharacterMasterController playerCharacterMasterController)
     {
         if (ClientToServerMessenger.keyValuePairs.TryGetValue(playerCharacterMasterController, out ClientToServerMessenger clientToServerMessenger))
