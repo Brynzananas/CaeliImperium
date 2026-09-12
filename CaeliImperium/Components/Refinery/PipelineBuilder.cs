@@ -12,7 +12,7 @@ namespace CaeliImperium.Components.Refinery;
 
 public class PipelineBuilder : NetworkBehaviour
 {
-    public static FixedConditionalWeakTable<Interactor, InteractionDriver> keyValuePairs = [];
+    public static List<PipelineBuilder> instances = [];
     [SyncVar] public NetworkInstanceId pipelineRefineryControllerNetworkInstanceId;
     private PipelineRefineryController _pipelineRefineryController;
     public PipelineRefineryController pipelineRefineryController
@@ -54,6 +54,7 @@ public class PipelineBuilder : NetworkBehaviour
     public Transform startObject;
     public List<PipelineInteractor> pipelineInteractors = [];
     public List<PipeMeshGenerator> pipeMeshGenerators = [];
+    public bool cancelBuilding;
     private Transform _currentSourceNode;
     public Transform currentSourceNode
     {
@@ -87,6 +88,14 @@ public class PipelineBuilder : NetworkBehaviour
     public void Start()
     {
         Init();
+    }
+    public void OnEnable()
+    {
+        instances.Add(this);
+    }
+    public void OnDisable()
+    {
+        instances.Remove(this);
     }
     public void Init()
     {
@@ -324,6 +333,14 @@ public class PipelineBuilder : NetworkBehaviour
         {
             CalculateControlPoints(start.position, start.forward, endPoistion, endNormal, out Vector3 p0, out Vector3 p1, out Vector3 p2, out Vector3 p3);
             bool isValid = ValidateSegment(p0, p1, p2, p3);
+            if (isValid)
+            {
+                cancelBuilding = false;
+            }
+            else
+            {
+                cancelBuilding = true;
+            }
             PlacePreview(endPoistion, endNormal, isValid);
             if (NetworkServer.active)
             {
@@ -378,6 +395,7 @@ public class PipelineBuilder : NetworkBehaviour
         }
         else
         {
+            cancelBuilding = true;
             bool disable = previewPipeObj.activeSelf;
             if (disable) DisablePreview();
             if (NetworkServer.active)

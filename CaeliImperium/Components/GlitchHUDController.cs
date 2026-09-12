@@ -185,11 +185,11 @@ public class GlitchHUDController : MonoBehaviour
     }
     public void OnEnable()
     {
-        StartCoroutine(GlitchRoutine());
+        //StartCoroutine(GlitchRoutine());
     }
     public void OnDisable()
     {
-        StopAllCoroutines();
+        //StopAllCoroutines();
         ResetUI();
     }
     public void Update()
@@ -198,7 +198,7 @@ public class GlitchHUDController : MonoBehaviour
         globalUpdateGlitchValues?.Invoke(this, ref glitchValues);
         updateGlitchValues?.Invoke(this, ref glitchValues);
         currentGlitchValues = glitchValues;
-        canvasGroup.alpha = totalAlpha;
+        //canvasGroup.alpha = totalAlpha;
         if (!postProcessVolume) return;
         postProcessVolume.weight = currentGlitchValues.postProcessWeight;
     }
@@ -250,6 +250,7 @@ public class GlitchHUDController : MonoBehaviour
                     yield return null;
                 }
                 ResetUI();
+                yield return null;
             }
             yield return new WaitForSecondsRealtime(normalDuration);
         }

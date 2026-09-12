@@ -4,12 +4,16 @@ using CaeliImperium.NetworkMessages;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using R2API.Utils;
 using RoR2;
+using RoR2.UI;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using static BrynzaAPI.BrynzaAPI;
 
 namespace CaeliImperium.Interactables;
 
@@ -45,6 +49,7 @@ public static class PipelineRefineryEvents
         SceneDirector.onPostPopulateSceneServer += SceneDirector_onPostPopulateSceneServer;
         CaeliImperiumPlugin.onPluginDestroyed += CaeliImperiumPlugin_onPluginDestroyed;
         IL.RoR2.MusicController.PickCurrentTrack += MusicController_PickCurrentTrack;
+        IL.RoR2.UI.ContextManager.Update += ContextManager_Update;
         if (inited) return;
         inited = true;
         List<Transform> children = CaeliImperiumUtils.GetFilteredChildren(gameObject.transform, FilterColliders);
@@ -74,12 +79,80 @@ public static class PipelineRefineryEvents
         R2API.Networking.NetworkingAPI.RegisterMessageType<PipelineBuilderRemoveCurrentInteractorNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<WellExtractorControllerOnPipeConnectedNetMessage>();
     }
+
+    private static void ContextManager_Update(ILContext il)
+    {
+        ILCursor c = new ILCursor(il);
+        if (!c.TryGotoNext(MoveType.Before,
+                x => x.MatchLdarg(0),
+                x => x.MatchLdfld<ContextManager>(nameof(ContextManager.glyphTMP))
+            ))
+        {
+            CaeliImperiumPlugin.Log.LogError(il.Method.Name + " IL Hook 1 failed!");
+            return;
+        }
+        Instruction instruction = c.Next;
+        c = new ILCursor(il);
+        if (!c.TryGotoNext(MoveType.Before,
+                x => x.MatchLdarg(0),
+                x => x.MatchLdfld<ContextManager>(nameof(ContextManager.hud)),
+                x => x.MatchCallvirt(typeof(HUD).GetPropertyGetter(nameof(HUD.targetBodyObject))),
+                x => x.MatchCallvirt<GameObject>(nameof(GameObject.GetComponent))
+            ))
+        {
+            CaeliImperiumPlugin.Log.LogError(il.Method.Name + " IL Hook 2 failed!");
+            return;
+        }
+        int valuesId = il.Body.Variables.Count;
+        c.Body.Variables.Add(new Mono.Cecil.Cil.VariableDefinition(il.Import(typeof(ContextManager_Update_Values))));
+        Instruction instruction2 = c.Next;
+        c.Emit(OpCodes.Ldarg_0);
+        c.EmitDelegate(OverrideString);
+        c.Emit(OpCodes.Stloc, valuesId);
+        c.Emit(OpCodes.Ldloc, valuesId);
+        c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ContextManager_Update_Values), nameof(ContextManager_Update_Values.doOverride)));
+        c.Emit(OpCodes.Brfalse_S, instruction2);
+        c.Emit(OpCodes.Ldloc, valuesId);
+        c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ContextManager_Update_Values), nameof(ContextManager_Update_Values.glyphText)));
+        c.Emit(OpCodes.Stloc, 0); // bad!!!
+        c.Emit(OpCodes.Ldloc, valuesId);
+        c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ContextManager_Update_Values), nameof(ContextManager_Update_Values.descriptionText)));
+        c.Emit(OpCodes.Stloc, 2); // bad!!!
+        c.Emit(OpCodes.Ldc_I4, 1);
+        c.Emit(OpCodes.Stloc, 4); // bad!!!
+        c.Emit(OpCodes.Br_S, instruction);
+    }
+    public struct ContextManager_Update_Values
+    {
+        public bool doOverride;
+        public string glyphText;
+        public string descriptionText;
+    }
+    private static ContextManager_Update_Values OverrideString(ContextManager contextManager)
+    {
+        ContextManager_Update_Values contextManager_Update_Values = new ContextManager_Update_Values();
+        HUD hUD = contextManager.hud;
+        if (!hUD) return contextManager_Update_Values;
+        GameObject gameObject = hUD.targetBodyObject;
+        if (!gameObject) return contextManager_Update_Values;
+        foreach (CaeliImperium.Components.Refinery.PipelineBuilder pipelineBuilder in CaeliImperium.Components.Refinery.PipelineBuilder.instances)
+        {
+            if (!pipelineBuilder || !pipelineBuilder.canBeInteracted || !pipelineBuilder.currentInteractor) continue;
+            if (pipelineBuilder.currentInteractor.gameObject == gameObject)
+            {
+                contextManager_Update_Values.doOverride = true;
+                contextManager_Update_Values.glyphText = string.Format(CultureInfo.InvariantCulture, "<style=cKeyBinding>{0}</style>", Glyphs.GetGlyphString(contextManager.eventSystemLocator, "Interact"));
+                contextManager_Update_Values.descriptionText = pipelineBuilder.cancelBuilding ? Language.GetString("CI_PIPELINE_CANCEL_CONTEXT") : Language.GetString("CI_PIPELINE_BUILD_CONTEXT");
+                return contextManager_Update_Values;
+            }
+        }
+        return contextManager_Update_Values;
+    }
     private static bool FilterColliders(Transform child)
     {
         if (child.name.StartsWith("Collider")) return true;
         return false;
     }
-
     private static void MusicController_PickCurrentTrack(MonoMod.Cil.ILContext il)
     {
         ILCursor c = new ILCursor(il);
@@ -102,6 +175,7 @@ public static class PipelineRefineryEvents
         SceneDirector.onPostPopulateSceneServer -= SceneDirector_onPostPopulateSceneServer;
         CaeliImperiumPlugin.onPluginDestroyed -= CaeliImperiumPlugin_onPluginDestroyed;
         IL.RoR2.MusicController.PickCurrentTrack -= MusicController_PickCurrentTrack;
+        IL.RoR2.UI.ContextManager.Update -= ContextManager_Update;
     }
     private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj) => CaeliImperiumUtils.SimulateInteractableSpawnUsingSpawnRules(obj, PipelineRefineryConfigs.pipelineRefinerySpawnRules, PipelineRefineryEvents.DefaultSpawnRules, SpawnPipelineRefinery, SpawnResourceWells);
     public static void SpawnPipelineRefinery()

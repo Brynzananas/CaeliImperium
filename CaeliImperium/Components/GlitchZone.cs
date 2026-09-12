@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using static CaeliImperium.Components.GlitchHUDController;
 
 namespace CaeliImperium.Components;
 public class GlitchZone : MonoBehaviour
@@ -19,16 +20,28 @@ public class GlitchZone : MonoBehaviour
     {
         CaeliImperiumExpansionRunComponent.caeliImperiumRunActions.Add(glitchZoneRunAction);
         GlitchHUDController.globalUpdateGlitchValues += GlitchHUDController_globalUpdateGlitchValues;
+        CaeliImperiumExpansionRunComponent.getDeathValue += CaeliImperiumExpansionRunComponent_getDeathValue;
     }
+
+    private void CaeliImperiumExpansionRunComponent_getDeathValue(ref float deathScream)
+    {
+        float value = GetValue();
+        if (value <= 0) return;
+        deathScream += value;
+    }
+
     private void GlitchHUDController_globalUpdateGlitchValues(GlitchHUDController glitchHUDController, ref GlitchHUDController.GlitchValues glitchValues)
     {
-        if (glitchZoneRunAction == null || !glitchZoneRunAction.enable) return;
-        float sqrDistance = distance * distance;
-        if (glitchZoneRunAction.sqrDistance > sqrDistance) return;
+        float value = GetValue();
+        if (value <= 0) return;
         glitchValues.enableCount++;
-        float value = glitchCurve == null ? 0f : glitchCurve.Evaluate(glitchZoneRunAction.sqrDistance / sqrDistance);
         glitchValues.totalAlpha += value;
         glitchValues.postProcessWeight += value;
+    }
+    public float GetValue()
+    {
+        if (glitchZoneRunAction == null) return 0f;
+        return glitchZoneRunAction.GetValue();
     }
     public void OnDisable()
     {
@@ -44,6 +57,13 @@ public class GlitchZone : MonoBehaviour
         public GlitchZone glitchZone;
         public float sqrDistance = float.MaxValue;
         public bool enable;
+        public float GetValue()
+        {
+            if (!glitchZone || !enable) return 0f;
+            float sqrDistance = glitchZone.distance * glitchZone.distance;
+            if (this.sqrDistance > sqrDistance) return 0f;
+            return glitchZone.glitchCurve == null ? 0f : glitchZone.glitchCurve.Evaluate(this.sqrDistance / sqrDistance);
+        }
         public override void FixedUpdate()
         {
             base.FixedUpdate();

@@ -31,6 +31,10 @@
 			<Private>false</Private>
 			<HintPath>D:\Ror2Mods\Brynzananas\R2API\R2API.Buffs\bin\Release\netstandard2.1\R2API.Buffs.dll</HintPath>
 		</Reference>
+		<Reference Include="R2API-Save">
+			<Private>false</Private>
+			<HintPath>D:\Ror2Mods\Brynzananas\R2API\R2API.Save\bin\Release\netstandard2.1\R2API.Save.dll</HintPath>
+		</Reference>
 		<Reference Include="UnityEngine-Editor">
 			<Private>false</Private>
 			<HintPath>D:\Unity 2021.3.33f1\Editor\Data\Managed\UnityEditor.dll</HintPath>

@@ -12,22 +12,31 @@ public class CaeliImperiumSave
     public const string saveName = "CaeliImperiumSave";
     public const string pipelineRefineriesCompletedCountName = "PipelineRefineriesCompletedCount";
     public int pipelineRefineriesCompletedCount;
-    public static XElement CreateXElement(UserProfile userProfile)
+    public static void Init()
     {
-        CaeliImperiumSave caeliImperiumSave = userProfile.GetOrCreateCaeliImperiumSave();
+        //R2API.SaveAPI.RegisterModdedUserProfileSaveData<CaeliImperiumSave>(CreateXElement, ReadXElement, Copy);
+    }
+    public static XElement CreateXElement(object save, UserProfile userProfile)
+    {
+        if (save is not CaeliImperiumSave caeliImperiumSave) return null;
         XElement xelement = new XElement(saveName);
         XElement xElement2 = new XElement(pipelineRefineriesCompletedCountName, caeliImperiumSave.pipelineRefineriesCompletedCount);
         xelement.Add(xElement2);
         return xelement;
     }
-    public static void ReadXElement(XElement container, UserProfile userProfile)
+    public static void ReadXElement(object save, XElement container, UserProfile userProfile)
     {
-        CaeliImperiumSave caeliImperiumSave = userProfile.GetOrCreateCaeliImperiumSave();
+        if (save is not CaeliImperiumSave caeliImperiumSave) return;
         XElement xelement = container.Element(saveName);
         if (xelement == null) return;
         XElement xElement2 = xelement.Element(pipelineRefineriesCompletedCountName);
         if (xElement2 != null && int.TryParse(xElement2.Value, out int pipelineRefineriesCompletedCount)) caeliImperiumSave.pipelineRefineriesCompletedCount = pipelineRefineriesCompletedCount;
 
+    }
+    private static void Copy(object srcSave, object destSave)
+    {
+        if (srcSave is not CaeliImperiumSave srcCaeliImperiumSave || destSave is not CaeliImperiumSave destCaeliImperiumSave) return;
+        destCaeliImperiumSave.pipelineRefineriesCompletedCount = srcCaeliImperiumSave.pipelineRefineriesCompletedCount;
     }
     public static CaeliImperiumSave GetOrCreateCaeliImperiumSaveFromUserProfile(UserProfile userProfile)
     {

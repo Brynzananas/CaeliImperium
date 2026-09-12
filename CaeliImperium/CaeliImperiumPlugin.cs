@@ -52,12 +52,13 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         configFile = Config;
         instance = this;
         riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ModCompatabilities.RiskOfOptionsCompatability.GUID);
+        CaeliImperiumSave.Init();
         CaeliImperiumConfigs.OverrideConfigValuesOnUpdate = Config.Bind(CaeliImperiumConfigs.sectionName, "Override config values on update", true, "Update config values with new default values if existing config value matches old default value on mod update?");
         CaeliImperiumAssets.Init();
         if (riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.Init();
         CaeliImperiumConfigs.Init();
         RoR2Application.onLoad += CaeliImperiumLanguage.Init;
-        CaeliImperiumHooks.SetSaveHooks();
+        //CaeliImperiumHooks.SetSaveHooks();
         CaeliImperiumHooks.SetZiprailHooks();
         R2API.DirectorAPI.GetCombatDirectorActivityCount += DirectorAPI_GetCombatDirectorActivityCount;
     }
@@ -71,7 +72,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
     public void OnDestroy()
     {
         RoR2Application.onLoad -= CaeliImperiumLanguage.Init;
-        CaeliImperiumHooks.UnsetSaveHooks();
+        //CaeliImperiumHooks.UnsetSaveHooks();
         CaeliImperiumHooks.UnsetZiprailHooks();
         R2API.DirectorAPI.GetCombatDirectorActivityCount -= DirectorAPI_GetCombatDirectorActivityCount;
         onPluginDestroyed?.Invoke();

@@ -51,10 +51,13 @@ public static class PipelineRefineryConfigs
         if (!pipelineRefineryController) return;
         PipelineRefineryTimeToComplete = CaeliImperiumUtils.CreateConfig(sectionName, "Time To Complete", pipelineRefineryController.timeToComplete, cantUpdateExistingDisclaimer);
         PipelineRefineryTimeToComplete.SettingChanged += PipelineRefineryTimeToComplete_SettingChanged;
+        PipelineRefinerySabotagesCount = CaeliImperiumUtils.CreateConfig(sectionName, "Sabotages Count", pipelineRefineryController.sabotages, cantUpdateExistingDisclaimer);
+        PipelineRefinerySabotagesCount.SettingChanged += PipelineRefineryTimeToComplete_SettingChanged;
         PipelineRefineryNeededCompletedBuilders = CaeliImperiumUtils.CreateConfig(sectionName, "Needed Completed Builders", pipelineRefineryController.neededCompletedBuilders, cantUpdateExistingDisclaimer);
         PipelineRefineryNeededCompletedBuilders.SettingChanged += PipelineRefineryTimeToComplete_SettingChanged;
         PipelineRefineryItemsToGivePerCompletedBuilder = CaeliImperiumUtils.CreateConfig(sectionName, "Items To Give Per Completed Builder", pipelineRefineryController.placeholderItemsToGivePerCompletedBuilder, cantUpdateExistingDisclaimer + ". " + placeholderDisclaimer);
         PipelineRefineryMultiplyItemsToGiveByPlayerCount = CaeliImperiumUtils.CreateConfig(sectionName, "Multiply Items To Give By Player Count", true, placeholderDisclaimer);
+        PipelineRefineryRerollEachItem = CaeliImperiumUtils.CreateConfig(sectionName, "Reroll Each Item Drop", true, placeholderDisclaimer);
         PipelineRefineryItemsToGivePerCompletedBuilder.SettingChanged += PipelineRefineryTimeToComplete_SettingChanged;
         UpdatePipelineRefineryController();
     }
@@ -64,6 +67,7 @@ public static class PipelineRefineryConfigs
         PipelineRefineryController pipelineRefineryController = PipelineRefineryEvents.PipelineRefinery.GetComponent<PipelineRefineryController>();
         if (!pipelineRefineryController) return;
         pipelineRefineryController.timeToComplete = PipelineRefineryTimeToComplete.Value;
+        pipelineRefineryController.sabotages = PipelineRefinerySabotagesCount.Value;
         pipelineRefineryController.neededCompletedBuilders = PipelineRefineryNeededCompletedBuilders.Value;
         pipelineRefineryController.placeholderItemsToGivePerCompletedBuilder = PipelineRefineryItemsToGivePerCompletedBuilder.Value;
     }
@@ -216,9 +220,11 @@ public static class PipelineRefineryConfigs
     public static ConfigEntry<string> PipelineRefinerySpawnRules;
     public static ConfigEntry<int> ResourceWellSpawnCount;
     public static ConfigEntry<float> PipelineRefineryTimeToComplete;
+    public static ConfigEntry<int> PipelineRefinerySabotagesCount;
     public static ConfigEntry<int> PipelineRefineryNeededCompletedBuilders;
     public static ConfigEntry<int> PipelineRefineryItemsToGivePerCompletedBuilder;
     public static ConfigEntry<bool> PipelineRefineryMultiplyItemsToGiveByPlayerCount;
+    public static ConfigEntry<bool> PipelineRefineryRerollEachItem;
     public static ConfigEntry<float> PipelineRefineryDropTableTier1Weight;
     public static ConfigEntry<float> PipelineRefineryDropTableTier2Weight;
     public static ConfigEntry<float> PipelineRefineryDropTableTier3Weight;

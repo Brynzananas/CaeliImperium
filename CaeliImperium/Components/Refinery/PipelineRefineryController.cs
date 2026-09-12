@@ -47,6 +47,8 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
     [SyncVar] public float runningPercentage;
     private bool oneTimeStarted;
     private bool objectiveAdded;
+    private bool directorHookAdded;
+    private bool addedRunningCount;
     public void Start()
     {
         AddObjective();
@@ -63,6 +65,13 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
             NetworkServer.Spawn(gameObject);
         }
     }
+    public void OnDestroy()
+    {
+        RemoveObjective();
+        RemoveRunningCount();
+        if (!NetworkServer.active) return;
+        RemoveDirectorHook();
+    }
     public void AddObjective()
     {
         if (objectiveAdded) return;
@@ -74,6 +83,30 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         if (!objectiveAdded) return;
         objectiveAdded = false;
         ObjectivePanelController.collectObjectiveSources -= ObjectivePanelController_collectObjectiveSources;
+    }
+    public void AddDirectorHook()
+    {
+        if (directorHookAdded) return;
+        directorHookAdded = true;
+        R2API.DirectorAPI.GetCombatDirectorActivityCount += DirectorAPI_GetCombatDirectorActivityCount;
+    }
+    public void RemoveDirectorHook()
+    {
+        if (!directorHookAdded) return;
+        directorHookAdded = false;
+        R2API.DirectorAPI.GetCombatDirectorActivityCount -= DirectorAPI_GetCombatDirectorActivityCount;
+    }
+    public void AddRunningCount()
+    {
+        if (addedRunningCount) return;
+        addedRunningCount = true;
+        runningCount++;
+    }
+    public void RemoveRunningCount()
+    {
+        if (!addedRunningCount) return;
+        addedRunningCount = false;
+        runningCount--;
     }
     private void ObjectivePanelController_collectObjectiveSources(CharacterMaster arg1, List<ObjectivePanelController.ObjectiveSourceDescriptor> arg2)
     {
@@ -115,8 +148,15 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
     public void StartPumping()
     {
         running = true;
-        float timeForOneSabotage = timeToComplete / sabotages;
-        nextSabotage = timeForOneSabotage * ((float)sabotagesCompleted + 0.9f);
+        if (sabotages <= 0)
+        {
+            nextSabotage = float.MaxValue;
+        }
+        else
+        {
+            float timeForOneSabotage = timeToComplete / sabotages;
+            nextSabotage = timeForOneSabotage * ((float)sabotagesCompleted + 0.9f);
+        }
         if (animator) animator.Play("StartUp", 0);
         PlayAnimationForWellExtractors("StartUp");
         if (soundCenter) Util.PlaySound("Play_DRG_Refinery_Loop", soundCenter);
@@ -126,9 +166,9 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
     {
         if (oneTimeStarted) return;
         oneTimeStarted = true;
-        runningCount++;
-        R2API.DirectorAPI.GetCombatDirectorActivityCount += DirectorAPI_GetCombatDirectorActivityCount;
+        AddRunningCount();
         if (!NetworkServer.active) return;
+        AddDirectorHook();
         if (PipelineRefineryConfigs.PipelineRefineryEnableExtraCombatDirector != null && PipelineRefineryConfigs.PipelineRefineryEnableExtraCombatDirector.Value && combatDirector && !combatDirector.enabled) combatDirector.enabled = true;
         if (DirectorCore.instance)
         {
@@ -250,11 +290,11 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         if (animator) animator.Play("Launch", 0);
         if (soundCenter) Util.PlaySound("Stop_DRG_Refinery_Loop", soundCenter);
         StopAnimationForWellExtractors();
-        runningCount--;
-        R2API.DirectorAPI.GetCombatDirectorActivityCount -= DirectorAPI_GetCombatDirectorActivityCount;
+        RemoveRunningCount();
         RemoveObjective();
-        SaveCount();
+        //SaveCount();
         if (!NetworkServer.active) return;
+        RemoveDirectorHook();
         if (combatDirector && combatDirector.enabled) combatDirector.enabled = false;
         PlaceholderGiveItems();
     }
@@ -268,15 +308,7 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         if (participatingPlayerCount == 0) return;
         if (!dropPosition) return;
         UniquePickup pickup = UniquePickup.none;
-        if (placeholderDropTable)
-        {
-            pickup = placeholderDropTable.GeneratePickup(rng);
-        }
-        else
-        {
-            List<PickupIndex> list = Run.instance.availableTier2DropList;
-            pickup = new UniquePickup(rng.NextElementUniform(list));
-        }
+        RerollRewardItem(ref pickup, rng);
         int num = currentlyCompletedBuilders * placeholderItemsToGivePerCompletedBuilder;
         if (PipelineRefineryConfigs.PipelineRefineryMultiplyItemsToGiveByPlayerCount != null && PipelineRefineryConfigs.PipelineRefineryMultiplyItemsToGiveByPlayerCount.Value) num *= participatingPlayerCount;
         float angle = 360f / num;
@@ -286,18 +318,22 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         while (num2 < num)
         {
             UniquePickup pickup2 = pickup;
-            if (placeholderDropTable)
-            {
-                pickup = placeholderDropTable.GeneratePickup(rng);
-            }
-            else
-            {
-                List<PickupIndex> list = Run.instance.availableTier2DropList;
-                pickup = new UniquePickup(rng.NextElementUniform(list));
-            }
             PickupDropletController.CreatePickupDroplet(pickup2, dropPosition.position, vector, false);
+            if (PipelineRefineryConfigs.PipelineRefineryRerollEachItem != null && PipelineRefineryConfigs.PipelineRefineryRerollEachItem.Value) RerollRewardItem(ref pickup2, rng);
             num2++;
             vector = quaternion * vector;
+        }
+    }
+    private void RerollRewardItem(ref UniquePickup pickup, Xoroshiro128Plus rng)
+    {
+        if (placeholderDropTable)
+        {
+            pickup = placeholderDropTable.GeneratePickup(rng);
+        }
+        else
+        {
+            List<PickupIndex> list = Run.instance.availableTier2DropList;
+            pickup = new UniquePickup(rng.NextElementUniform(list));
         }
     }
     public void DisableBuilders()

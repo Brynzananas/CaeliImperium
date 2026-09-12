@@ -675,8 +675,8 @@ public static class CaeliImperiumUtils
         basicBezierSpline.BuildKeyFrames();
         return basicBezierSpline;
     }
-    public static CaeliImperiumSave GetOrCreateCaeliImperiumSave(this UserProfile userProfile) => CaeliImperiumSave.GetOrCreateCaeliImperiumSaveFromUserProfile(userProfile);
-    public static CaeliImperiumSave GetCaeliImperiumSave(this UserProfile userProfile) => CaeliImperiumSave.GetCaeliImperiumSaveFromUserProfile(userProfile);
+    public static CaeliImperiumSave GetOrCreateCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetOrCreateModdedUserProfileSaveData<CaeliImperiumSave>();
+    public static CaeliImperiumSave GetCaeliImperiumSave(this UserProfile userProfile) => userProfile.GetModdedUserProfileSaveData<CaeliImperiumSave>();
     public static void SimulateInteractableSpawnUsingSpawnRules(SceneDirector sceneDirector, InteractableSpawnRules interactableSpawnRules, InteractableSpawnRules defaultInteractableSpawnRules, Action<SceneDirector> actionPerSpawnCount, Action<SceneDirector, int> actionOneTime)
     {
         if (!Run.instance || !SceneInfo.instance) return;

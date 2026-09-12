@@ -34,13 +34,13 @@ public class ResourceWellController : NetworkBehaviour, IInteractable
     public void OnInteractionBegin([NotNull] Interactor activator)
     {
         if (!available) return;
-        bool dontPlay = false;
+        /*bool dontPlay = false;
         foreach (ResourceWellController resourceWellController in instances)
         {
             if (!resourceWellController || resourceWellController.available) continue;
             dontPlay = true;
         }
-        if (!dontPlay) Invoke("CallPlayVoiceMessage", delayBeforePlayingVoiceMessage);
+        if (!dontPlay) Invoke("CallPlayVoiceMessage", delayBeforePlayingVoiceMessage);*/
         CallSpawnExtractor();
     }
     public void CallPlayVoiceMessage()

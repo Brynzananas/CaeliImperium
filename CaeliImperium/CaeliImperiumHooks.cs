@@ -41,7 +41,7 @@ namespace CaeliImperium
             return interactability;
         }
 
-        public static void SetSaveHooks()
+        /*public static void SetSaveHooks()
         {
             if (_saveHooksSet) return;
             _saveHooksSet = true;
@@ -105,7 +105,7 @@ namespace CaeliImperium
             c.Emit(OpCodes.Ldarg_0);
             c.EmitDelegate(AddCaeliImperiumSaveData);
         }
-        private static IEnumerable<object> AddCaeliImperiumSaveData(IEnumerable<object> objects, UserProfile userProfile) => objects.Append(CaeliImperiumSave.CreateXElement(userProfile));
+        private static IEnumerable<object> AddCaeliImperiumSaveData(IEnumerable<object> objects, UserProfile userProfile) => objects.Append(CaeliImperiumSave.CreateXElement(userProfile));*/
         private static int _OnPickupPickerControllerOnDisplayBeginHookAdded;
         private static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> _OnPickupPickerControllerOnDisplayBegin;
         public static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> OnPickupPickerControllerOnDisplayBegin
