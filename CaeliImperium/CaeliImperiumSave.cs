@@ -16,18 +16,18 @@ public class CaeliImperiumSave
     {
         //R2API.SaveAPI.RegisterModdedUserProfileSaveData<CaeliImperiumSave>(CreateXElement, ReadXElement, Copy);
     }
-    public static XElement CreateXElement(object save, UserProfile userProfile)
+    public static XDocument CreateXElement(object save, UserProfile userProfile)
     {
         if (save is not CaeliImperiumSave caeliImperiumSave) return null;
         XElement xelement = new XElement(saveName);
         XElement xElement2 = new XElement(pipelineRefineriesCompletedCountName, caeliImperiumSave.pipelineRefineriesCompletedCount);
         xelement.Add(xElement2);
-        return xelement;
+        return new XDocument(xelement);
     }
-    public static void ReadXElement(object save, XElement container, UserProfile userProfile)
+    public static void ReadXElement(object save, XDocument xDocument, UserProfile userProfile)
     {
         if (save is not CaeliImperiumSave caeliImperiumSave) return;
-        XElement xelement = container.Element(saveName);
+        XElement xelement = xDocument.Element(saveName);
         if (xelement == null) return;
         XElement xElement2 = xelement.Element(pipelineRefineriesCompletedCountName);
         if (xElement2 != null && int.TryParse(xElement2.Value, out int pipelineRefineriesCompletedCount)) caeliImperiumSave.pipelineRefineriesCompletedCount = pipelineRefineriesCompletedCount;

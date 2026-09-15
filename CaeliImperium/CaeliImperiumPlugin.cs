@@ -33,7 +33,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
 {
     public const string ModGuid = "com.brynzananas.caeliimperium";
     public const string ModName = "Caeli Imperium";
-    public const string ModVer = "0.12.0";
+    public const string ModVer = "0.12.1";
     public const string ModPrefix = "CI";
     public static bool emotesEnabled;
     public static bool riskOfOptionsEnabled;

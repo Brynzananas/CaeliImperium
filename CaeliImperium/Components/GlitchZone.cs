@@ -47,6 +47,7 @@ public class GlitchZone : MonoBehaviour
     {
         CaeliImperiumExpansionRunComponent.caeliImperiumRunActions.Remove(glitchZoneRunAction);
         GlitchHUDController.globalUpdateGlitchValues -= GlitchHUDController_globalUpdateGlitchValues;
+        CaeliImperiumExpansionRunComponent.getDeathValue -= CaeliImperiumExpansionRunComponent_getDeathValue;
     }
     public class GlitchZoneRunAction : CaeliImperiumRunAction
     {
