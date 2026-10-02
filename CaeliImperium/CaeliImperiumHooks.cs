@@ -20,18 +20,121 @@ namespace CaeliImperium
     public static class CaeliImperiumHooks 
     {
         private static bool _saveHooksSet;
-        private static bool _ziprailHooksSet;
-        public static void SetZiprailHooks()
+        private static bool _hooksSet;
+        public static void SetHooks()
         {
-            if (_ziprailHooksSet) return;
-            _ziprailHooksSet = true;
+            if (_hooksSet) return;
+            _hooksSet = true;
             On.RoR2.ZiprailController.GetInteractability += ZiprailController_GetInteractability;
+            IL.RoR2.CameraRigController.SetCameraState += CameraRigController_SetCameraState;
+            CameraRigController.onCameraTargetChanged += CameraRigController_onCameraTargetChanged;
+            IL.RoR2.DitherModel.UpdateDither += DitherModel_UpdateDither;
+            IL.RoR2.CharacterModel.UpdateMaterials += CharacterModel_UpdateMaterials;
+            IL.RoR2.SetStateOnHurt.OnTakeDamageServer += SetStateOnHurt_OnTakeDamageServer;
         }
-        public static void UnsetZiprailHooks()
+        public static void UnsetHooks()
         {
-            if (!_ziprailHooksSet) return;
-            _ziprailHooksSet = false;
+            if (!_hooksSet) return;
+            _hooksSet = false;
             On.RoR2.ZiprailController.GetInteractability -= ZiprailController_GetInteractability;
+            CameraRigController.onCameraTargetChanged -= CameraRigController_onCameraTargetChanged;
+            IL.RoR2.CameraRigController.SetCameraState -= CameraRigController_SetCameraState;
+            IL.RoR2.DitherModel.UpdateDither -= DitherModel_UpdateDither;
+            IL.RoR2.CharacterModel.UpdateMaterials -= CharacterModel_UpdateMaterials;
+            IL.RoR2.SetStateOnHurt.OnTakeDamageServer -= SetStateOnHurt_OnTakeDamageServer;
+        }
+        private static void SetStateOnHurt_OnTakeDamageServer(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            ILLabel iLLabel = null;
+            if (c.TryGotoNext(
+                MoveType.After,
+                x => x.MatchLdfld<SetStateOnHurt>(nameof(SetStateOnHurt.canBeHitStunned)),
+                x => x.MatchBrfalse(out iLLabel)
+            ))
+            {
+                c.Emit(OpCodes.Ldarg_1);
+                c.EmitDelegate(HandleCanBeHitstunned);
+                c.Emit(OpCodes.Brtrue_S, iLLabel);
+            }
+            else
+            {
+                CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
+            }
+        }
+        private static bool HandleCanBeHitstunned(DamageReport damageReport)
+        {
+            if (damageReport.damageInfo.HasModdedDamageType(CaeliImperiumAssets.CannotHitstun)) return true;
+            return false;
+        }
+        private static void CharacterModel_UpdateMaterials(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            while (c.TryGotoNext(
+                MoveType.After,
+                x => x.MatchLdfld<CharacterModel>(nameof(CharacterModel.fade))
+            ))
+            {
+                c.EmitDelegate(HandleDither);
+            }
+        }
+
+        private static void DitherModel_UpdateDither(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            if (c.TryGotoNext(
+                MoveType.After,
+                x => x.MatchLdfld<DitherModel>(nameof(DitherModel.fade))
+            ))
+            {
+                c.EmitDelegate(HandleDither);
+            }
+            else
+            {
+                CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
+            }
+        }
+        private static float HandleDither(float fade)
+        {
+            if (FirstPersonCameraController.instance)
+            {
+                return 1f;
+            }
+            else
+            {
+                return fade;
+            }
+        }
+        private static void CameraRigController_SetCameraState(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            if (c.TryGotoNext(
+                MoveType.After,
+                x => x.MatchCallvirt<Transform>(nameof(Transform.SetPositionAndRotation))
+            ))
+            {
+                c.Emit(OpCodes.Ldarg_0);
+                c.Emit(OpCodes.Ldloc, 2);
+                c.EmitDelegate(HandleFPSCameraShake);
+            }
+            else
+            {
+                CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
+            }
+        }
+        public static void HandleFPSCameraShake(CameraRigController cameraRigController, Vector3 vector3)
+        {
+            if (!FirstPersonCameraController.keyValuePairs.TryGetValue(cameraRigController, out FirstPersonCameraController firstPersonCameraController) || !firstPersonCameraController.shakeTransform) return;
+            firstPersonCameraController.shakeTransform.localPosition = firstPersonCameraController.defailtShakeTransformLocalPosition + (firstPersonCameraController.shakeIntensity * vector3);
+        }
+        public static bool SafeObjectCheck(object obj)
+        {
+            if (obj is UnityEngine.Object unityObj) return unityObj;
+            return obj != null;
+        }
+        private static void CameraRigController_onCameraTargetChanged(CameraRigController arg1, UnityEngine.GameObject arg2)
+        {
+            FirstPersonCameraController.Init(arg1);
         }
 
         private static Interactability ZiprailController_GetInteractability(On.RoR2.ZiprailController.orig_GetInteractability orig, ZiprailController self, Interactor activator)

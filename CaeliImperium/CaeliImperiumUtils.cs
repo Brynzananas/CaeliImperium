@@ -910,6 +910,31 @@ public static class CaeliImperiumUtils
             }
         }
     }
+    public static Collider GetClosestColliderOnLine(List<Collider> colliders, Vector3 direction, Vector3 origin)
+    {
+        if (colliders == null || colliders.Count == 0) return null;
+        Vector3 normalizedDirection = direction.normalized;
+        if (normalizedDirection == Vector3.zero) return null;
+        Collider closestCollider = null;
+        float minSquareDistance = float.MaxValue;
+        foreach (Collider collider in colliders)
+        {
+            if (!collider) continue;
+            Vector3 targetPosition = collider.bounds.center;
+            Vector3 originToTarget = targetPosition - origin;
+            float projectionDistance = Vector3.Dot(originToTarget, normalizedDirection);
+            projectionDistance = Mathf.Max(0f, projectionDistance);
+            Vector3 pointOnLine = origin + normalizedDirection * projectionDistance;
+            float sqrDistance = (targetPosition - pointOnLine).sqrMagnitude;
+            if (sqrDistance < minSquareDistance)
+            {
+                minSquareDistance = sqrDistance;
+                closestCollider = collider;
+            }
+        }
+        return closestCollider;
+    }
+    public static bool HasRequiredStockAndDelay(this GenericSkill genericSkill) => genericSkill.skillDef ? genericSkill.skillDef.HasRequiredStockAndDelay(genericSkill) : false;
 }
 
 [Serializable]

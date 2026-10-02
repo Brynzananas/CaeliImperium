@@ -10,48 +10,63 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Networking;
+using static RoR2.Skills.ComboSkillDef;
 
 namespace CaeliImperiumEntityStates.Bishop;
-public class Punch : BishopState
+public class Punch : BishopMeleeState
 {
-    public static float baseDamageCoefficient = 1f;
-    public static float damageCoefficientIncreasePerCombo = 3f;
-    public static float procCoefficient = 1f;
-    public static float minSpread = 0f;
-    public static float maxSpread = 0f;
-    public static float baseDuration = 0.4f;
-    public static bool allowTrajectoryAimAssist = false;
-    public static uint bulletCount = 1;
-    public static DamageType comboDamageType = DamageType.Stun1s;
-    public static DamageType damageType = DamageType.Generic;
-    public static DamageTypeExtended comboDamageTypeExtended = DamageTypeExtended.Generic;
-    public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
-    public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
-    public static float force = 300f;
-    public static float radius = 2f;
-    public static float trajectoryAimAssistMultiplier = 0f;
-    public static bool smartCollision = true;
-    public static float maxDistance = 2f;
-    public static PhysForceFlags physForceFlags = PhysForceFlags.None;
-    public static float seekDistance = 24f;
-    public static float seekAngle = 180f;
-    public static float backoffVelocity = 24f;
-    public static float flyToTargetSpeed = 96f;
+    public static float _damageCoefficient = 1f;
+    public static float _damageCoefficientPerCombo = 1f;
+    public static float _maxDamageCoefficient = 7f;
+    public override float damageCoefficient => Mathf.Min((_damageCoefficient + (characterBody.GetBuffCount(BishopEvents.MeleeCombo) + (hasRequiredStockAndDelay ? 1 : 0)) * _damageCoefficientPerCombo), _maxDamageCoefficient);
+    public static float _procCoefficient = 1f;
+    public override float procCoefficient => _procCoefficient;
+    public static float _minSpread = 0f;
+    public override float minSpread => _minSpread;
+    public static float _maxSpread = 0f;
+    public override float maxSpread => _maxSpread;
+    public static float _baseDuration = 0.4f;
+    public override float baseDuration => _baseDuration;
+
+    public static bool _allowTrajectoryAimAssist = false;
+    public override bool allowTrajectoryAimAssist => _allowTrajectoryAimAssist;
+    public static uint _bulletCount = 1;
+    public override uint bulletCount => _bulletCount;
+    public static DamageType _damageType = DamageType.Generic;
+    public override DamageType damageType => _damageType;
+    public static DamageTypeExtended _damageTypeExtended = DamageTypeExtended.Generic;
+    public override DamageTypeExtended damageTypeExtended => _damageTypeExtended;
+    public static BulletAttack.FalloffModel _falloffModel = BulletAttack.FalloffModel.None;
+    public override BulletAttack.FalloffModel falloffModel => _falloffModel;
+    public static float _force = 300f;
+    public override float force => _force;
+    public static float _radius = 2f;
+    public override float radius => _radius;
+    public static float _trajectoryAimAssistMultiplier = 0f;
+    public override float trajectoryAimAssistMultiplier => _trajectoryAimAssistMultiplier;
+    public static bool _smartCollision = true;
+    public override bool smartCollision => _smartCollision;
+    public static float _maxDistance = 2f;
+    public override float maxDistance => _maxDistance;
+    public static PhysForceFlags _physForceFlags = PhysForceFlags.None;
+    public override PhysForceFlags physForceFlags => _physForceFlags;
+    public static float _backoffVelocity = 24f;
+    public override float backoffVelocity => _backoffVelocity;
+    public static float _flyToTargetSpeed = 96f;
+    public override float flyToTargetSpeed => _flyToTargetSpeed;
+    public static float _findTargetDistance = 48f;
+    public override float findTargetDistance => _findTargetDistance;
+    public static float _findTargetRadius = 3f;
+    public override float findTargetRadius => _findTargetRadius;
+    public override bool giveEmpowermentOnExecute => true;
+
     public static float leftPunchTimerSet = 1f;
-    public BulletAttack bulletAttack;
-    public BullseyeSearch bullseyeSearch;
-    public Ray ray;
-    public float damage;
-    public float duration;
-    public bool stopMoving;
-    public HurtBox target;
-    public bool hitConfirmed;
+
     public override void OnEnter()
     {
         base.OnEnter();
-        SetValues();
-        if (!isAuthority) return;
         bool leftHandPunch = false;
         if ((this as IBishopState).bishopComponent)
         {
@@ -67,133 +82,11 @@ public class Punch : BishopState
         }
         (this as IBishopState).PlayFirstPersonCrossfade(leftHandPunch ? "LeftArm, Override" : "RightArm, Override", "PunchStart", leftHandPunch ? "leftArm.playbackRate" : "rightArm.playbackRate", attackSpeedStat, 0.05f, true);
         (this as IBishopState).PlayFirstPersonCrossfade(!leftHandPunch ? "LeftArm, Override" : "RightArm, Override", "Idle", !leftHandPunch ? "leftArm.playbackRate" : "rightArm.playbackRate", attackSpeedStat, 0.05f, true);
-        FindTarget();
-        CreateBulletAttack();
     }
-    /*public override void OnExit()
+    public override void OnMeleeHit(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo, HealthComponent victimHealthComponent)
     {
-        base.OnExit();
-        if (isAuthority) return;
-        Vector3 backoff = ray.direction * -1f * backoffVelocity;
-        this.SetVelocity(backoff);
-    }*/
-    public void SetValues()
-    {
-        damage = baseDamageCoefficient * characterBody.damage + (characterBody.damage * damageCoefficientIncreasePerCombo * characterBody.GetBuffCount(BishopEvents.MeleeCombo));
-        duration = baseDuration / characterBody.attackSpeed;
-        ray = GetAimRay();
+        base.OnMeleeHit(bulletAttack, ref hitInfo, victimHealthComponent);
+        Util.PlaySound("Play_DoomTDA_Punch", gameObject);
+        if (!wasStaggeredOnHit && hasRequiredStockAndDelay) AddTimeBuffAndResetTimerForAllStacksNetMessage.Send(characterBody, BishopEvents.MeleeCombo.buffIndex, BishopEvents.MeleeComboDuration);
     }
-    public void FindTarget()
-    {
-        bullseyeSearch = new BullseyeSearch
-        {
-            teamMaskFilter = TeamMask.all,
-            filterByLoS = true,
-            searchOrigin = ray.origin,
-            searchDirection = ray.direction,
-            sortMode = BullseyeSearch.SortMode.Angle,
-            maxDistanceFilter = seekDistance,
-            maxAngleFilter = seekAngle,
-        };
-        bullseyeSearch.teamMaskFilter.RemoveTeam(GetTeam());
-        bullseyeSearch.RefreshCandidates();
-        bullseyeSearch.FilterOutGameObject(gameObject);
-        target = bullseyeSearch.GetResults().FirstOrDefault<HurtBox>();
-    }
-    public override void FixedUpdate()
-    {
-        base.FixedUpdate();
-        if (!isAuthority) return;
-        UpdateBulletAttack();
-        Fire();
-        if (target && !stopMoving)
-        {
-            Vector3 velocity = (target.transform.position - transform.position).normalized * flyToTargetSpeed;
-            this.SetVelocity(Vector3.zero);
-            this.AddRootMotion(velocity * Time.fixedDeltaTime);
-        }
-        if (fixedAge < duration) return;
-        outer.SetNextStateToMain();
-    }
-    public void CreateBulletAttack()
-    {
-        bool isCombo = activatorSkillSlot ? activatorSkillSlot.stock > 0 : false;
-        bulletAttack = new BulletAttack
-        {
-            owner = gameObject,
-            weapon = gameObject,
-            origin = ray.origin,
-            aimVector = ray.direction,
-            minSpread = minSpread,
-            maxSpread = maxSpread,
-            damage = damage,
-            allowTrajectoryAimAssist = allowTrajectoryAimAssist,
-            bulletCount = bulletCount,
-            damageType = new DamageTypeCombo(isCombo ? comboDamageType : damageType, isCombo ? comboDamageTypeExtended : damageTypeExtended, this.GetDamageSource(DamageSource.Primary)),
-            falloffModel = falloffModel,
-            force = force,
-            isCrit = RollCrit(),
-            trajectoryAimAssistMultiplier = trajectoryAimAssistMultiplier,
-            radius = radius,
-            smartCollision = smartCollision,
-            maxDistance = maxDistance,
-            physForceFlags = physForceFlags,
-            procCoefficient = procCoefficient,
-            stopperMask = LayerIndex.ui.mask,
-            hitMask = LayerIndex.entityPrecise.mask,
-            hitCallback = HitCallback,
-            filterCallback = FilterCallback
-        };
-        bulletAttack.SetIgnoreHitTargets(true);
-        bulletAttack.AddModdedDamageType(BishopEvents.BypassStaggerInvincibilityDamageType);
-    }
-    public bool FilterCallback(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo)
-    {
-        if (hitConfirmed || (target && target.healthComponent && hitInfo.hitHurtBox && hitInfo.hitHurtBox.healthComponent && hitInfo.hitHurtBox.healthComponent != target.healthComponent)) return false;
-        return BulletAttack.DefaultFilterCallbackImplementation(bulletAttack, ref hitInfo);
-    }
-    public bool HitCallback(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo)
-    {
-        if (hitConfirmed) return false;
-        HurtBox hurtBox = hitInfo.hitHurtBox;
-        if (!hurtBox) return BulletAttack.DefaultHitCallbackImplementation(bulletAttack, ref hitInfo);
-        HealthComponent healthComponent1 = hurtBox.healthComponent;
-        if (!healthComponent1 || !healthComponent1.body) return BulletAttack.DefaultHitCallbackImplementation(bulletAttack, ref hitInfo);
-        bool isStaggered = healthComponent1.body.HasBuff(BishopEvents.Stagger);
-        bool hit = BulletAttack.DefaultHitCallbackImplementation(bulletAttack, ref hitInfo);
-        if (target && healthComponent1)
-        {
-            if (healthComponent1.body.teamComponent && TeamManager.IsTeamEnemy(healthComponent1.body.teamComponent.teamIndex, GetTeam()))
-            {
-                stopMoving = true;
-                hitConfirmed = true;
-                Vector3 backoff = ray.direction * -1f * backoffVelocity;
-                Util.PlaySound("Play_DoomTDA_Punch", gameObject);
-                this.SetVelocity(backoff);
-                if (!isStaggered)
-                {
-                    if (activatorSkillSlot && activatorSkillSlot.stock > 0)
-                    {
-                        AddTimeBuffAndResetTimerForAllStacksNetMessage.Send(characterBody, BishopEvents.MeleeCombo.buffIndex, BishopEvents.MeleeComboDuration);
-                        activatorSkillSlot.DeductStock(1);
-                    }
-                }
-
-            }
-        }
-        return hit;
-    }
-    public void UpdateBulletAttack()
-    {
-        if (bulletAttack == null) return;
-        ray = GetAimRay();
-        bulletAttack.origin = ray.origin;
-        bulletAttack.aimVector = ray.direction;
-    }
-    public void Fire()
-    {
-        if (bulletAttack == null) return;
-        bulletAttack.Fire();
-    }
-    public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.PrioritySkill;
 }

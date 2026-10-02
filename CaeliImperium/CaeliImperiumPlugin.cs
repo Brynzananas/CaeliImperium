@@ -52,8 +52,6 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
     public static ManualLogSource Log { get; private set; }
     public static BaseUnityPlugin instance { get; private set; }
     public static event Action onPluginDestroyed;
-    public static int combatDirectorAddActivityCount;
-    public static bool affectOnlyIfItIsStageCombatDirector;
     public void Awake()
     {
         Log = Logger;
@@ -68,113 +66,16 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         CaeliImperiumConfigs.Init();
         RoR2Application.onLoad += CaeliImperiumLanguage.Init;
         //CaeliImperiumHooks.SetSaveHooks();
-        CaeliImperiumHooks.SetZiprailHooks();
-        IL.RoR2.CameraRigController.SetCameraState += CameraRigController_SetCameraState;
-        CameraRigController.onCameraTargetChanged += CameraRigController_onCameraTargetChanged;
-        IL.RoR2.DitherModel.UpdateDither += DitherModel_UpdateDither;
-        IL.RoR2.CharacterModel.UpdateMaterials += CharacterModel_UpdateMaterials;
-        IL.RoR2.SetStateOnHurt.OnTakeDamageServer += SetStateOnHurt_OnTakeDamageServer;
-        R2API.DirectorAPI.GetCombatDirectorActivityCount += DirectorAPI_GetCombatDirectorActivityCount;
+        CaeliImperiumHooks.SetHooks();
+        
     }
-    private void SetStateOnHurt_OnTakeDamageServer(ILContext il)
-    {
-        ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(
-            MoveType.After,
-            x => x.MatchLdfld<SetStateOnHurt>(nameof(DitherModel.fade))
-        ))
-        {
-            c.EmitDelegate(HandleDither);
-        }
-        else
-        {
-            Log.LogError("IL Hook " + il.Method.Name + " failed!");
-        }
-    }
-    private void CharacterModel_UpdateMaterials(ILContext il)
-    {
-        ILCursor c = new ILCursor(il);
-        while (c.TryGotoNext(
-            MoveType.After,
-            x => x.MatchLdfld<CharacterModel>(nameof(CharacterModel.fade))
-        ))
-        {
-            c.EmitDelegate(HandleDither);
-        }
-    }
-
-    private void DitherModel_UpdateDither(ILContext il)
-    {
-        ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(
-            MoveType.After,
-            x => x.MatchLdfld<DitherModel>(nameof(DitherModel.fade))
-        ))
-        {
-            c.EmitDelegate(HandleDither);
-        }
-        else
-        {
-            Log.LogError("IL Hook " + il.Method.Name + " failed!");
-        }
-    }
-    private static float HandleDither(float fade)
-    {
-        if (FirstPersonCameraController.instance)
-        {
-            return 1f;
-        }
-        else
-        {
-            return fade;
-        }
-    }
-    private void CameraRigController_SetCameraState(ILContext il)
-    {
-        ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(
-            MoveType.After,
-            x => x.MatchCallvirt<Transform>(nameof(Transform.SetPositionAndRotation))
-        ))
-        {
-            c.Emit(OpCodes.Ldarg_0);
-            c.Emit(OpCodes.Ldloc, 2);
-            c.EmitDelegate(HandleFPSCameraShake);
-        }
-        else
-        {
-            Log.LogError("IL Hook " + il.Method.Name + " failed!");
-        }
-    }
-    public static void HandleFPSCameraShake(CameraRigController cameraRigController, Vector3 vector3)
-    {
-        if (!FirstPersonCameraController.keyValuePairs.TryGetValue(cameraRigController, out FirstPersonCameraController firstPersonCameraController) || !firstPersonCameraController.shakeTransform) return;
-        firstPersonCameraController.shakeTransform.localPosition = firstPersonCameraController.defailtShakeTransformLocalPosition + (firstPersonCameraController.shakeIntensity * vector3);
-    }
-    public static bool SafeObjectCheck(object obj)
-    {
-        if (obj is UnityEngine.Object unityObj) return unityObj;
-        return obj != null;
-    }
-    private void CameraRigController_onCameraTargetChanged(CameraRigController arg1, UnityEngine.GameObject arg2)
-    {
-        FirstPersonCameraController.Init(arg1);
-    }
-
-    private void DirectorAPI_GetCombatDirectorActivityCount(CombatDirector combatDirector, ref int activityCount)
-    {
-        if (affectOnlyIfItIsStageCombatDirector && !combatDirector.IsStageCombatDirector()) return;
-        activityCount += combatDirectorAddActivityCount;
-    }
+    
 
     public void OnDestroy()
     {
         RoR2Application.onLoad -= CaeliImperiumLanguage.Init;
         //CaeliImperiumHooks.UnsetSaveHooks();
-        CaeliImperiumHooks.UnsetZiprailHooks();
-        R2API.DirectorAPI.GetCombatDirectorActivityCount -= DirectorAPI_GetCombatDirectorActivityCount;
-        CameraRigController.onCameraTargetChanged -= CameraRigController_onCameraTargetChanged;
-        IL.RoR2.CameraRigController.SetCameraState -= CameraRigController_SetCameraState;
+        CaeliImperiumHooks.UnsetHooks();
         onPluginDestroyed?.Invoke();
     }
     public void AddCustomMusic()

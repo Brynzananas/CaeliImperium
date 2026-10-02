@@ -17,7 +17,7 @@ using static UnityEngine.SendMouseEvents;
 namespace CaeliImperiumEntityStates.Bishop;
 public class SwingSpear : BishopState
 {
-    public static float baseDamageCoefficient = 5f;
+    public static float baseDamageCoefficient = 2f;
     public static float procCoefficient = 1f;
     public static float minSpread = 0f;
     public static float maxSpread = 0f;
@@ -33,7 +33,7 @@ public class SwingSpear : BishopState
     public static bool smartCollision = true;
     public static float maxDistance = 6f;
     public static PhysForceFlags physForceFlags = PhysForceFlags.None;
-    public static float parryDuration = 1f;
+    public static float parryDuration = 0.6f;
     public BulletAttack bulletAttack;
     public float damage;
     public float duration;
@@ -93,6 +93,7 @@ public class SwingSpear : BishopState
             hitCallback = HitCallback
         };
         bulletAttack.AddModdedDamageType(BishopEvents.ParryDamageType);
+        bulletAttack.AddModdedDamageType(CaeliImperiumAssets.CannotHitstun);
         bulletAttack.SetIgnoreHitTargets(true);
     }
     public bool HitCallback(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo)
