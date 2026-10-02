@@ -25,7 +25,7 @@
 		</Reference>
 		<Reference Include="UnityEngine-PostProcessing">
 			<Private>false</Private>
-			<HintPath>D:\SteamLibrary\steamapps\common\Risk of Rain 2\Risk of Rain 2_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
+			<HintPath>D:\Ror2Mods\CaeliImperium\CaeliImperium\CaeliImperium\NetworkWeaver\libs\Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
 		<Reference Include="R2API-Buffs">
 			<Private>false</Private>

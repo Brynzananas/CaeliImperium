@@ -23,7 +23,7 @@ namespace CaeliImperium
             InitBomberWisp();
             InitMonsterChest();
             InitPipelineRefinery();
-            InitDeath();
+            InitBishop();
         }
         public static void InitHealReceivedDamage()
         {
@@ -125,24 +125,15 @@ namespace CaeliImperium
             AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Slide off");
             AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Съехать", "ru");
         }
-        public static void InitDeath()
+        public static void InitBishop()
         {
-            AddLanguageToken("CI_DEATH_MESSAGE_1", "pain");
-            AddLanguageToken("CI_DEATH_MESSAGE_2", "the end is nigh");
-            AddLanguageToken("CI_DEATH_MESSAGE_3", "i am dying");
-            AddLanguageToken("CI_DEATH_MESSAGE_4", "he is playing god");
-            AddLanguageToken("CI_DEATH_MESSAGE_5", "he is hiding");
-            AddLanguageToken("CI_DEATH_MESSAGE_6", "a parasite inside of me");
-            AddLanguageToken("CI_DEATH_MESSAGE_7", "he is breeding weapons");
-            AddLanguageToken("CI_DEATH_MESSAGE_8", "he is supposed to die");
-            AddLanguageToken("CI_DEATH_MESSAGE_9", "providence is dead");
-            AddLanguageToken("CI_DEATH_MESSAGE_10", "mithrix lost");
-            AddLanguageToken("CI_DEATH_MESSAGE_11", "gambit is selling my ashes");
-            AddLanguageToken("CI_DEATH_MESSAGE_12", "i am just a product");
-            AddLanguageToken("CI_DEATH_MESSAGE_13", "mistakes into catastropies");
-            AddLanguageToken("CI_DEATH_MESSAGE_14", "help me");
-            AddLanguageToken("CI_DEATH_MESSAGE_15", "my final moments");
-            AddLanguageToken("CI_DEATH_MESSAGE_15", "etot shrift nepodderzhivaet kirilicu", "ru");
+            AddLanguageToken("CI_BISHOP_SPEAR_THROW", "Throw");
+            AddLanguageToken("CI_BISHOP_SPEAR_THROW", "Бросить", "ru");
+            AddLanguageToken("CI_BISHOP_SPEAR_SLAM", "Slam");
+            AddLanguageToken("CI_BISHOP_SPEAR_SLAM", "Ебануться", "ru");
+            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "Pull");
+            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "Притянуть", "ru");
+            if (!BishopEvents.Body) return;
         }
         public static void AddLanguageToken(string token, string text) => AddLanguageToken(token, text, "en");
         public static void AddLanguageToken(string token, string text, string lang)

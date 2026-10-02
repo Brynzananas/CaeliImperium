@@ -438,6 +438,51 @@ public static class CaeliImperiumUtils
         if (baseSkillState.activatorSkillSlot == baseSkillState.skillLocator.special) return DamageSource.Special;
         return fallbackDamageSource;
     }
+    public static void AddVelocity(this BaseState baseState, Vector3 velocity)
+    {
+        if (baseState.characterMotor)
+        {
+            baseState.characterMotor.velocity += velocity;
+        }
+        else if (baseState.rigidbody)
+        {
+            baseState.rigidbody.velocity += velocity;
+        }
+    }
+    public static void SetVelocity(this BaseState baseState, Vector3 velocity)
+    {
+        if (baseState.characterMotor)
+        {
+            baseState.characterMotor.velocity = velocity;
+        }
+        else if (baseState.rigidbody)
+        {
+            baseState.rigidbody.velocity = velocity;
+        }
+    }
+    public static Vector3 GetVelocity(this BaseState baseState)
+    {
+        if (baseState.characterMotor)
+        {
+            return baseState.characterMotor.velocity;
+        }
+        else if (baseState.rigidbody)
+        {
+            return baseState.rigidbody.velocity;
+        }
+        return Vector3.zero;
+    }
+    public static void AddRootMotion(this BaseState baseState, Vector3 vector3)
+    {
+        if (baseState.characterMotor)
+        {
+            baseState.characterMotor.rootMotion += vector3;
+        }
+        else if (baseState.rigidbody)
+        {
+            baseState.rigidbody.MovePosition(baseState.rigidbody.position + vector3);
+        }
+    }
     public static void AddInteger(this Animator animator, string name) => animator.SetInteger(name, animator.GetInteger(name) + 1);
     public static void SubstractInteger(this Animator animator, string name) => animator.SetInteger(name, animator.GetInteger(name) - 1);
     public static Vector3 ToVector3(this float value) => new Vector3(value, value, value);
@@ -535,12 +580,9 @@ public static class CaeliImperiumUtils
         if (characterBody.inputBank) return new Ray(characterBody.inputBank.aimOrigin, characterBody.inputBank.aimDirection);
         return new Ray(characterBody.transform.position, characterBody.transform.forward);
     }
-    public static void PlayCrossfade(this Animator modelAnimator, string layerName, string animationStateName, string playbackRateParam, float duration, float crossfadeDuration)
+    public static void PlayCrossfade(this Animator modelAnimator, string layerName, string animationStateName, string playbackRateParam, float duration, float crossfadeDuration) => modelAnimator.PlayCrossfade(layerName, animationStateName, playbackRateParam, duration, crossfadeDuration, false);
+    public static void PlayCrossfade(this Animator modelAnimator, string layerName, string animationStateName, string playbackRateParam, float duration, float crossfadeDuration, bool durationIsMultiplier)
     {
-        if (duration <= 0f)
-        {
-            return;
-        }
         if (modelAnimator)
         {
             modelAnimator.speed = 1f;
@@ -550,15 +592,12 @@ public static class CaeliImperiumUtils
             modelAnimator.CrossFadeInFixedTime(animationStateName, crossfadeDuration, layerIndex);
             modelAnimator.Update(0f);
             float length = modelAnimator.GetNextAnimatorStateInfo(layerIndex).length;
-            modelAnimator.SetFloat(playbackRateParam, length / duration);
+            modelAnimator.SetFloat(playbackRateParam, duration > 0 ? durationIsMultiplier ? duration : length / duration : 1f);
         }
     }
-    public static void PlayCrossfade(this Animator modelAnimator, string layerName, int animationStateNameHash, int playbackRateParamHash, float duration, float crossfadeDuration)
+    public static void PlayCrossfade(this Animator modelAnimator, string layerName, int animationStateNameHash, int playbackRateParamHash, float duration, float crossfadeDuration) => modelAnimator.PlayCrossfade(layerName, animationStateNameHash, playbackRateParamHash, duration, crossfadeDuration, false);
+    public static void PlayCrossfade(this Animator modelAnimator, string layerName, int animationStateNameHash, int playbackRateParamHash, float duration, float crossfadeDuration, bool durationIsMultiplier)
     {
-        if (duration <= 0f)
-        {
-            return;
-        }
         if (modelAnimator)
         {
             modelAnimator.speed = 1f;
@@ -568,7 +607,7 @@ public static class CaeliImperiumUtils
             modelAnimator.CrossFadeInFixedTime(animationStateNameHash, crossfadeDuration, layerIndex);
             modelAnimator.Update(0f);
             float length = modelAnimator.GetNextAnimatorStateInfo(layerIndex).length;
-            modelAnimator.SetFloat(playbackRateParamHash, length / duration);
+            modelAnimator.SetFloat(playbackRateParamHash, duration > 0 ? durationIsMultiplier ? duration : length / duration : 1f);
         }
     }
     public static void PlayCrossfade(this Animator modelAnimator, string layerName, string animationStateName, float crossfadeDuration)
@@ -755,6 +794,121 @@ public static class CaeliImperiumUtils
         GameObject gameObject = Util.FindNetworkObject(networkInstanceId);
         if (!gameObject) return null;
         return gameObject.GetComponent<WellExtractorController>();
+    }
+    public static CharacterBody GetCharacterBody(this NetworkInstanceId networkInstanceId)
+    {
+        GameObject gameObject = Util.FindNetworkObject(networkInstanceId);
+        if (!gameObject) return null;
+        return gameObject.GetComponent<CharacterBody>();
+    }
+    public static AnimationCurve CreateAnimationCurveEaseInOutPingPong(float timeStart, float valueStart, float timeEnd, float valueEnd)
+    {
+        AnimationCurve animationCurve = AnimationCurve.EaseInOut(timeStart, valueStart, timeEnd, valueEnd);
+        animationCurve.postWrapMode = WrapMode.PingPong;
+        animationCurve.preWrapMode = WrapMode.PingPong;
+        return animationCurve;
+    }
+    public static Texture2D CreateReadableTexture(this Texture sourceTexture)
+    {
+        if (!sourceTexture) return null;
+        RenderTexture renderTexture = RenderTexture.GetTemporary(
+            sourceTexture.width,
+            sourceTexture.height,
+            0,
+            RenderTextureFormat.Default,
+            RenderTextureReadWrite.Linear
+        );
+        Graphics.Blit(sourceTexture, renderTexture);
+        RenderTexture previousActive = RenderTexture.active;
+        RenderTexture.active = renderTexture;
+        Texture2D readableTexture = new Texture2D(sourceTexture.width, sourceTexture.height, TextureFormat.RGBA32, false);
+        readableTexture.wrapMode = sourceTexture.wrapMode;
+        readableTexture.wrapModeU = sourceTexture.wrapModeU;
+        readableTexture.wrapModeV = sourceTexture.wrapModeV;
+        readableTexture.wrapModeW = sourceTexture.wrapModeW;
+        readableTexture.mipMapBias = sourceTexture.mipMapBias;
+        readableTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+        readableTexture.Apply();
+        RenderTexture.active = previousActive;
+        RenderTexture.ReleaseTemporary(renderTexture);
+        return readableTexture;
+    }
+    public static Texture2D ApplyGradientToTexture(this Texture2D sourceTexture, Gradient gradient)
+    {
+        if (!sourceTexture || gradient == null) return null;
+        bool destroySourceTexture = false;
+        if (!sourceTexture.isReadable)
+        {
+            destroySourceTexture = true;
+            sourceTexture = sourceTexture.CreateReadableTexture();
+        }
+        int width = sourceTexture.width;
+        int height = sourceTexture.height;
+        Color[] pixels = sourceTexture.GetPixels();
+        Color[] resultPixels = new Color[pixels.Length];
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color currentPixel = pixels[i];
+            float luminance = (currentPixel.r * 0.299f) + (currentPixel.g * 0.587f) + (currentPixel.b * 0.114f);
+            Color gradientColor = gradient.Evaluate(luminance);
+            gradientColor.a *= currentPixel.a;
+            resultPixels[i] = gradientColor;
+        }
+        Texture2D resultTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        resultTexture.wrapMode = sourceTexture.wrapMode;
+        resultTexture.wrapModeU = sourceTexture.wrapModeU;
+        resultTexture.wrapModeV = sourceTexture.wrapModeV;
+        resultTexture.wrapModeW = sourceTexture.wrapModeW;
+        resultTexture.mipMapBias = sourceTexture.mipMapBias;
+        resultTexture.SetPixels(resultPixels);
+        resultTexture.Apply();
+        if (destroySourceTexture) GameObject.Destroy(sourceTexture);
+        return resultTexture;
+    }
+    public static Vector3 GetColliderCenter(this Collider collider) => collider.bounds.center;
+    public static ChildLocator GetModelChildLocator(this CharacterBody characterBody)
+    {
+        ModelLocator modelLocator = characterBody.modelLocator;
+        if (!modelLocator) return null;
+        return modelLocator.modelChildLocator;
+    }
+    public static void ReplaceChild(this ChildLocator childLocator, string name, Transform newTransform)
+    {
+        if (childLocator.FindChild(name))
+        {
+            for (int i = 0; i < childLocator.transformPairs.Length; i++)
+            {
+                ref ChildLocator.NameTransformPair pair = ref childLocator.transformPairs[i];
+                if (!(pair.name == name)) continue;
+                pair.transform = newTransform;
+            }
+        }
+    }
+    public static void SuperStun(this CharacterBody characterBody, float duration)
+    {
+        EntityStateMachine[] entityStateMachines = characterBody.gameObject.GetComponents<EntityStateMachine>();
+        foreach (EntityStateMachine entityStateMachine in entityStateMachines)
+        {
+            if (entityStateMachine.customName == "Body")
+            {
+                if (entityStateMachine.state is StunState)
+                {
+                    StunState stunState = entityStateMachine.state as StunState;
+                    if (stunState.timeRemaining < duration) stunState.ExtendStun(duration - stunState.timeRemaining);
+                }
+                else
+                {
+                    StunState stunState2 = new StunState();
+                    stunState2.stunDuration = duration;
+                    entityStateMachine.SetInterruptState(stunState2, InterruptPriority.Stun);
+                }
+            }
+            else
+            {
+                entityStateMachine.SetStateToMain();
+            }
+        }
     }
 }
 

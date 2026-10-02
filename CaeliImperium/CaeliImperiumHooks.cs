@@ -106,6 +106,7 @@ namespace CaeliImperium
             c.EmitDelegate(AddCaeliImperiumSaveData);
         }
         private static IEnumerable<object> AddCaeliImperiumSaveData(IEnumerable<object> objects, UserProfile userProfile) => objects.Append(CaeliImperiumSave.CreateXElement(userProfile));*/
+
         private static int _OnPickupPickerControllerOnDisplayBeginHookAdded;
         private static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> _OnPickupPickerControllerOnDisplayBegin;
         public static event Action<PickupPickerController, NetworkUIPromptController, LocalUser, CameraRigController> OnPickupPickerControllerOnDisplayBegin
@@ -131,8 +132,9 @@ namespace CaeliImperium
             {
                 _OnPickupPickerControllerOnDisplayBegin?.Invoke(self, networkUIPromptController, localUser, cameraRigController);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
 
@@ -160,8 +162,9 @@ namespace CaeliImperium
             {
                 _OnBuffFinalStackLost?.Invoke(self, buffDef);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnBuffFirstStackGainedHookAdded;
@@ -188,8 +191,9 @@ namespace CaeliImperium
             {
                 _OnBuffFirstStackGained?.Invoke(self, buffDef);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static void GenericSkill_RecalculateMaxStock(On.RoR2.GenericSkill.orig_RecalculateMaxStock orig, GenericSkill self)
@@ -199,8 +203,9 @@ namespace CaeliImperium
             {
                 _OnRecalculateMaxStock?.Invoke(self);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnRecalculateMaxStockHookAdded;
@@ -227,8 +232,9 @@ namespace CaeliImperium
             {
                 _OnCombatDirectorInit?.Invoke();
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnCombatDirectorInitHookAdded;
@@ -255,8 +261,9 @@ namespace CaeliImperium
             {
                 _OnPurchaseInteractionEnable?.Invoke(self);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnPurchaseInteractionEnableHookAdded;
@@ -341,8 +348,9 @@ namespace CaeliImperium
             {
                 _OnTakeDamageProcess?.Invoke(healthComponent, damageInfo, attackerBody, ref damage);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
             return damage;
         }
@@ -381,8 +389,9 @@ namespace CaeliImperium
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
             return orig(self, equipmentDef);
         }
@@ -394,8 +403,9 @@ namespace CaeliImperium
             {
                 _OnInventoryChanged?.Invoke(self);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnInventoryChangedHookAdded;
@@ -439,8 +449,9 @@ namespace CaeliImperium
             {
                 _OnSetBodyPrefabsIndividualPrefab?.Invoke(characterBody);
             }
-            catch
+            catch (Exception e)
             {
+                CaeliImperiumPlugin.Log.LogError(e);
             }
         }
         private static int _OnSetBodyPrefabsIndividualPrefabHookAdded;
@@ -490,8 +501,9 @@ namespace CaeliImperium
                 {
                     _OnSetBodyPrefabsIndividualPrefab?.Invoke(characterBody);
                 }
-                catch
+                catch (Exception e)
                 {
+                    CaeliImperiumPlugin.Log.LogError(e);
                 }
             }
         }
@@ -512,7 +524,6 @@ namespace CaeliImperium
                 _OnSetProjectilePrefabsIndividualPrefabHookAdded--;
             }
         }
-
         private static void ProjectileCatalog_SetProjectilePrefabs(On.RoR2.ProjectileCatalog.orig_SetProjectilePrefabs orig, GameObject[] newProjectilePrefabs)
         {
             orig(newProjectilePrefabs);
@@ -525,8 +536,9 @@ namespace CaeliImperium
                 {
                     _OnSetProjectilePrefabsIndividualPrefab?.Invoke(projectileController);
                 }
-                catch
+                catch (Exception e)
                 {
+                    CaeliImperiumPlugin.Log.LogError(e);
                 }
             }
         }
