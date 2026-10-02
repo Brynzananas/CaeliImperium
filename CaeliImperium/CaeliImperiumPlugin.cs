@@ -69,7 +69,6 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         RoR2Application.onLoad += CaeliImperiumLanguage.Init;
         //CaeliImperiumHooks.SetSaveHooks();
         CaeliImperiumHooks.SetZiprailHooks();
-        IL.RoR2.CameraModes.CameraModePlayerBasic.CollectLookInputInternal += FixICameraStateProviderNullCheck;
         IL.RoR2.CameraRigController.SetCameraState += CameraRigController_SetCameraState;
         CameraRigController.onCameraTargetChanged += CameraRigController_onCameraTargetChanged;
         IL.RoR2.DitherModel.UpdateDither += DitherModel_UpdateDither;
@@ -157,24 +156,6 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         if (obj is UnityEngine.Object unityObj) return unityObj;
         return obj != null;
     }
-    private static void FixICameraStateProviderNullCheck(ILContext il)
-    {
-        ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(
-            MoveType.Before,
-            x => x.MatchCastclass<UnityEngine.Object>(),
-            x => x.MatchCall<UnityEngine.Object>("op_Implicit")
-        ))
-        {
-            c.Next.OpCode = OpCodes.Isinst;
-            c.Index++;
-            c.Next.Operand = il.Import(typeof(CaeliImperiumPlugin).GetMethod(nameof(SafeObjectCheck)));
-        }
-        else
-        {
-            Log.LogError("Failed to locate IL pattern for CollectLookInputInternal nullcheck fix.");
-        }
-    }
     private void CameraRigController_onCameraTargetChanged(CameraRigController arg1, UnityEngine.GameObject arg2)
     {
         FirstPersonCameraController.Init(arg1);
@@ -193,7 +174,6 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         CaeliImperiumHooks.UnsetZiprailHooks();
         R2API.DirectorAPI.GetCombatDirectorActivityCount -= DirectorAPI_GetCombatDirectorActivityCount;
         CameraRigController.onCameraTargetChanged -= CameraRigController_onCameraTargetChanged;
-        IL.RoR2.CameraModes.CameraModePlayerBasic.CollectLookInputInternal -= FixICameraStateProviderNullCheck;
         IL.RoR2.CameraRigController.SetCameraState -= CameraRigController_SetCameraState;
         onPluginDestroyed?.Invoke();
     }

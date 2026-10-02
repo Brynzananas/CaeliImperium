@@ -1,6 +1,7 @@
 ﻿using BrynzaAPI;
 using CaeliImperium;
 using CaeliImperium.Bodies;
+using CaeliImperium.Components;
 using EntityStates;
 using R2API.Networking;
 using RoR2;
@@ -12,7 +13,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 
 namespace CaeliImperiumEntityStates.Bishop;
-public class SpearOrbit : BishopMainState, ICameraStateProvider
+public class SpearOrbit : BishopMainState
 {
     public static float baseDuration = 3f;
     public static float baseDurationAddition = 7f;
@@ -37,6 +38,7 @@ public class SpearOrbit : BishopMainState, ICameraStateProvider
     public float strafeSpeed;
     public float orbitSpeed;
     public Vector3? finalVector;
+    public CameraOverride cameraOverride;
     public override void OnEnter()
     {
         base.OnEnter();
@@ -141,7 +143,16 @@ public class SpearOrbit : BishopMainState, ICameraStateProvider
         startedLockOn = true;
         characterBody.AddClientBuff(RoR2Content.Buffs.NoCooldowns);
         duration += durationAddition;
-        UpdateCameras(characterBody);
+        if (!cameraOverride)
+        {
+            cameraOverride = gameObject.AddComponent<CameraOverride>();
+            cameraOverride.cameraUpdateLerpDuration = cameraUpdateLerpDuration;
+            cameraOverride.characterBody = characterBody;
+            cameraOverride.isHudAllowed = true;
+            cameraOverride.isUserControlAllowed = true;
+            cameraOverride.isUserLookAllowed = false;
+            cameraOverride.getCameraStateDelegate = GetCameraState;
+        }
         if (inputBank && inputBank.rawMoveRight.down)
         {
             orbitToTheRight = true;
@@ -157,23 +168,7 @@ public class SpearOrbit : BishopMainState, ICameraStateProvider
         startedLockOn = false;
         characterBody.RemoveClientBuff(RoR2Content.Buffs.NoCooldowns);
         duration -= durationAddition;
-        UpdateCameras(null);
-    }
-    public void UpdateCameras(CharacterBody characterBody)
-    {
-        ReadOnlyCollection<CameraRigController> readOnlyInstancesList = CameraRigController.readOnlyInstancesList;
-        for (int i = 0; i < readOnlyInstancesList.Count; i++)
-        {
-            CameraRigController cameraRigController = readOnlyInstancesList[i];
-            if (characterBody && cameraRigController.target == characterBody.gameObject)
-            {
-                cameraRigController.SetOverrideCam(this, cameraUpdateLerpDuration);
-            }
-            else if (cameraRigController.IsOverrideCam(this))
-            {
-                cameraRigController.SetOverrideCam(null, cameraUpdateLerpDuration);
-            }
-        }
+        if (cameraOverride) Destroy(cameraOverride);
     }
     public override void OnSerialize(NetworkWriter writer)
     {
@@ -199,8 +194,5 @@ public class SpearOrbit : BishopMainState, ICameraStateProvider
         if (inputBank) inputBank.aimDirection = interpolatedLookVector;
         cameraState.rotation = Util.QuaternionSafeLookRotation(interpolatedLookVector);
     }
-    public bool IsUserLookAllowed(CameraRigController cameraRigController) => false;
-    public bool IsUserControlAllowed(CameraRigController cameraRigController) => true;
-    public bool IsHudAllowed(CameraRigController cameraRigController) => true;
     public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.PrioritySkill;
 }
