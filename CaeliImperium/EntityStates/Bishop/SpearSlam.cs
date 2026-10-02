@@ -12,7 +12,7 @@ using UnityEngine.Networking;
 namespace CaeliImperiumEntityStates.Bishop;
 public class SpearSlam : BishopState
 {
-    public static float damageCoefficient = 10f;
+    public static float damageCoefficient = 7f;
     public static float procCoefficient = 1f;
     public static float force = 300f;
     public static float radius = 24f;

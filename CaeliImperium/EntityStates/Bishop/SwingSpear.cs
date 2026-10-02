@@ -28,12 +28,12 @@ public class SwingSpear : BishopState
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
     public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
     public static float force = 300f;
-    public static float radius = 5f;
+    public static float radius = 3f;
     public static float trajectoryAimAssistMultiplier = 0f;
     public static bool smartCollision = true;
-    public static float maxDistance = 6f;
+    public static float maxDistance = 4f;
     public static PhysForceFlags physForceFlags = PhysForceFlags.None;
-    public static float parryDuration = 0.6f;
+    public static float parryDuration = 0.4f;
     public BulletAttack bulletAttack;
     public float damage;
     public float duration;

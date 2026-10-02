@@ -15,7 +15,7 @@ using UnityEngine.Networking;
 namespace CaeliImperiumEntityStates.Bishop;
 public class Dash : BishopMainState
 {
-    public static float baseSpeed = 64f;
+    public static float baseSpeed = 48f;
     public static float baseDashDuration = 0.2f;
     public static float baseDuration = 0.6f;
     public static float dashRadius = 5f;

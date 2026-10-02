@@ -9,6 +9,8 @@ namespace CaeliImperium.Components.Bishop;
 public class BishopComponent : MonoBehaviour
 {
     public static int enableCount {  get; private set; }
+    public float maxMoveSpeed = 15f;
+    public int maxJumpCount = 2;
     public GenericSkill dashSkill;
     public CharacterBody characterBody;
     public ShakeEmitter shakeEmitter;
@@ -118,10 +120,12 @@ public class BishopComponent : MonoBehaviour
     }
     private void CharacterBody_onRecalculateStats(CharacterBody obj)
     {
+        float maxMoveSpeed = Mathf.Max(obj.baseMoveSpeed, this.maxMoveSpeed);
         previousMoveSpeed = obj.moveSpeed;
-        obj.moveSpeed = obj.baseMoveSpeed;
+        obj.moveSpeed = Mathf.Min(obj.moveSpeed, maxMoveSpeed);
+        int maxJumpCount = Mathf.Max(obj.baseJumpCount, this.maxJumpCount);
         previousMaxJumpCount = obj.maxJumpCount;
-        obj.maxJumpCount = obj.baseJumpCount;
+        obj.maxJumpCount = Mathf.Min(obj.maxJumpCount, maxJumpCount);
         if (dashSkill)
         {
             dashSkill.cooldownScale = 1f / (previousMoveSpeed / obj.moveSpeed);

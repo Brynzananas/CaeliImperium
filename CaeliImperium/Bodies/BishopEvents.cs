@@ -16,6 +16,7 @@ using RoR2;
 using RoR2.Networking;
 using RoR2.Projectile;
 using RoR2.Skills;
+using RoR2.UI;
 using RoR2BepInExPack.Utilities;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,7 @@ public static class BishopEvents
     public static EffectDef SpearSlashHitEffect;
     public static EffectDef SpearParryEffect;
     public static GameObject SpearCrosshair;
+    public static BulletPatternDef ShotgunBulletPattern;
     public static ModdedProcType HealMeleeProcType;
     public static DamageAPI.ModdedDamageType ParriableDamageType;
     public static DamageAPI.ModdedDamageType ParryDamageType;
@@ -77,7 +79,7 @@ public static class BishopEvents
     public static float WasStaggeredDuration = 80f;
     public static float MeleeComboDuration = 1f;
     public static Gradient ParriableGradient = GetParriableGradient();
-    public static float GlobalProjectileSpeedMultiplier = 0.75f;
+    public static float GlobalProjectileSpeedMultiplier = 0.65f;
     public static float SuperStunDuration = 2f;
     public static float ParriableOverlapAttackSizeMultiplier = 2f;
     public static float ParriableBlastAttackSizeMultiplier = 2f;
@@ -95,7 +97,10 @@ public static class BishopEvents
     private static Dictionary<Type, ParriableFireProjectileInfo> types = [];
     private static HashSet<Type> types2 = [];
     private static HashSet<Type> types3 = [];
-    private static HashSet<string> purgeTheWeak = new HashSet<string> { "BeetleMaster" };
+    private static Dictionary<string, DroneIndex> GearboxYouHadOneJob = [];
+    private static HashSet<string> purgeTheWeak = new HashSet<string> { "BeetleMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster" };
+    private static HashSet<string> purgeTheBoring = new HashSet<string> { "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
+    private static HashSet<string> purgeTheClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
     public static void Init(GameObject gameObject)
     {
         On.RoR2.HealthComponent.Heal += HealthComponent_Heal;
@@ -116,6 +121,7 @@ public static class BishopEvents
         On.RoR2.DirectorCard.IsAvailable += DirectorCard_IsAvailable;
         Run.onRunStartGlobal += Run_onRunStartGlobal;
         IL.RoR2.BlastAttack.CollectHits += BlastAttack_CollectHits;
+        On.RoR2.DroneCatalog.SetDroneDefs += DroneCatalog_SetDroneDefs;
         if (init) return;
         init = true;
         Body = gameObject.GetComponent<CharacterBody>();
@@ -155,6 +161,9 @@ public static class BishopEvents
         SpearSlamExplosionEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearSlamVFX.prefab").RegisterEffect();
         SpearParryEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearParryVFX.prefab").RegisterEffect();
         SpearCrosshair = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/BishopSpearInputsCrosshair.prefab");
+        ShotgunBulletPattern = CaeliImperiumAssets.assetBundle.LoadAsset<BulletPatternDef>("Assets/CaeliImperium/Bodies/Bishop/Weapons/Shotgun/bpdShotgun.asset");
+        SniperTargetViewer sniperTargetViewer = SpearCrosshair.AddComponent<SniperTargetViewer>();
+        sniperTargetViewer.visualizerPrefab = CaeliImperiumAssets.LightSniperTargetVisualizer;
         HealMeleeProcType = ProcTypeAPI.ReserveProcType();
         ParriableDamageType = DamageAPI.ReserveDamageType();
         ParryDamageType = DamageAPI.ReserveDamageType();
@@ -203,6 +212,8 @@ public static class BishopEvents
         PatchBlastAttackStateToParriable(typeof(EntityStates.GolemMonster.ClapState), nameof(EntityStates.GolemMonster.ClapState.FixedUpdate));
         MakeStateParriable<EntityStates.ParentMonster.GroundSlam>();
         PatchBlastAttackStateToParriable(typeof(EntityStates.ParentMonster.GroundSlam), nameof(EntityStates.ParentMonster.GroundSlam.FixedUpdate));
+        MakeStateParriable<EntityStates.Wisp1Monster.ChargeEmbers>();
+        PatchBlastAttackStateToParriable(typeof(EntityStates.Wisp1Monster.FireEmbers), nameof(EntityStates.Wisp1Monster.FireEmbers.OnEnter));
         R2API.Networking.NetworkingAPI.RegisterMessageType<BishopRechargeSpecialSpearSkillsNetMessage>();
         typeof(Dash).RegisterEntityState();
         typeof(Punch).RegisterEntityState();
@@ -213,6 +224,16 @@ public static class BishopEvents
         typeof(SpearSlam).RegisterEntityState();
         typeof(SpearThrow).RegisterEntityState();
         typeof(SpearOrbit).RegisterEntityState();
+    }
+
+    private static void DroneCatalog_SetDroneDefs(On.RoR2.DroneCatalog.orig_SetDroneDefs orig, DroneDef[] newDroneDefs)
+    {
+        orig(newDroneDefs);
+        foreach (DroneDef droneDef in DroneCatalog.allDroneDefs)
+        {
+            if (droneDef.name.IsNullOrWhiteSpace()) continue;
+            GearboxYouHadOneJob.Add(droneDef.name, droneDef.droneIndex);
+        }
     }
 
     private static void BlastAttack_CollectHits(ILContext il)
@@ -244,6 +265,20 @@ public static class BishopEvents
         if (!obj.GetEventFlag("BishopRun"))
         {
             obj.SetEventFlag("BishopRun");
+            foreach (string itemName in purgeTheBoring)
+            {
+                if (itemName.IsNullOrWhiteSpace()) continue;
+                ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
+                if (itemIndex == ItemIndex.None) continue;
+                obj.availableItems.Remove(itemIndex);
+            }
+            foreach (string droneName in purgeTheClankers)
+            {
+                if (droneName.IsNullOrWhiteSpace()) continue;
+                DroneIndex droneIndex = GearboxYouHadOneJob[droneName];
+                if (droneIndex == DroneIndex.None) continue;
+                obj.availableDrones.Remove(droneIndex);
+            }
             CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
         }
         else
@@ -358,12 +393,21 @@ public static class BishopEvents
     {
         CharacterBody characterBody = healthComponent.body;
         if (!characterBody) return true;
-        if (characterBody.HasBuff(Stagger) && !damageReport.damageInfo.damageType.IsDamageSourceSkillBased)
+        if (characterBody.HasBuff(Stagger))
         {
-            healthComponent.Networkhealth = 1f;
-            return false;
+            if (damageReport.damageInfo.damageType.IsDamageSourceSkillBased)
+            {
+                healthComponent.Networkhealth = 0f;
+                return true;
+            }
+            else
+            {
+                healthComponent.Networkhealth = 1f;
+                return false;
+            }
+               
         }
-        if (characterBody.HasBuff(StaggerInvincibility))
+        if (characterBody.HasBuff(StaggerInvincibility) && !damageReport.damageInfo.HasModdedDamageType(BypassStaggerInvincibilityDamageType))
         {
             healthComponent.Networkhealth = 1f;
             return false;
@@ -611,6 +655,17 @@ public static class BishopEvents
         }
         types3.Add(type1);
     }
+    private static void PatchBulletAttackStateToParriable(Type type, string name) => PatchBulletAttackStateToParriable(type, name, type);
+    private static void PatchBulletAttackStateToParriable(Type type, string name, Type type1)
+    {
+        if (!types2.Contains(type))
+        {
+            MethodBase methodBase = AccessTools.Method(type, name);
+            _hooks.Add(new ILHook(methodBase, HandleFireBulletAttack));
+            types2.Add(type);
+        }
+        types3.Add(type1);
+    }
     private static Gradient GetParriableGradient()
     {
         Gradient gradient = new Gradient();
@@ -816,11 +871,33 @@ public static class BishopEvents
     }
     private static BlastAttack HandleBlastAttack2(BlastAttack blastAttack, BaseState baseState)
     {
+        RemoveParriable(baseState);
         if (types3.Contains(baseState.GetType()))
         {
             if (!blastAttack.HasModdedDamageType(ParriableDamageType)) blastAttack.AddModdedDamageType(ParriableDamageType);
         }
         return blastAttack;
+    }
+    private static BulletAttack HandleBulletAttack2(BulletAttack bulletAttack, BaseState baseState)
+    {
+        RemoveParriable(baseState);
+        if (types3.Contains(baseState.GetType()))
+        {
+            if (!bulletAttack.HasModdedDamageType(ParriableDamageType)) bulletAttack.AddModdedDamageType(ParriableDamageType);
+        }
+        return bulletAttack;
+    }
+    private static void HandleFireBulletAttack(ILContext il)
+    {
+        ILCursor c = new ILCursor(il);
+        if (c.TryGotoNext(MoveType.Before,
+                x => x.MatchCallvirt<BulletAttack>(nameof(BulletAttack.Fire))
+            ))
+        {
+            c.Emit(OpCodes.Ldarg_0);
+            c.EmitDelegate(HandleBulletAttack2);
+            return;
+        }
     }
     private struct ParriableOverlapStuff
     {
@@ -828,6 +905,7 @@ public static class BishopEvents
         public List<HurtBox> hurtBoxes;
         public static ParriableOverlapStuff HandleFireOverlapAttack2(OverlapAttack overlapAttack, List<HurtBox> hurtBoxes, BaseState baseState)
         {
+            RemoveParriable(baseState);
             if (types3.Contains(baseState.GetType()))
             {
                 if (!overlapAttack.HasModdedDamageType(ParriableDamageType)) overlapAttack.AddModdedDamageType(ParriableDamageType);

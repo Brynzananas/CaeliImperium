@@ -1,5 +1,6 @@
 ﻿using BrynzaAPI;
 using CaeliImperium;
+using CaeliImperium.Bodies;
 using EntityStates;
 using RoR2;
 using System;
@@ -12,9 +13,10 @@ public class ShootShotgun : BishopState
 {
     public static float baseDamageCoefficient = 1f;
     public static float procCoefficient = 0.5f;
-    public static float minSpread = 0f;
-    public static float maxSpread = 3f;
+    public static float minSpread = 10f;
+    public static float maxSpread = 10f;
     public static float baseDuration = 0.8f;
+    public static float durationMultiplierWhenOrbiting = 0.7f;
     public static bool allowTrajectoryAimAssist = true;
     public static uint bulletCount = 5;
     public static DamageType damageType = DamageType.Generic;
@@ -46,7 +48,8 @@ public class ShootShotgun : BishopState
     public void SetValues()
     {
         damage = baseDamageCoefficient * characterBody.damage;
-        duration = baseDuration / characterBody.attackSpeed/ (isAuthority ? (float)(characterBody.GetClientBuffCount(RoR2Content.Buffs.NoCooldowns) + 1) : 1f);
+        duration = baseDuration / characterBody.attackSpeed;
+        if (isAuthority && characterBody.GetClientBuffCount(RoR2Content.Buffs.NoCooldowns) > 0) duration *= durationMultiplierWhenOrbiting;
     }
     public void Fire()
     {
@@ -82,6 +85,7 @@ public class ShootShotgun : BishopState
             physForceFlags = physForceFlags,
             procCoefficient = procCoefficient
         };
+        bulletAttack.SetBulletPatternDef(BishopEvents.ShotgunBulletPattern);
         bulletAttack.Fire();
         characterBody.AddSpreadBloom(spreadBloom);
     }
@@ -90,6 +94,12 @@ public class ShootShotgun : BishopState
         base.FixedUpdate();
         if (!isAuthority || fixedAge < duration) return;
         outer.SetNextStateToMain();
+    }
+    public override void ModifyNextState(EntityState nextState)
+    {
+        base.ModifyNextState(nextState);
+        if (nextState is not BishopMeleeState bishopMeleeState) return;
+        bishopMeleeState.addDuration = Mathf.Max(duration - fixedAge, 0f);
     }
     public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Skill;
 }

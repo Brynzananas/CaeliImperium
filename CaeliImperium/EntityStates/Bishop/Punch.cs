@@ -55,7 +55,7 @@ public class Punch : BishopMeleeState
     public static float _backoffVelocity = 24f;
     public override float backoffVelocity => _backoffVelocity;
     public static float _flyToTargetSpeed = 96f;
-    public override float flyToTargetSpeed => _flyToTargetSpeed;
+    public override float minFlyToTargetSpeed => _flyToTargetSpeed;
     public static float _findTargetDistance = 48f;
     public override float findTargetDistance => _findTargetDistance;
     public static float _findTargetRadius = 3f;

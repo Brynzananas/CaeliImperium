@@ -48,6 +48,7 @@ public static class CaeliImperiumAssets
     public static GameObject GenericFootstepDust;
     public static GameObject GenericHugeFootstepDust;
     public static GameObject GenericLargeFootstepDust;
+    public static GameObject LightSniperTargetVisualizer;
     public static DeployableSlot mercenaryGhostDeployable;
     public static GameObject EquipmentPicker;
     public static GameObject EquipmentPickerSlot;
@@ -100,6 +101,7 @@ public static class CaeliImperiumAssets
         GreaterWispProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_GreaterWisp.WispCannonGhost_prefab).WaitForCompletion();
         HermitCrabProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_prefab).WaitForCompletion();
         HermitCrabProjectileOptGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_opt_prefab).WaitForCompletion();
+        LightSniperTargetVisualizer = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_Railgunner.RailgunnerSniperTargetVisualizerLight_prefab).WaitForCompletion();
         ArenaMonstersDccsPool = Addressables.LoadAssetAsync<DccsPool>("RoR2/Base/arena/dpArenaMonsters.asset").WaitForCompletion();
         SimpleDotCrosshair = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/UI/SimpleDotCrosshair.prefab").WaitForCompletion();
         IgniteOnKillExplosion = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/IgniteOnKill/IgniteExplosionVFX.prefab").WaitForCompletion();

@@ -31,7 +31,7 @@ public abstract class BishopMeleeState : BishopState
     public abstract float maxDistance { get; }
     public abstract PhysForceFlags physForceFlags { get; }
     public abstract float backoffVelocity { get; }
-    public abstract float flyToTargetSpeed { get; }
+    public abstract float minFlyToTargetSpeed { get; }
     public abstract float findTargetDistance { get; }
     public abstract float findTargetRadius { get; }
     public abstract bool giveEmpowermentOnExecute { get; }
@@ -46,6 +46,8 @@ public abstract class BishopMeleeState : BishopState
     public bool hasRequiredStockAndDelay;
     public bool targetIsStaggered;
     public bool wasStaggeredOnHit;
+    public float addDuration;
+    public float flyToTargetSpeed;
     public override void OnEnter()
     {
         base.OnEnter();
@@ -60,6 +62,7 @@ public abstract class BishopMeleeState : BishopState
         duration = baseDuration / characterBody.attackSpeed;
         ray = GetAimRay();
         hasRequiredStockAndDelay = activatorSkillSlot ? activatorSkillSlot.HasRequiredStockAndDelay() : false;
+        flyToTargetSpeed = minFlyToTargetSpeed;
     }
     public virtual void FindTarget()
     {
@@ -91,7 +94,16 @@ public abstract class BishopMeleeState : BishopState
                 targetIsStaggered = atleastOneStaggered;
             }
         }
-        moveDirection = target ? (target.transform.position - transform.position).normalized : Vector3.zero;
+        if (target)
+        {
+            Vector3 vector3 = target.transform.position - transform.position;
+            moveDirection = vector3.normalized;
+            flyToTargetSpeed = Mathf.Max(flyToTargetSpeed, vector3.magnitude / duration);
+        }
+        else
+        {
+            moveDirection = Vector3.zero;
+        }
     }
     public virtual bool canFly => targetIsStaggered || hasRequiredStockAndDelay;
     public override void FixedUpdate()
@@ -105,12 +117,12 @@ public abstract class BishopMeleeState : BishopState
         UpdateBulletAttack();
         FireBulletAttack();
         FlyToTarget();
-        if (fixedAge < duration) return;
+        if (fixedAge < (duration + addDuration)) return;
         outer.SetNextStateToMain();
     }
     public virtual void FlyToTarget()
     {
-        if (target && !stopMoving && canFly)
+        if (target && moveDirection != Vector3.zero && !stopMoving && canFly)
         {
             this.SetVelocity(Vector3.zero);
             this.AddRootMotion(moveDirection * flyToTargetSpeed * Time.fixedDeltaTime);
@@ -199,5 +211,5 @@ public abstract class BishopMeleeState : BishopState
         if (bulletAttack == null) return;
         bulletAttack.Fire();
     }
-    public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.PrioritySkill;
+    public override InterruptPriority GetMinimumInterruptPriority() => fixedAge > duration ? InterruptPriority.Skill : InterruptPriority.PrioritySkill;
 }
