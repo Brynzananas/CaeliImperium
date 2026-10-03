@@ -935,6 +935,19 @@ public static class CaeliImperiumUtils
         return closestCollider;
     }
     public static bool HasRequiredStockAndDelay(this GenericSkill genericSkill) => genericSkill.skillDef ? genericSkill.skillDef.HasRequiredStockAndDelay(genericSkill) : false;
+    public static List<string> GetLayerNames(LayerMask mask)
+    {
+        List<string> layerNames = [];
+        for (int i = 0; i < 32; i++)
+        {
+            if ((mask.value & (1 << i)) != 0)
+            {
+                string layerName = LayerMask.LayerToName(i);
+                if (!layerName.IsNullOrWhiteSpace()) layerNames.Add(layerName);
+            }
+        }
+        return layerNames;
+    }
 }
 
 [Serializable]

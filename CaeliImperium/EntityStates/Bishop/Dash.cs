@@ -31,6 +31,7 @@ public class Dash : BishopMainState
         GatherInputs();
         DestroyNearbyProjectilesAndGainSpecialSpearStocks();
         SetValues();
+        if (NetworkServer.active) characterBody.AddTimedBuff(BishopEvents.Parry, duration);
     }
     public override void OnExit()
     {

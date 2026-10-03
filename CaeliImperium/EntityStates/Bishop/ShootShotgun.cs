@@ -12,9 +12,9 @@ namespace CaeliImperiumEntityStates.Bishop;
 public class ShootShotgun : BishopState
 {
     public static float baseDamageCoefficient = 1f;
-    public static float procCoefficient = 0.5f;
-    public static float minSpread = 10f;
-    public static float maxSpread = 10f;
+    public static float procCoefficient = 1f;
+    public static float minSpread = 7f;
+    public static float maxSpread = 7f;
     public static float baseDuration = 0.8f;
     public static float durationMultiplierWhenOrbiting = 0.7f;
     public static bool allowTrajectoryAimAssist = true;

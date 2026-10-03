@@ -24,6 +24,7 @@ public class BishopCrosshairController : MonoBehaviour
     private GameObject currentWeaponCrosshair;
     private GameObject previousWeaponCrosshairPrefab;
     private OverlayController overlayController;
+    private int sprintSkillPreviousStock;
 
     public void Awake()
     {
@@ -40,21 +41,34 @@ public class BishopCrosshairController : MonoBehaviour
         if (bishopComponent && sprintSkillHolder)
         {
             GenericSkill dashSkill = bishopComponent.dashSkill;
+            if (sprintSkillHolder)
+            {
+                if (dashSkill)
+                {
+                    if (sprintSkillStocksCounter) sprintSkillStocksCounter.text = bishopComponent.dashSkill.stock.ToString();
+                    if (sprintSkillCooldownMeter)
+                    {
+                        float fill = dashSkill.stock >= dashSkill.maxStock ? 1f : dashSkill.rechargeStopwatch / dashSkill.finalRechargeInterval;
+                        sprintSkillCooldownMeter.fillAmount = fill;
+                    }
+                    if (!sprintSkillHolder.activeSelf) sprintSkillHolder.SetActive(true);
+                }
+                else
+                {
+                    if (sprintSkillHolder.activeSelf) sprintSkillHolder.SetActive(false);
+                }
+            }
             if (dashSkill)
             {
-                if (sprintSkillStocksCounter) sprintSkillStocksCounter.text = bishopComponent.dashSkill.stock.ToString();
-                if (sprintSkillCooldownMeter)
+                int stock = dashSkill.stock;
+                if (sprintSkillPreviousStock < stock)
                 {
-                    float fill = dashSkill.stock >= dashSkill.maxStock ? 1f : dashSkill.rechargeStopwatch / dashSkill.finalRechargeInterval;
-                    sprintSkillCooldownMeter.fillAmount = fill;
+                    Camera camera = Camera.main;
+                    if (camera) Util.PlaySound("DoomTDA_Player_Dash_Recharge", camera.gameObject);
                 }
-                if (!sprintSkillHolder.activeSelf) sprintSkillHolder.SetActive(true);
+                sprintSkillPreviousStock = stock;
             }
-            else
-            {
-                if (sprintSkillHolder.activeSelf) sprintSkillHolder.SetActive(false);
-            }
-
+            
         }
         if (skillLocator)
         {

@@ -86,7 +86,7 @@ public class Punch : BishopMeleeState
     public override void OnMeleeHit(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo, HealthComponent victimHealthComponent)
     {
         base.OnMeleeHit(bulletAttack, ref hitInfo, victimHealthComponent);
-        Util.PlaySound("Play_DoomTDA_Punch", gameObject);
+        Util.PlaySound(wasStaggeredOnHit || hasRequiredStockAndDelay ? "Play_DoomTDA_Punch_Combo" : "Play_DoomTDA_Punch", gameObject);
         if (!wasStaggeredOnHit && hasRequiredStockAndDelay) AddTimeBuffAndResetTimerForAllStacksNetMessage.Send(characterBody, BishopEvents.MeleeCombo.buffIndex, BishopEvents.MeleeComboDuration);
     }
 }

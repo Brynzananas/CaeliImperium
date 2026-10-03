@@ -10,7 +10,7 @@ using static UnityEngine.ParticleSystem.PlaybackState;
 namespace CaeliImperium.Components;
 public class ParriableProjectileGhostColorChanger : MonoBehaviour
 {
-    public static float BrightnessMultiplier = 2.5f;
+    public static float BrightnessMultiplier = 3f;
     private static HashSet<string> remapShaderNames = new HashSet<string> { "Hopoo Games/FX/Cloud Remap", "Hopoo Games/FX/Cloud Intersection Remap", "Hopoo Games/FX/Opaque Cloud Remap", "Hopoo Games/Optimized/Switch/FX/CloudIntersectionRemap", "Hopoo Games/Optimized/Switch/FX/CloudIntersectionRemap_TwoSides", "Hopoo Games/Optimized/Switch/FX/OpaqueCloudRemap", "Hopoo Games/Optimized/Switch/FX/OpaqueCloudRemap_Specular", "Hopoo Games/Optimized/Switch/FX/CloudRemap", "Hopoo Games/UI/UI Bar Remap" };
     public static Dictionary<Texture2D, Texture2D> defaultTextureToParriableTexture = [];
     public static Dictionary<Material, Material> defaultMaterialToParriableMaterial = [];
@@ -22,6 +22,8 @@ public class ParriableProjectileGhostColorChanger : MonoBehaviour
     public Dictionary<Light, Color> defaultLightColors = [];
     public Color parriableLightColor;
     private bool appliedParriable;
+    private uint soundId;
+    
     public void Init(Gradient gradient)
     {
         parriableLightColor = gradient.colorKeys.Last().color;
