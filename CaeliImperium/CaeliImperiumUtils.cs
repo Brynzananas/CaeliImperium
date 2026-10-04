@@ -948,6 +948,19 @@ public static class CaeliImperiumUtils
         }
         return layerNames;
     }
+    public static CameraRigController GetCameraRigController(this CharacterBody characterBody)
+    {
+        ReadOnlyCollection<CameraRigController> readOnlyInstancesList = CameraRigController.readOnlyInstancesList;
+        foreach (CameraRigController cameraRigController in readOnlyInstancesList)
+        {
+            if (!cameraRigController) continue;
+            if (cameraRigController.targetBody == characterBody)
+            {
+                return cameraRigController;
+            }
+        }
+        return null;
+    }
 }
 
 [Serializable]

@@ -20,7 +20,7 @@ public class EasyProjectileController : MonoBehaviour
     public void Start()
     {
         if (!rigidbody) return;
-        rigidbody.velocity += Physics.gravity * addGravityOnStart;
+        if (rigidbody.useGravity) rigidbody.velocity += Physics.gravity * addGravityOnStart;
     }
     public void OnTriggerEnter(Collider collider)
     {

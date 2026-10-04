@@ -46,17 +46,22 @@ public static class BishopEvents
     public static SkillFamily Special;
     public static SkillFamily Sprint;
     public static SkillDef ShotgunFire;
+    public static SkillDef AcceleratorFire;
     public static SkillDef SpearSwing;
     public static SkillDef Punch;
     public static SkillDef Dash;
     public static SkillDef SpearSpecial;
     public static BuffDef PrepareParriableAttackCount;
     public static BuffDef Parry;
+    public static BuffDef Dodge;
     public static BuffDef Stagger;
     public static BuffDef StaggerInvincibility;
     public static BuffDef WasStaggered;
     public static BuffDef MeleeCombo;
+    public static BuffDef SpearOrbitLockOn;
     public static GameObject SpearThrowProjectile;
+    public static GameObject AcceleratorPlasmaProjectile;
+    public static EffectDef AcceleratorPlasmaImpactEffect;
     public static EffectDef SpearThrowHitEffect;
     public static EffectDef SpearThrowHeadshotExplosionEffect;
     public static EffectDef SpearSlamExplosionEffect;
@@ -65,6 +70,7 @@ public static class BishopEvents
     public static EffectDef AboutToAttackParryEffect;
     public static GameObject SpearCrosshair;
     public static BulletPatternDef ShotgunBulletPattern;
+    public static BulletPatternDef AcceleratorBulletPattern;
     public static ModdedProcType HealMeleeProcType;
     public static DamageAPI.ModdedDamageType ParriableDamageType;
     public static DamageAPI.ModdedDamageType ParryDamageType;
@@ -146,25 +152,31 @@ public static class BishopEvents
         Special = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopSpecial.asset").RegisterSkillFamily();
         Sprint = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopSprint.asset").RegisterSkillFamily();
         ShotgunFire = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopShotgunFire.asset").RegisterSkillDef();
+        AcceleratorFire = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopAcceleratorFire.asset").RegisterSkillDef();
         SpearSwing = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSwing.asset").RegisterSkillDef();
         Punch = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopPunch.asset").RegisterSkillDef();
         Dash = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopDash.asset").RegisterSkillDef();
         SpearSpecial = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSpecial.asset").RegisterSkillDef();
         PrepareParriableAttackCount = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdPrepareParriableAttackCount.asset").RegisterBuffDef();
         Parry = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdParry.asset").RegisterBuffDef();
+        Dodge = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdDodge.asset").RegisterBuffDef();
+        SpearOrbitLockOn = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdSpearOrbitLockOn.asset").RegisterBuffDef();
         Stagger = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdStagger.asset").RegisterBuffDef();
         StaggerInvincibility = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdStaggerInvincibility.asset").RegisterBuffDef();
         WasStaggered = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdWasStaggered.asset").RegisterBuffDef();
         MeleeCombo = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdMeleeCombo.asset").RegisterBuffDef();
         SpearThrowProjectile = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/CIBishopSpearThrowProjectile.prefab").RegisterProjectile();
+        AcceleratorPlasmaProjectile = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Weapons/Accelerator/CIAcceleratorPlasmaProjectile.prefab").RegisterProjectile();
         SpearThrowHeadshotExplosionEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearThrowHeadshotHitVFX.prefab").RegisterEffect();
         SpearThrowHitEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearThrowHitVFX.prefab").RegisterEffect();
+        AcceleratorPlasmaImpactEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/AcceleratorPlasmaImpact.prefab").RegisterEffect();
         SpearSlashHitEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearSlashHitVFX.prefab").RegisterEffect();
         SpearSlamExplosionEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearSlamVFX.prefab").RegisterEffect();
         SpearParryEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/SpearParryVFX.prefab").RegisterEffect();
         AboutToAttackParryEffect = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/Effects/AboutToAttackParriable.prefab").RegisterEffect();
         SpearCrosshair = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/BishopSpearInputsCrosshair.prefab");
         ShotgunBulletPattern = CaeliImperiumAssets.assetBundle.LoadAsset<BulletPatternDef>("Assets/CaeliImperium/Bodies/Bishop/Weapons/Shotgun/bpdShotgun.asset");
+        AcceleratorBulletPattern = CaeliImperiumAssets.assetBundle.LoadAsset<BulletPatternDef>("Assets/CaeliImperium/Bodies/Bishop/Weapons/Accelerator/bpdAccelerator.asset");
         SniperTargetViewer sniperTargetViewer = SpearCrosshair.AddComponent<SniperTargetViewer>();
         sniperTargetViewer.visualizerPrefab = CaeliImperiumAssets.LightSniperTargetVisualizer;
         HealMeleeProcType = ProcTypeAPI.ReserveProcType();
@@ -236,6 +248,8 @@ public static class BishopEvents
         typeof(SpearSlam).RegisterEntityState();
         typeof(SpearThrow).RegisterEntityState();
         typeof(SpearOrbit).RegisterEntityState();
+        typeof(ShootAccelerator).RegisterEntityState();
+        typeof(ExitAccelerator).RegisterEntityState();
     }
 
     private static void DroneCatalog_SetDroneDefs(On.RoR2.DroneCatalog.orig_SetDroneDefs orig, DroneDef[] newDroneDefs)

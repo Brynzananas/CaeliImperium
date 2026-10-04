@@ -1,32 +1,34 @@
 ﻿using BrynzaAPI;
 using CaeliImperium;
 using CaeliImperium.Bodies;
+using CaeliImperiumScriptableObjects;
 using EntityStates;
 using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace CaeliImperiumEntityStates.Bishop;
-public class ShootShotgun : BishopRightWeaponState
+public class ExitAccelerator : BishopRightWeaponState
 {
-    public static float damageCoefficient = 1f;
+    public static float damageCoefficient = 5f;
     public static float procCoefficient = 1f;
-    public static float minSpread = 7f;
-    public static float maxSpread = 7f;
-    public static float baseDuration = 0.8f;
-    public static float durationMultiplierWhenOrbiting = 0.7f;
-    public static bool allowTrajectoryAimAssist = true;
-    public static uint bulletCount = 5;
-    public static DamageType damageType = DamageType.Generic;
+    public static float minSpread = 0f;
+    public static float maxSpread = 0f;
+    public static float baseDuration = 0.5f;
+    public static bool allowTrajectoryAimAssist = false;
+    public static uint bulletCount = 1;
+    public static DamageType damageType = DamageType.SlowOnHit;
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
     public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
-    public static float force = 300f;
-    public static float radius = 0.1f;
+    public static float force = 900f;
+    public static float selfVelocity = 12f;
+    public static float radius = 5f;
     public static float trajectoryAimAssistMultiplier = 0.75f;
     public static bool smartCollision = true;
-    public static float maxDistance = 256f;
+    public static float maxDistance = 6f;
     public static PhysForceFlags physForceFlags = PhysForceFlags.None;
     public static float minVerticalRecoil = -0.4f;
     public static float maxVerticalRecoil = -0.8f;
@@ -36,33 +38,51 @@ public class ShootShotgun : BishopRightWeaponState
     public static float shakeFrequency = 12f;
     public static float shakeDuration = 0.7f;
     public static float shakeRadius = 6f;
-    public static float shakeAmplitude = 1f;
-    public float damage;
+    public static float shakeAmplitude = 2f;
+    public bool supercharge;
     public float duration;
+    public float damage;
     public override float durationForStateModification => duration;
     public override float fixedAgeForStateModification => fixedAge;
 
+    public override void OnSerialize(NetworkWriter writer)
+    {
+        base.OnSerialize(writer);
+        writer.Write(supercharge);
+    }
+    public override void OnDeserialize(NetworkReader reader)
+    {
+        base.OnDeserialize(reader);
+        supercharge = reader.ReadBoolean();
+    }
     public override void OnEnter()
     {
         base.OnEnter();
         SetValues();
-        Fire();
+        (this as IBishopState).PlayFirstPersonCrossfade("RightArm, Override", "ExitAccelerator", "rightArm.playbackRate", 1f, 0.05f, true);
+        if (supercharge) Fire();
     }
     public void SetValues()
     {
         damage = damageCoefficient * characterBody.damage;
         duration = baseDuration / characterBody.attackSpeed;
-        if (characterBody.HasBuff(BishopEvents.SpearOrbitLockOn)) duration *= durationMultiplierWhenOrbiting;
+    }
+    public override void FixedUpdate()
+    {
+        base.FixedUpdate();
+        if (!isAuthority || fixedAge < duration) return;
+        outer.SetNextStateToMain();
     }
     public void Fire()
     {
         Ray ray = GetAimRay();
         StartAimMode(ray);
         AddRecoil(minVerticalRecoil, maxVerticalRecoil, minHorizontalRecoil, maxHorizontalRecoil);
-        (this as IBishopState).PlayFirstPersonCrossfade("RightArm, Override", "FireShotgun", "rightArm.playbackRate", 1f, 0.05f, true);
-        Util.PlaySound("Play_DoomTDA_CombatShotgun_Fire", gameObject);
+        Util.PlaySound("Play_DoomTDA_Accelerator_Heatblast", gameObject);
         (this as IBishopState).Shake(shakeDuration, shakeRadius, shakeFrequency, shakeAmplitude);
         if (!isAuthority) return;
+        this.AddVelocity(ray.direction * -1f * selfVelocity);
+        if (activatorSkillSlot) BishopAcceleratorSkillDef.RemoveAllCharge(activatorSkillSlot);
         BulletAttack bulletAttack = new BulletAttack
         {
             owner = gameObject,
@@ -86,16 +106,11 @@ public class ShootShotgun : BishopRightWeaponState
             smartCollision = smartCollision,
             maxDistance = maxDistance,
             physForceFlags = physForceFlags,
-            procCoefficient = procCoefficient
+            procCoefficient = procCoefficient,
+            stopperMask = LayerIndex.ui.mask,
+            hitMask = LayerIndex.entityPrecise.mask
         };
-        bulletAttack.SetBulletPatternDef(BishopEvents.ShotgunBulletPattern);
         bulletAttack.Fire();
         characterBody.AddSpreadBloom(spreadBloom);
-    }
-    public override void FixedUpdate()
-    {
-        base.FixedUpdate();
-        if (!isAuthority || fixedAge < duration) return;
-        outer.SetNextStateToMain();
     }
 }

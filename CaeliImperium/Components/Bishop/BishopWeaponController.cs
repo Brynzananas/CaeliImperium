@@ -8,4 +8,6 @@ public class BishopWeaponController : MonoBehaviour
 {
     public GameObject crosshairPrefab;
     public Transform muzzle;
+    public string loopAnimationString;
+    public int rightWeaponIndex;
 }

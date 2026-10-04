@@ -64,6 +64,11 @@ public class BishopFirstPersonCameraController : MonoBehaviour
         if (!newWeaponPrefab) return;
         currentRightHandWeapon = Instantiate(newWeaponPrefab, rightWeaponHolder);
         previousRightHandWeaponPrefab = newWeaponPrefab;
+        if (firstPersonCameraController && firstPersonCameraController.animator)
+        {
+            firstPersonCameraController.animator.SetInteger("rightWeaponIndex", newWeaponPrefab.rightWeaponIndex);
+            firstPersonCameraController.animator.Play(newWeaponPrefab.loopAnimationString, 1);
+        }
         if (newWeaponPrefab.crosshairPrefab)
         {
             OverlayCreationParams overlayCreationParams = new OverlayCreationParams

@@ -141,7 +141,7 @@ public class SpearOrbit : BishopMainState
     {
         if (startedLockOn) return;
         startedLockOn = true;
-        characterBody.AddClientBuff(RoR2Content.Buffs.NoCooldowns);
+        characterBody.ApplyBuff(BishopEvents.SpearOrbitLockOn.buffIndex, 1);
         duration += durationAddition;
         if (!cameraOverride)
         {
@@ -166,7 +166,7 @@ public class SpearOrbit : BishopMainState
     {
         if (!startedLockOn) return;
         startedLockOn = false;
-        characterBody.RemoveClientBuff(RoR2Content.Buffs.NoCooldowns);
+        characterBody.ApplyBuff(BishopEvents.SpearOrbitLockOn.buffIndex, 0);
         duration -= durationAddition;
         if (cameraOverride) Destroy(cameraOverride);
     }
