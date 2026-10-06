@@ -4,9 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace CaeliImperium.Components.Bishop;
-public class BishopComponent : MonoBehaviour
+public class BishopComponent : NetworkBehaviour
 {
     public static int enableCount {  get; private set; }
     public float maxMoveSpeed = 15f;
@@ -19,8 +20,9 @@ public class BishopComponent : MonoBehaviour
     public float mantleHeight = 2f;
     public float mantleMaxAngle = 30f;
     public float mantleCooldown = 0.5f;
-    public float healFraction = 1f;
-    public float reservedHeal;
+    public float drainReserveHealPercentage = 0.01f;
+    [SyncVar] public float reservedHealPercentage;
+    public float maxReservedHealPercentage = 1f;
     public float leftHandPunchTimer;
     public event Action<BishopComponent, MantleInfo> onMantle;
     [HideInInspector] public float previousMoveSpeed;
@@ -61,11 +63,24 @@ public class BishopComponent : MonoBehaviour
     }
     public void FixedUpdate()
     {
-        if (mantleCooldown > 0f) mantleCooldown -= Time.fixedDeltaTime;
+        HandleDrain();
         if (mantle) HandleMantle();
+    }
+    public void SetReservedHealPercentage(float value)
+    {
+        float setValue = Mathf.Clamp(value, 0f, maxReservedHealPercentage);
+        reservedHealPercentage = setValue;
+    }
+    public void HandleDrain()
+    {
+        if (!NetworkServer.active || reservedHealPercentage <= 0f || !characterBody) return;
+        HealthComponent healthComponent = characterBody.healthComponent;
+        if (!healthComponent) return;
+        SetReservedHealPercentage(reservedHealPercentage - (drainReserveHealPercentage * Time.fixedDeltaTime));
     }
     public void HandleMantle()
     {
+        if (mantleCooldown > 0f) mantleCooldown -= Time.fixedDeltaTime;
         if (mantleStopwatch > 0f || !characterBody || !characterBody.hasEffectiveAuthority || !characterMotor || !inputBankTest || characterMotor.isGrounded) return;
         if (mantleOnlyWhenFalling && characterMotor.velocity.y > 0f) return;
         CapsuleCollider capsuleCollider = characterMotor.capsuleCollider;
@@ -82,10 +97,11 @@ public class BishopComponent : MonoBehaviour
         if (angle < mantleMaxAngle) return;
         float currentY = capsuleCollider.bounds.center.y;
         float targetY = hitInfo.point.y;
-        float deltaY = (targetY - currentY) + (capsuleCollider.height);
+        float deltaY = targetY - currentY;
         if (deltaY < 0f) return;
+        deltaY += capsuleCollider.height;
         float jumpPower = Trajectory.CalculateInitialYSpeedForHeight(deltaY);
-        characterMotor.velocity.y += jumpPower;
+        characterMotor.velocity.y = jumpPower;
         mantleStopwatch = mantleCooldown;
         if (animator)
         {

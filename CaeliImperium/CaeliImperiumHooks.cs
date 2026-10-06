@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static RoR2.DotController;
 
 namespace CaeliImperium
@@ -28,10 +29,60 @@ namespace CaeliImperium
             On.RoR2.ZiprailController.GetInteractability += ZiprailController_GetInteractability;
             IL.RoR2.CameraRigController.SetCameraState += CameraRigController_SetCameraState;
             CameraRigController.onCameraTargetChanged += CameraRigController_onCameraTargetChanged;
-            IL.RoR2.DitherModel.UpdateDither += DitherModel_UpdateDither;
-            IL.RoR2.CharacterModel.UpdateMaterials += CharacterModel_UpdateMaterials;
             IL.RoR2.SetStateOnHurt.OnTakeDamageServer += SetStateOnHurt_OnTakeDamageServer;
+            On.RoR2.DitherModel.RefreshObstructorsForCamera += DitherModel_RefreshObstructorsForCamera;
+            On.RoR2.CharacterModel.RefreshObstructorsForCamera += CharacterModel_RefreshObstructorsForCamera;
+            MusicController.pickTrackHook += MusicController_pickTrackHook;
+            NetworkUser.onNetworkUserDiscovered += NetworkUser_onNetworkUserDiscovered;
+            SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
         }
+
+        private static void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
+        {
+            if (arg1.name == "title")
+            {
+                new GameObject("CaeliImperiumTitleController", [typeof(CaeliImperiumTitleController)]);
+            }
+        }
+
+        private static void NetworkUser_onNetworkUserDiscovered(NetworkUser networkUser)
+        {
+            if (!Util.HasEffectiveAuthority(networkUser.netIdentity)) return;
+            CaeliImperiumPlugin.currentNetworkUser = networkUser;
+        }
+
+        private static void MusicController_pickTrackHook(MusicController musicController, ref MusicTrackDef newTrack)
+        {
+            if (!(newTrack == CaeliImperiumAssets.MainMenuMusic || newTrack == CaeliImperiumAssets.CharaceterSelectScreenMusic)) return;
+            bool selectedCaeliImperiumSurvivor = CaeliImperiumUtils.SelectedCaeliImperiumSurvivor();
+            if (selectedCaeliImperiumSurvivor) newTrack = CaeliImperiumAssets.CaeliImperiumMainMenuMusic;
+        }
+
+        private static void CharacterModel_RefreshObstructorsForCamera(On.RoR2.CharacterModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController)
+        {
+            if (FirstPersonCameraController.keyValuePairs.TryGetValue(cameraRigController, out FirstPersonCameraController firstPersonCameraController))
+            {
+                foreach (CharacterModel characterModel in InstanceTracker.GetInstancesList<CharacterModel>())
+                {
+                    characterModel.fade = 1f;
+                }
+                return;
+            }
+            orig(cameraRigController);
+        }
+        private static void DitherModel_RefreshObstructorsForCamera(On.RoR2.DitherModel.orig_RefreshObstructorsForCamera orig, CameraRigController cameraRigController)
+        {
+            if (FirstPersonCameraController.keyValuePairs.TryGetValue(cameraRigController, out FirstPersonCameraController firstPersonCameraController))
+            {
+                foreach (DitherModel ditherModel in DitherModel.instancesList)
+                {
+                    ditherModel.fade = 1f;
+                }
+                return;
+            }
+            orig(cameraRigController);
+        }
+
         public static void UnsetHooks()
         {
             if (!_hooksSet) return;
@@ -39,9 +90,9 @@ namespace CaeliImperium
             On.RoR2.ZiprailController.GetInteractability -= ZiprailController_GetInteractability;
             CameraRigController.onCameraTargetChanged -= CameraRigController_onCameraTargetChanged;
             IL.RoR2.CameraRigController.SetCameraState -= CameraRigController_SetCameraState;
-            IL.RoR2.DitherModel.UpdateDither -= DitherModel_UpdateDither;
-            IL.RoR2.CharacterModel.UpdateMaterials -= CharacterModel_UpdateMaterials;
             IL.RoR2.SetStateOnHurt.OnTakeDamageServer -= SetStateOnHurt_OnTakeDamageServer;
+            On.RoR2.DitherModel.RefreshObstructorsForCamera -= DitherModel_RefreshObstructorsForCamera;
+            On.RoR2.CharacterModel.RefreshObstructorsForCamera -= CharacterModel_RefreshObstructorsForCamera;
         }
         private static void SetStateOnHurt_OnTakeDamageServer(ILContext il)
         {
@@ -66,33 +117,6 @@ namespace CaeliImperium
         {
             if (damageReport.damageInfo.HasModdedDamageType(CaeliImperiumAssets.CannotHitstun)) return true;
             return false;
-        }
-        private static void CharacterModel_UpdateMaterials(ILContext il)
-        {
-            ILCursor c = new ILCursor(il);
-            while (c.TryGotoNext(
-                MoveType.After,
-                x => x.MatchLdfld<CharacterModel>(nameof(CharacterModel.fade))
-            ))
-            {
-                c.EmitDelegate(HandleDither);
-            }
-        }
-
-        private static void DitherModel_UpdateDither(ILContext il)
-        {
-            ILCursor c = new ILCursor(il);
-            if (c.TryGotoNext(
-                MoveType.After,
-                x => x.MatchLdfld<DitherModel>(nameof(DitherModel.fade))
-            ))
-            {
-                c.EmitDelegate(HandleDither);
-            }
-            else
-            {
-                CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
-            }
         }
         private static float HandleDither(float fade)
         {

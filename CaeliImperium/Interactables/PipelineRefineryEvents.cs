@@ -43,15 +43,15 @@ public static class PipelineRefineryEvents
         }
         }
     };
-    private static bool inited;
+    internal static bool init;
     public static void Init(GameObject gameObject)
     {
         SceneDirector.onPostPopulateSceneServer += SceneDirector_onPostPopulateSceneServer;
         CaeliImperiumPlugin.onPluginDestroyed += CaeliImperiumPlugin_onPluginDestroyed;
         IL.RoR2.MusicController.PickCurrentTrack += MusicController_PickCurrentTrack;
         IL.RoR2.UI.ContextManager.Update += ContextManager_Update;
-        if (inited) return;
-        inited = true;
+        if (init) return;
+        init = true;
         List<Transform> children = CaeliImperiumUtils.GetFilteredChildren(gameObject.transform, FilterColliders);
         foreach (Transform child in children)
         {

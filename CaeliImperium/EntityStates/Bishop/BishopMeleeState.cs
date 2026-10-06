@@ -157,7 +157,7 @@ public abstract class BishopMeleeState : BishopState
             filterCallback = FilterCallback
         };
         bulletAttack.SetIgnoreHitTargets(true);
-        bulletAttack.AddModdedDamageType(BishopEvents.BypassStaggerInvincibilityDamageType);
+        bulletAttack.AddModdedDamageType(BishopEvents.GloryKillDamageType);
     }
     public virtual bool FilterCallback(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo)
     {

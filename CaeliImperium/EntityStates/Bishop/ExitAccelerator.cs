@@ -24,7 +24,7 @@ public class ExitAccelerator : BishopRightWeaponState
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
     public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
     public static float force = 900f;
-    public static float selfVelocity = 12f;
+    public static float selfVelocity = 18f;
     public static float radius = 5f;
     public static float trajectoryAimAssistMultiplier = 0.75f;
     public static bool smartCollision = true;

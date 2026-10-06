@@ -53,7 +53,7 @@ public class FirstPersonCameraViewbob : MonoBehaviour
         {
             viewbobTimer += Time.deltaTime * viewbobFrequency;
             float horizontalOffset = Mathf.Sin(viewbobTimer) * viewbobHorizontalAmount;
-            float verticalOffset = Mathf.Sin(viewbobTimer * 2.0f) * viewbobVerticalAmount;
+            float verticalOffset = Mathf.Sin(viewbobTimer * 2.0f) * -viewbobVerticalAmount;
             targetPosition += new Vector3(horizontalOffset, verticalOffset, 0);
         }
         else

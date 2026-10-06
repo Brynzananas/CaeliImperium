@@ -24,7 +24,7 @@ public class ShootAccelerator : BishopRightWeaponState
     public static DamageType damageType = DamageType.Generic;
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
     public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
-    public static float force = 300f;
+    public static float force = 0f;
     public static float radius = 0.1f;
     public static float trajectoryAimAssistMultiplier = 1f;
     public static float minVerticalRecoil = -0.4f;

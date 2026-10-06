@@ -14,6 +14,8 @@ using CaeliImperiumEntityStates.Test;
 using CaeliImperium.Interactables;
 using CaeliImperium.Stages;
 using CaeliImperium.Components;
+using CaeliImperium.ScriptableObjects;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace CaeliImperium;
 
@@ -31,7 +33,12 @@ public static class CaeliImperiumAssets
     public static GameObject GreaterWispProjectileGhost;
     public static GameObject HermitCrabProjectileGhost;
     public static GameObject HermitCrabProjectileOptGhost;
+    public static GameObject BeetleQueenSpitProejctileGhost;
+    public static GameObject ClayBossTarBallProjectileGhost;
+    public static GameObject GrandparentBossBoulderProjectileGhost;
+    public static GameObject GrandparentBossMiniBoulderProjectileGhost;
     public static GameObject PlayerCharacterMasterControllerPrefab;
+    public static GameObject HuntressArrowRainIndicator;
     public static GameObject ClassicRunPrefab;
     public static GameObject IgniteOnKillExplosion;
     public static GameObject LoaderExplosion;
@@ -42,6 +49,19 @@ public static class CaeliImperiumAssets
     public static GameObject TreebotBody;
     public static GameObject MinorConstructBody;
     public static GameObject ExtractorUnitBody;
+    public static GameObject VultureHunterBody;
+    public static GameObject TitanGoldBody;
+    public static GameObject FalseSonBossBody;
+    public static GameObject FalseSonBossLunarShardBody;
+    public static GameObject FalseSonBossBrokenLunarShardBody;
+    public static GameObject BrotherBody;
+    public static GameObject BrotherHurtBody;
+    public static GameObject SolusHeartBody;
+    public static GameObject SolusWingBody;
+    public static GameObject MiniVoidRaidCrabBaseBody;
+    public static GameObject MiniVoidRaidCrabPhase1Body;
+    public static GameObject MiniVoidRaidCrabPhase2Body;
+    public static GameObject MiniVoidRaidCrabPhase3Body;
     public static GameObject SimpleDotCrosshair;
     public static CharacterCameraParams StandardCharacterCameraParams;
     public static CharacterCameraParams StandardHugeCharacterCameraParams;
@@ -75,6 +95,11 @@ public static class CaeliImperiumAssets
     public static SceneCollection LoopStage3;
     public static SceneCollection LoopStage4;
     public static SceneCollection LoopStage5;
+    public static MusicTrackDef MainMenuMusic;
+    public static MusicTrackDef CharaceterSelectScreenMusic;
+    public static PostProcessProfile NestPP;
+    public static CIMusicTrackDef CaeliImperiumMainMenuMusic;
+    public static Sprite CaeliImperiumLogo;
     public static GameObject MainCamera;
     public static SceneDef TitanicPlains;
     public static SurfaceDef MetalSurface;
@@ -101,6 +126,10 @@ public static class CaeliImperiumAssets
         GreaterWispProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_GreaterWisp.WispCannonGhost_prefab).WaitForCompletion();
         HermitCrabProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_prefab).WaitForCompletion();
         HermitCrabProjectileOptGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_opt_prefab).WaitForCompletion();
+        BeetleQueenSpitProejctileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_BeetleQueen.BeetleQueenSpitGhost_prefab).WaitForCompletion();
+        ClayBossTarBallProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_ClayBoss.TarballGhost_prefab).WaitForCompletion();
+        GrandparentBossBoulderProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Grandparent.GrandparentBoulderGhost_prefab).WaitForCompletion();
+        GrandparentBossMiniBoulderProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Grandparent.GrandparentMiniBoulderGhost_prefab).WaitForCompletion();
         LightSniperTargetVisualizer = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_Railgunner.RailgunnerSniperTargetVisualizerLight_prefab).WaitForCompletion();
         ArenaMonstersDccsPool = Addressables.LoadAssetAsync<DccsPool>("RoR2/Base/arena/dpArenaMonsters.asset").WaitForCompletion();
         SimpleDotCrosshair = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/UI/SimpleDotCrosshair.prefab").WaitForCompletion();
@@ -114,7 +143,21 @@ public static class CaeliImperiumAssets
         MinorConstructBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_MajorAndMinorConstruct.MinorConstructBody_prefab).WaitForCompletion();
         ExtractorUnitBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_ExtractorUnit.ExtractorUnitBody_prefab).WaitForCompletion();
         LoaderBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Loader.LoaderBody_prefab).WaitForCompletion();
+        VultureHunterBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_VultureHunter.VultureHunterBody_prefab).WaitForCompletion();
+        TitanGoldBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Titan.TitanGoldBody_prefab).WaitForCompletion();
+        FalseSonBossBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC2_FalseSonBoss.FalseSonBossBody_prefab).WaitForCompletion();
+        FalseSonBossLunarShardBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC2_FalseSonBoss.FalseSonBossBodyLunarShard_prefab).WaitForCompletion();
+        FalseSonBossBrokenLunarShardBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC2_FalseSonBoss.FalseSonBossBodyBrokenLunarShard_prefab).WaitForCompletion();
+        BrotherBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Brother.BrotherBody_prefab).WaitForCompletion();
+        BrotherHurtBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Brother.BrotherHurtBody_prefab).WaitForCompletion();
+        SolusHeartBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_SolusHeart.SolusHeartBody_prefab).WaitForCompletion();
+        SolusWingBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_SolusWing.SolusWingBody_prefab).WaitForCompletion();
+        MiniVoidRaidCrabBaseBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyBase_prefab).WaitForCompletion();
+        MiniVoidRaidCrabPhase1Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase1_prefab).WaitForCompletion();
+        MiniVoidRaidCrabPhase2Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase2_prefab).WaitForCompletion();
+        MiniVoidRaidCrabPhase3Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase3_prefab).WaitForCompletion();
         LoaderExplosion = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Loader.LoaderGroundSlam_prefab).WaitForCompletion();
+        HuntressArrowRainIndicator = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Huntress.HuntressArrowRainIndicator_prefab).WaitForCompletion();
         GenericFootstepDust = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/GenericFootstepDust.prefab").WaitForCompletion();
         GenericHugeFootstepDust = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/GenericHugeFootstepDust.prefab").WaitForCompletion();
         GenericLargeFootstepDust = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/GenericLargeFootstepDust.prefab").WaitForCompletion();
@@ -131,8 +174,13 @@ public static class CaeliImperiumAssets
         MainCamera = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Core/Camera/Main Camera.prefab").WaitForCompletion();
         TitanicPlains = Addressables.LoadAssetAsync<SceneDef>("RoR2/Base/golemplains/golemplains.asset").WaitForCompletion();
         MetalSurface = Addressables.LoadAssetAsync<SurfaceDef>("RoR2/Base/Common/sdMetal.asset").WaitForCompletion();
+        MainMenuMusic = Addressables.LoadAssetAsync<MusicTrackDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Common_MusicTrackDefs.muMenu_asset).WaitForCompletion();
+        CharaceterSelectScreenMusic = Addressables.LoadAssetAsync<MusicTrackDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Common_MusicTrackDefs.muLogbook_asset).WaitForCompletion();
+        NestPP = Addressables.LoadAssetAsync<PostProcessProfile>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_nest.ppSceneNest_asset).WaitForCompletion();
         GlitchHUD = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/GlitchHUD.prefab");
         VoiceMessage = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/VoiceMessage.prefab");
+        CaeliImperiumMainMenuMusic = assetBundle.LoadAsset<CIMusicTrackDef>("Assets/CaeliImperium/cmtdCIMainMenu.asset");
+        CaeliImperiumLogo = assetBundle.LoadAsset<Sprite>("Assets/CaeliImperium/caeliLogo1.png");
         SuperSecretScreamEffect = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Effects/SuperSecretScreamEffect.prefab").RegisterEffect();
         DrawSpeedPath = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/DrawSpeedPath.asset").RegisterItemDef(DrawSpeedPathEvents.Init);
         HealReceivedDamage = assetBundle.LoadAsset<CIItemDef>("Assets/CaeliImperium/Items/HealReceivedDamage.asset").RegisterItemDef(HealReceivedDamageEvents.Init);
@@ -154,6 +202,7 @@ public static class CaeliImperiumAssets
         R2API.Networking.NetworkingAPI.RegisterMessageType<HealReceivedDamageHealRateReportMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<DestroyNetworkObjectNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<AddTimeBuffAndResetTimerForAllStacksNetMessage>();
+        R2API.Networking.NetworkingAPI.RegisterMessageType<SetClientBuffCountNetMessage>();
         //R2API.Networking.NetworkingAPI.RegisterMessageType<VictorChargeMessage>();
         //R2API.Networking.NetworkingAPI.RegisterMessageType<VictorDamageDealtMessage>();
         foreach (Material material in assetBundle.LoadAllAssets<Material>())

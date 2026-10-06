@@ -961,8 +961,92 @@ public static class CaeliImperiumUtils
         }
         return null;
     }
+    public static bool ParabolicCapsuleCast(Vector3 point1, Vector3 point2, float radius, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity) => ParabolicCapsuleCast(point1, point2, radius, initialVelocity, out hitInfo, layerMask, gravity, 0.02f, 100);
+    public static bool ParabolicCapsuleCast(Vector3 point1, Vector3 point2, float radius, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity, float timeStep, int maxSteps)
+    {
+        Vector3 g = gravity ?? Physics.gravity;
+        Vector3 currentPos = Vector3.zero;
+        Vector3 currentVel = initialVelocity;
+        for (int i = 0; i < maxSteps; i++)
+        {
+            Vector3 nextVel = currentVel + g * timeStep;
+            Vector3 stepVector = (currentVel + nextVel) * 0.5f * timeStep;
+            float stepDistance = stepVector.magnitude;
+            if (stepDistance > 0.0001f)
+            {
+                Vector3 stepDirection = stepVector / stepDistance;
+                if (Physics.CapsuleCast(point1 + currentPos, point2 + currentPos, radius, stepDirection, out hitInfo, stepDistance, layerMask)) return true;
+            }
+            currentPos += stepVector;
+            currentVel = nextVel;
+        }
+        hitInfo = default;
+        return false;
+    }
+    public static bool ParabolicSphereCast(Vector3 origin, float radius, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity) => ParabolicSphereCast(origin, radius, initialVelocity, out hitInfo, layerMask, gravity, 0.02f, 100);
+    public static bool ParabolicSphereCast(Vector3 origin, float radius, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity, float timeStep, int maxSteps)
+    {
+        Vector3 g = gravity ?? Physics.gravity;
+        Vector3 currentPos = Vector3.zero;
+        Vector3 currentVel = initialVelocity;
+        for (int i = 0; i < maxSteps; i++)
+        {
+            Vector3 nextVel = currentVel + g * timeStep;
+            Vector3 stepVector = (currentVel + nextVel) * 0.5f * timeStep;
+            float stepDistance = stepVector.magnitude;
+            if (stepDistance > 0.0001f)
+            {
+                Vector3 stepDirection = stepVector / stepDistance;
+                if (Physics.SphereCast(origin + currentPos, radius, stepDirection, out hitInfo, stepDistance, layerMask)) return true;
+            }
+            currentPos += stepVector;
+            currentVel = nextVel;
+        }
+        hitInfo = default;
+        return false;
+    }
+    public static bool ParabolicRayCast(Vector3 origin, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity) => ParabolicRayCast(origin, initialVelocity, out hitInfo, layerMask, gravity, 0.02f, 100);
+    public static bool ParabolicRayCast(Vector3 origin, Vector3 initialVelocity, out RaycastHit hitInfo, int layerMask, Vector3? gravity, float timeStep, int maxSteps)
+    {
+        Vector3 g = gravity ?? Physics.gravity;
+        Vector3 currentPos = Vector3.zero;
+        Vector3 currentVel = initialVelocity;
+        for (int i = 0; i < maxSteps; i++)
+        {
+            Vector3 nextVel = currentVel + g * timeStep;
+            Vector3 stepVector = (currentVel + nextVel) * 0.5f * timeStep;
+            float stepDistance = stepVector.magnitude;
+            if (stepDistance > 0.0001f)
+            {
+                Vector3 stepDirection = stepVector / stepDistance;
+                if (Physics.Raycast(origin + currentPos, stepDirection, out hitInfo, stepDistance, layerMask)) return true;
+            }
+            currentPos += stepVector;
+            currentVel = nextVel;
+        }
+        hitInfo = default;
+        return false;
+    }
+    public static bool SelectedCaeliImperiumSurvivor()
+    {
+        LocalUser localUser = LocalUserManager.GetFirstLocalUser();
+        if (localUser == null) return false;
+        UserProfile userProfile = localUser.userProfile;
+        if (userProfile == null) return false;
+        SurvivorDef selectedSurvivor = userProfile.GetSurvivorPreference();
+        if (!selectedSurvivor) return false;
+        foreach (SurvivorDef survivorDef in CaeliImperiumContent.survivors)
+        {
+            if (!survivorDef) continue;
+            if (survivorDef == selectedSurvivor)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }
-
+ 
 [Serializable]
 public struct BezierSegmentData : IEquatable<BezierSegmentData>
 {

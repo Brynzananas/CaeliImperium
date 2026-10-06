@@ -52,6 +52,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
     public static ManualLogSource Log { get; private set; }
     public static BaseUnityPlugin instance { get; private set; }
     public static event Action onPluginDestroyed;
+    public static NetworkUser currentNetworkUser;
     public void Awake()
     {
         Log = Logger;
