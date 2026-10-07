@@ -151,7 +151,7 @@ public class SpearOrbit : BishopMainState
             cameraOverride.isHudAllowed = true;
             cameraOverride.isUserControlAllowed = true;
             cameraOverride.isUserLookAllowed = false;
-            cameraOverride.getCameraStateDelegate = GetCameraState;
+            cameraOverride.getCameraStateDelegate += GetCameraState;
         }
         if (inputBank && inputBank.rawMoveRight.down)
         {

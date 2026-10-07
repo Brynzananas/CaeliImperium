@@ -1,5 +1,6 @@
 ﻿using CaeliImperium;
 using CaeliImperium.Bodies;
+using CaeliImperium.Components.Bishop;
 using RoR2;
 using RoR2BepInExPack.Utilities;
 using System;
@@ -29,6 +30,7 @@ public class BishopStaggerOnHurt : MonoBehaviour, IOnTakeDamageServerReceiver
     }
     public void OnTakeDamageServer(DamageReport damageReport)
     {
+        if (BishopComponent.enableCount <= 0) return;
         HealthComponent victimHealthComponent = damageReport.victim;
         if (!victimHealthComponent || !victimHealthComponent.alive) return;
         if (victimHealthComponent.healthFraction > nextHealthPercentageUntilStagger) return;

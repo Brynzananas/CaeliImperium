@@ -42,6 +42,8 @@ public class ExitAccelerator : BishopRightWeaponState
     public bool supercharge;
     public float duration;
     public float damage;
+    public EntityState nextState;
+    public bool alreadyExit;
     public override float durationForStateModification => duration;
     public override float fixedAgeForStateModification => fixedAge;
 
@@ -60,6 +62,14 @@ public class ExitAccelerator : BishopRightWeaponState
         base.OnEnter();
         SetValues();
         (this as IBishopState).PlayFirstPersonCrossfade("RightArm, Override", "ExitAccelerator", "rightArm.playbackRate", 1f, 0.05f, true);
+        if (isAuthority)
+        {
+            if (nextState != null && nextState.GetType() != typeof(Idle))
+            {
+                outer.SetNextState(nextState);
+                alreadyExit = true;
+            }
+        }
         if (supercharge) Fire();
     }
     public void SetValues()
@@ -70,7 +80,7 @@ public class ExitAccelerator : BishopRightWeaponState
     public override void FixedUpdate()
     {
         base.FixedUpdate();
-        if (!isAuthority || fixedAge < duration) return;
+        if (!isAuthority || fixedAge < duration || alreadyExit) return;
         outer.SetNextStateToMain();
     }
     public void Fire()

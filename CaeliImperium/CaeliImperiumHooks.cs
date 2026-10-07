@@ -98,7 +98,7 @@ namespace CaeliImperium
         {
             ILCursor c = new ILCursor(il);
             ILLabel iLLabel = null;
-            if (c.TryGotoNext(
+            while (c.TryGotoNext(
                 MoveType.After,
                 x => x.MatchLdfld<SetStateOnHurt>(nameof(SetStateOnHurt.canBeHitStunned)),
                 x => x.MatchBrfalse(out iLLabel)
@@ -107,10 +107,6 @@ namespace CaeliImperium
                 c.Emit(OpCodes.Ldarg_1);
                 c.EmitDelegate(HandleCanBeHitstunned);
                 c.Emit(OpCodes.Brtrue_S, iLLabel);
-            }
-            else
-            {
-                CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
             }
         }
         private static bool HandleCanBeHitstunned(DamageReport damageReport)

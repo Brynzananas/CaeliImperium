@@ -122,7 +122,7 @@ public abstract class BishopMeleeState : BishopState
     }
     public virtual void FlyToTarget()
     {
-        if (target && moveDirection != Vector3.zero && !stopMoving && canFly)
+        if (target && target.healthComponent && target.healthComponent.alive && moveDirection != Vector3.zero && !stopMoving && canFly)
         {
             this.SetVelocity(Vector3.zero);
             this.AddRootMotion(moveDirection * flyToTargetSpeed * Time.fixedDeltaTime);

@@ -1,4 +1,5 @@
-﻿using CaeliImperium;
+﻿using BrynzaAPI;
+using CaeliImperium;
 using CaeliImperium.Bodies;
 using CaeliImperiumScriptableObjects;
 using EntityStates;
@@ -10,7 +11,7 @@ using System.Text;
 using UnityEngine;
 
 namespace CaeliImperiumEntityStates.Bishop;
-public class ShootAccelerator : BishopRightWeaponState
+public class ShootAccelerator : BishopRightWeaponState, IModifyNextRefState
 {
     public static float damageCoefficient = 0.5f;
     public static float superchargeDamageCoefficient = 1.25f;
@@ -85,7 +86,7 @@ public class ShootAccelerator : BishopRightWeaponState
             Fire();
         }
         if (!isAuthority) return;
-        if (!IsKeyDownAuthority()) outer.SetNextState(new ExitAccelerator { activatorSkillSlot = activatorSkillSlot, supercharge = supercharge });
+        if (!IsKeyDownAuthority()) outer.SetNextStateToMain();
     }
     public void Fire()
     {
@@ -123,5 +124,10 @@ public class ShootAccelerator : BishopRightWeaponState
         };
         ProjectileManager.instance.FireProjectile(fireProjectileInfo);
         characterBody.AddSpreadBloom(spreadBloom);
+    }
+
+    public void ModifyNextRefState(ref EntityState entityState)
+    {
+        entityState = new ExitAccelerator { activatorSkillSlot = activatorSkillSlot, supercharge = supercharge, nextState = entityState };
     }
 }

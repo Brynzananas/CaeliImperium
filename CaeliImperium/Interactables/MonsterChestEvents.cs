@@ -37,7 +37,6 @@ namespace CaeliImperium.Interactables
             CaeliImperiumPlugin.onPluginDestroyed += CaeliImperiumPlugin_onPluginDestroyed;
             RoR2Application.onLoadFinished += OnLoadFinished;
             SceneDirector.onPostPopulateSceneServer += SceneDirector_onPostPopulateSceneServer;
-            CaeliImperiumHooks.OnPickupPickerControllerOnDisplayBegin += Hooks_OnPickupPickerControllerOnDisplayBegin;
             if (inited) return;
             inited = true;
             MonsterChest = gameObject;
@@ -95,16 +94,6 @@ namespace CaeliImperium.Interactables
             typeof(Spew).RegisterEntityState();
             typeof(Idle).RegisterEntityState();
             R2API.Networking.NetworkingAPI.RegisterMessageType<MonsterChestControllerSpewNetMessage>();
-        }
-
-        private static void Hooks_OnPickupPickerControllerOnDisplayBegin(PickupPickerController arg1, NetworkUIPromptController arg2, LocalUser arg3, CameraRigController arg4)
-        {
-            if (!arg1.panelInstance) return;
-            MonsterChestPanelHelper monsterChestPanelHelper = arg1.panelInstance.GetComponent<MonsterChestPanelHelper>();
-            if (!monsterChestPanelHelper) return;
-            MonsterChestController monsterChestController = arg1.GetComponent<MonsterChestController>();
-            if (!monsterChestController) return;
-            monsterChestPanelHelper.Init(monsterChestController);
         }
         public static void GiveItems(int itemCountForTier1, int itemCountForTier2, int itemCountForTier3)
         {

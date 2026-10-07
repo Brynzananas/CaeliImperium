@@ -1,4 +1,6 @@
-﻿using CaeliImperium.Interactables;
+﻿using CaeliImperium.Components;
+using CaeliImperium.Interactables;
+using RoR2;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,6 +18,8 @@ public class CaeliImperiumTitleController : MonoBehaviour
     public static Vector3 RefineryPosition = new Vector3(61.6778f, - 1.6237f, 83.5794f);
     public static Vector3 RefineryRotation = new Vector3(0f, 198.7585f, 0f);
     public static Vector3 RefineryScale = new Vector3(-3f, 3f, 3f);
+    public static Vector3 CameraPosition = Vector3.zero;
+    public static Vector3 CameraRotation = new Vector3(15f, 0f, 0f);
     public Image logoImage;
     public Sprite previousLogoSprite;
     public PostProcessVolume postProcessVolume;
@@ -23,6 +27,7 @@ public class CaeliImperiumTitleController : MonoBehaviour
     public bool init;
     public GameObject resourceWell1;
     public GameObject refinery;
+    public CameraOverride cameraOverride;
     public void Awake()
     {
         if (init) return;
@@ -41,7 +46,15 @@ public class CaeliImperiumTitleController : MonoBehaviour
                 this.postProcessVolume.enabled = false;
             }
         }
+        cameraOverride = new GameObject("CameraOverride", [typeof(CameraOverride)]).GetComponent<CameraOverride>();
+        cameraOverride.getCameraStateDelegate += CameraOverride_getCameraStateDelegate;
+        cameraOverride.doesntNeedCharacterBody = true;
         init = true;
+    }
+
+    private void CameraOverride_getCameraStateDelegate(CameraRigController cameraRigController, ref CameraState state)
+    {
+        state.position = transform.position;
     }
 
     public void Update()
@@ -65,6 +78,7 @@ public class CaeliImperiumTitleController : MonoBehaviour
             logoImage.sprite = CaeliImperiumAssets.CaeliImperiumLogo;
         }
         if (postProcessVolume) postProcessVolume.enabled = true;
+        if (cameraOverride) cameraOverride.UpdateCameras(null);
         if (!PipelineRefineryEvents.init) return;
         if (resourceWell1)
         {
@@ -103,5 +117,6 @@ public class CaeliImperiumTitleController : MonoBehaviour
         if (postProcessVolume) postProcessVolume.enabled = false;
         if (resourceWell1) resourceWell1.SetActive(false);
         if (refinery) refinery.SetActive(false);
+        if (cameraOverride) cameraOverride.UpdateCameras(null);
     }
 }

@@ -119,9 +119,9 @@ public static class BishopEvents
     private static HashSet<Type> patchedBlastStates = [];
     private static HashSet<Type> types3 = [];
     private static Dictionary<string, DroneIndex> GearboxYouHadOneJob = [];
-    private static HashSet<string> purgeTheWeak = new HashSet<string> { "BeetleMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster" };
-    private static HashSet<string> purgeTheBoring = new HashSet<string> { "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
-    private static HashSet<string> purgeTheClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
+    private static HashSet<string> purgeMonsters = new HashSet<string> { "BeetleMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster" };
+    private static HashSet<string> purgeItems = new HashSet<string> { "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
+    private static HashSet<string> purgeClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
     public static void Init(GameObject gameObject)
     {
         On.RoR2.HealthComponent.Heal += HealthComponent_Heal;
@@ -140,10 +140,14 @@ public static class BishopEvents
         On.RoR2.Projectile.ProjectileManager.InitializeProjectile += ProjectileManager_InitializeProjectile;
         IL.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
         On.RoR2.DirectorCard.IsAvailable += DirectorCard_IsAvailable;
-        Run.onRunStartGlobal += Run_onRunStartGlobal;
         IL.RoR2.BlastAttack.CollectHits += BlastAttack_CollectHits;
         On.RoR2.DroneCatalog.SetDroneDefs += DroneCatalog_SetDroneDefs;
         On.RoR2.BodyCatalog.SetBodyPrefabs += BodyCatalog_SetBodyPrefabs;
+        On.RoR2.SetStateOnHurt.GetShouldHitStun += SetStateOnHurt_GetShouldHitStun;
+        IL.RoR2.CharacterAI.BaseAI.FindEnemyHurtBox += BaseAI_FindEnemyHurtBox;
+        On.RoR2.Run.Start += Run_Start;
+        On.RoR2.CharacterAI.BaseAI.OnBodyDamaged += BaseAI_OnBodyDamaged;
+        On.RoR2.CharacterAI.BaseAI.OnServerDamageDealt += BaseAI_OnServerDamageDealt;
         if (init) return;
         init = true;
         Body = gameObject.GetComponent<CharacterBody>();
@@ -297,6 +301,115 @@ public static class BishopEvents
             bishopStaggerOnHurt.staggerDuration = StaggerDuration;
         }
     }
+
+    private static void BaseAI_OnServerDamageDealt(On.RoR2.CharacterAI.BaseAI.orig_OnServerDamageDealt orig, RoR2.CharacterAI.BaseAI self, DamageReport damageReport)
+    {
+        if (ReturnIfAttackerIsNotAPlayer(damageReport)) return;
+        orig(self, damageReport);
+    }
+
+    private static void BaseAI_OnBodyDamaged(On.RoR2.CharacterAI.BaseAI.orig_OnBodyDamaged orig, RoR2.CharacterAI.BaseAI self, DamageReport damageReport)
+    {
+        if (ReturnIfAttackerIsNotAPlayer(damageReport)) return;
+        orig(self, damageReport);
+    }
+    private static bool ReturnIfAttackerIsNotAPlayer(DamageReport damageReport)
+    {
+        if (BishopComponent.enableCount > 0)
+        {
+            if (damageReport.attackerBody && !damageReport.attackerBody.isPlayerControlled)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    private static void Run_Start(On.RoR2.Run.orig_Start orig, Run self)
+    {
+        bool foundBishop = false;
+        foreach (NetworkUser networkUser in NetworkUser.instancesList)
+        {
+            if (!networkUser) continue;
+            SurvivorDef survivorDef = networkUser.GetSurvivorPreference();
+            if (!survivorDef) continue;
+            if (survivorDef == Bishop)
+            {
+                foundBishop = true;
+                break;
+            }
+        }
+        if (!foundBishop) return;
+        if (!self.GetEventFlag("BishopRun"))
+        {
+            self.SetEventFlag("BishopRun");
+            CaeliImperiumPlugin.Log.LogMessage("Start the item purge");
+            foreach (string itemName in purgeItems)
+            {
+                if (itemName.IsNullOrWhiteSpace()) continue;
+                CaeliImperiumPlugin.Log.LogMessage("Name: " + itemName);
+                ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
+                CaeliImperiumPlugin.Log.LogMessage("Index: " + itemIndex);
+                if (itemIndex == ItemIndex.None) continue;
+                CaeliImperiumPlugin.Log.LogMessage("Item has been succesfully purged");
+                self.availableItems.Remove(itemIndex);
+            }
+            foreach (string droneName in purgeClankers)
+            {
+                if (droneName.IsNullOrWhiteSpace()) continue;
+                CaeliImperiumPlugin.Log.LogMessage("Name: " + droneName);
+                DroneIndex droneIndex = GearboxYouHadOneJob[droneName];
+                CaeliImperiumPlugin.Log.LogMessage("Index: " + droneIndex);
+                if (droneIndex == DroneIndex.None) continue;
+                CaeliImperiumPlugin.Log.LogMessage("Drone has been succesfully purged");
+                self.availableDrones.Remove(droneIndex);
+            }
+            CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
+        }
+        else
+        {
+            CaeliImperiumPlugin.Log.LogMessage("BishopRun Flag Already Set");
+        }
+        orig(self);
+    }
+
+    private static void BaseAI_FindEnemyHurtBox(ILContext il)
+    {
+        ILCursor c = new ILCursor(il);
+        int locId = 2;
+        ILLabel iLLabel = null;
+        if (c.TryGotoNext(
+            MoveType.After,
+            x => x.MatchLdloc(out locId),
+            x => x.MatchCall<UnityEngine.Object>("op_Implicit"),
+            x => x.MatchBrfalse(out iLLabel)
+        ))
+        {
+            c.Emit(OpCodes.Ldloc, locId);
+            c.EmitDelegate(TargetNonPlayers);
+            c.Emit(OpCodes.Brfalse_S, iLLabel);
+        }
+        else
+        {
+            CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
+        }
+    }
+    private static bool TargetNonPlayers(HurtBox hurtBox)
+    {
+        if (BishopComponent.enableCount > 0)
+        {
+            if (hurtBox.healthComponent && hurtBox.healthComponent.body && !hurtBox.healthComponent.body.isPlayerControlled)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    private static bool SetStateOnHurt_GetShouldHitStun(On.RoR2.SetStateOnHurt.orig_GetShouldHitStun orig, SetStateOnHurt self, HealthComponent healthComponent, float trueDamage)
+    {
+        if (BishopComponent.enableCount > 0) return false;
+        return orig(self, healthComponent, trueDamage);
+    }
+
     private static void BodyCatalog_SetBodyPrefabs(On.RoR2.BodyCatalog.orig_SetBodyPrefabs orig, GameObject[] newBodyPrefabs)
     {
         orig(newBodyPrefabs);
@@ -340,50 +453,12 @@ public static class BishopEvents
             c.EmitDelegate(InflatBlastAttack);
         }
     }
-    private static void Run_onRunStartGlobal(Run obj)
-    {
-        bool foundBishop;
-        foreach (NetworkUser networkUser in NetworkUser.instancesList)
-        {
-            if (!networkUser) continue;
-            SurvivorDef survivorDef = networkUser.GetSurvivorPreference();
-            if (!survivorDef) continue;
-            if (survivorDef == Bishop)
-            {
-                foundBishop = true;
-                break;
-            }
-        }
-        if (!obj.GetEventFlag("BishopRun"))
-        {
-            obj.SetEventFlag("BishopRun");
-            foreach (string itemName in purgeTheBoring)
-            {
-                if (itemName.IsNullOrWhiteSpace()) continue;
-                ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
-                if (itemIndex == ItemIndex.None) continue;
-                obj.availableItems.Remove(itemIndex);
-            }
-            foreach (string droneName in purgeTheClankers)
-            {
-                if (droneName.IsNullOrWhiteSpace()) continue;
-                DroneIndex droneIndex = GearboxYouHadOneJob[droneName];
-                if (droneIndex == DroneIndex.None) continue;
-                obj.availableDrones.Remove(droneIndex);
-            }
-            CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
-        }
-        else
-        {
-            CaeliImperiumPlugin.Log.LogMessage("BishopRun Flag Already Set");
-        }
-    }
 
     private static bool DirectorCard_IsAvailable(On.RoR2.DirectorCard.orig_IsAvailable orig, DirectorCard self)
     {
         bool flag = orig(self);
         if (!flag) return flag;
-        if (Run.instance && Run.instance.GetEventFlag("BishopRun") && self.spawnCard && self.spawnCard.prefab && !self.spawnCard.prefab.name.IsNullOrWhiteSpace() && purgeTheWeak.Contains(self.spawnCard.prefab.name)) return false;
+        if (Run.instance && Run.instance.GetEventFlag("BishopRun") && self.spawnCard && self.spawnCard.prefab && !self.spawnCard.prefab.name.IsNullOrWhiteSpace() && purgeMonsters.Contains(self.spawnCard.prefab.name)) return false;
         return flag;
     }
 
@@ -588,18 +663,26 @@ public static class BishopEvents
     {
         if (self && self.body)
         {
+            if (!damageInfo.damageType.IsDamageSourceSkillBased)
+            {
+                CharacterBody attackerBody = damageInfo.attacker ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
+                if (attackerBody)
+                {
+                    BishopComponent bishopComponent = attackerBody.GetComponent<BishopComponent>();
+                    if (bishopComponent)
+                    {
+                        damageInfo.damage *= bishopComponent.nonSkillDamageMultiplier;
+                    }
+                }
+            }
             if (self.body.HasBuff(StaggerInvincibility) && !damageInfo.damageType.HasModdedDamageType(GloryKillDamageType))
             {
                 return;
             }
             if (damageInfo.damageType.HasModdedDamageType(ParriableDamageType) && self.body.HasBuff(Parry))
             {
-                CharacterBody attackerBody = damageInfo.attacker ? damageInfo.attacker.GetComponent<CharacterBody>() : null;
-                if (attackerBody)
-                {
-                    OnParry(self.body, damageInfo.position);
-                    return;
-                }
+                OnParry(self.body, damageInfo.position);
+                return;
             }
         }
         orig(self, damageInfo);
@@ -625,6 +708,7 @@ public static class BishopEvents
     private static void EntityState_OnEnter(On.EntityStates.EntityState.orig_OnEnter orig, EntityState self)
     {
         orig(self);
+        if (BishopComponent.enableCount <= 0) return;
         if (!NetworkServer.active || !parriableStatesTypes.TryGetValue(self.GetType(), out ParriableStateInfo parriableStateInfo) || self is not BaseState baseState) return;
         if (parriableStateInfo.parriableCount > 0)
         {
@@ -944,15 +1028,22 @@ public static class BishopEvents
     
     private static float HealthComponent_Heal(On.RoR2.HealthComponent.orig_Heal orig, HealthComponent self, float amount, ProcChainMask procChainMask, bool nonRegen)
     {
-        if (nonRegen && self)
+        if (self)
         {
-            BishopComponent bishopComponent = self.GetComponent<BishopComponent>();
-            if (bishopComponent)
+            if (self.body && self.body.HasBuff(Stagger))
             {
-                if (!procChainMask.HasModdedProc(IgnoreBishopComponentHealRestrictionProcType))
+                return 0f;
+            }
+            if (nonRegen)
+            {
+                BishopComponent bishopComponent = self.GetComponent<BishopComponent>();
+                if (bishopComponent)
                 {
-                    bishopComponent.SetReservedHealPercentage(bishopComponent.reservedHealPercentage + (amount / self.fullHealth));
-                    return 0f;
+                    if (!procChainMask.HasModdedProc(IgnoreBishopComponentHealRestrictionProcType))
+                    {
+                        bishopComponent.SetReservedHealPercentage(bishopComponent.reservedHealPercentage + (amount / self.fullHealth));
+                        return 0f;
+                    }
                 }
             }
         }

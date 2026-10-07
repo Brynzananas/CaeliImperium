@@ -39,7 +39,7 @@ public class BomberWispStageRules
                 {
                     useStageCount = true,
                     stageCount = 3,
-                    blastRadius = 14f,
+                    blastRadius = 13f,
                     detonationTime = 2f,
                     blastDamageCoefficient = 2f
                 },
@@ -55,16 +55,16 @@ public class BomberWispStageRules
                 {
                     useStageCount = true,
                     stageCount = 5,
-                    blastRadius = 16f,
-                    detonationTime = 1.5f,
+                    blastRadius = 15f,
+                    detonationTime = 1.6f,
                     blastDamageCoefficient = 3f
                 },
                     new StageRule
                 {
                     useStageCount = true,
                     stageCount = 6,
-                    blastRadius = 18f,
-                    detonationTime = 1f,
+                    blastRadius = 16f,
+                    detonationTime = 1.4f,
                     blastDamageCoefficient = 5f
                 }
             };

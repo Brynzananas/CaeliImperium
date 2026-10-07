@@ -15,6 +15,7 @@ public class BishopComponent : NetworkBehaviour
     public GenericSkill dashSkill;
     public CharacterBody characterBody;
     public ShakeEmitter shakeEmitter;
+    public float nonSkillDamageMultiplier = 0.25f;
     public bool mantle = true;
     public bool mantleOnlyWhenFalling = true;
     public float mantleHeight = 2f;

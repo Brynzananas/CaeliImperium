@@ -13,7 +13,7 @@ using static CaeliImperium.Interactables.MonsterChestEvents;
 
 namespace CaeliImperium.Components
 {
-    public class MonsterChestController : NetworkBehaviour
+    public class MonsterChestController : PickupPickerController
     {
         [SyncVar] public int neededSacrifices;
         [SyncVar] public int sacrificesForTier1;
@@ -30,8 +30,9 @@ namespace CaeliImperium.Components
         public HologramProjector hologramProjector;
         public ChildLocator childLocator;
         private static string lastSHA;
-        public void Awake()
+        public new void Awake()
         {
+            base.Awake();
             if (!entityStateMachine) entityStateMachine = GetComponent<EntityStateMachine>();
             if (!hologramProjector) hologramProjector = GetComponent<HologramProjector>();
             if (!childLocator)
@@ -166,6 +167,14 @@ namespace CaeliImperium.Components
             itemIndex = ItemCatalog.FindItemIndex(itemName);
             if (itemIndex == ItemIndex.None) return false;
             return true;
+        }
+        public override void OnDisplayBegin(NetworkUIPromptController networkUIPromptController, LocalUser localUser, CameraRigController cameraRigController)
+        {
+            base.OnDisplayBegin(networkUIPromptController, localUser, cameraRigController);
+            if (!panelInstance) return;
+            MonsterChestPanelHelper monsterChestPanelHelper = panelInstance.GetComponent<MonsterChestPanelHelper>();
+            if (!monsterChestPanelHelper) return;
+            monsterChestPanelHelper.Init(this);
         }
     }
 }
