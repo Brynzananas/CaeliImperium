@@ -12,6 +12,7 @@ using R2API;
 using R2API.SpawnCardCloning;
 using RoR2;
 using RoR2.ExpansionManagement;
+using RoR2.Projectile;
 using RoR2.Skills;
 using RoR2.UI;
 using System;
@@ -153,7 +154,7 @@ public static class CaeliImperiumUtils
         ConfigDescription configDescription = new ConfigDescription(description);
         ConfigEntry<T> entry = configFile.Bind(configDefinition, defaultValue, configDescription);
         if (value != null) entry.Value = (T)value;
-        if (CaeliImperiumPlugin.riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.AddConfig(entry);
+        if (CaeliImperiumPlugin.riskOfOptionsEnabled) RiskOfOptionsCompatability.AddConfig(entry);
         return entry;
     }
     public static T RegisterItemDef<T>(this T itemDef) where T : ItemDef => RegisterItemDef(itemDef, null);
@@ -1044,6 +1045,14 @@ public static class CaeliImperiumUtils
             }
         }
         return false;
+    }
+    public static GameObject GetProjectileGhost(GameObject gameObject)
+    {
+        ProjectileController projectile = gameObject.GetComponent<ProjectileController>();
+        if (!projectile) return null;
+        if (projectile.ghostPrefab) return projectile.ghostPrefab;
+        // There should be logic for getting ghost prefab from assync reference but I am lazy to write and I don't think it will matter
+        return null;
     }
 }
  

@@ -39,6 +39,10 @@
 			<Private>false</Private>
 			<HintPath>D:\Unity 2021.3.33f1\Editor\Data\Managed\UnityEditor.dll</HintPath>
 		</Reference>
+		<Reference Include="RiskySleeps-EnemiesReturns">
+			<Private>false</Private>
+			<HintPath>D:\Ror2Mods\CaeliImperium\CaeliImperium\CaeliImperium\OtherMods\EnemiesReturns-nstrip.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="call weaver.bat $(TargetDir) $(AssemblyName)" />

@@ -36,7 +36,8 @@ namespace CaeliImperium;
 [BepInDependency(R2API.CharacterBodyAPI.PluginGUID)]
 [BepInDependency(R2API.ColorsAPI.PluginGUID)]
 [BepInDependency(BrynzaAPI.BrynzaAPI.ModGuid)]
-[BepInDependency(ModCompatabilities.RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(EnemiesReturnsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [System.Serializable]
 public class CaeliImperiumPlugin : BaseUnityPlugin
 {
@@ -46,6 +47,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
     public const string ModPrefix = "CI";
     public static bool emotesEnabled;
     public static bool riskOfOptionsEnabled;
+    public static bool enemiesReturnsEnabled;
     public static ExpansionDef expansionDef;
     public static PluginInfo PluginInfo { get; private set; }
     public static ConfigFile configFile { get; private set; }
@@ -59,11 +61,12 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         PluginInfo = Info;
         configFile = Config;
         instance = this;
-        riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(ModCompatabilities.RiskOfOptionsCompatability.GUID);
+        riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(RiskOfOptionsCompatability.GUID);
+        enemiesReturnsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(RiskOfOptionsCompatability.GUID);
         CaeliImperiumSave.Init();
         CaeliImperiumConfigs.OverrideConfigValuesOnUpdate = Config.Bind(CaeliImperiumConfigs.sectionName, "Override config values on update", true, "Update config values with new default values if existing config value matches old default value on mod update?");
         CaeliImperiumAssets.Init();
-        if (riskOfOptionsEnabled) ModCompatabilities.RiskOfOptionsCompatability.Init();
+        if (riskOfOptionsEnabled) RiskOfOptionsCompatability.Init();
         CaeliImperiumConfigs.Init();
         RoR2Application.onLoad += CaeliImperiumLanguage.Init;
         //CaeliImperiumHooks.SetSaveHooks();

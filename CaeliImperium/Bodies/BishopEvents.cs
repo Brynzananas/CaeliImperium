@@ -15,6 +15,7 @@ using MonoMod.RuntimeDetour;
 using R2API;
 using R2API.Networking;
 using RoR2;
+using RoR2.CharacterAI;
 using RoR2.Networking;
 using RoR2.Projectile;
 using RoR2.Skills;
@@ -47,12 +48,12 @@ public static class BishopEvents
     public static SkillFamily Utility;
     public static SkillFamily Special;
     public static SkillFamily Sprint;
-    public static SkillDef ShotgunFire;
-    public static SkillDef AcceleratorFire;
-    public static SkillDef SpearSwing;
-    public static SkillDef Punch;
-    public static SkillDef Dash;
-    public static SkillDef SpearSpecial;
+    public static BishopSkillDef ShotgunFire;
+    public static BishopSkillDef AcceleratorFire;
+    public static BishopSkillDef SpearSwing;
+    public static BishopSkillDef Punch;
+    public static BishopSkillDef Dash;
+    public static BishopSpecialSpearSkillDef SpearSpecial;
     public static BuffDef PrepareParriableAttackCount;
     public static BuffDef Parry;
     public static BuffDef Dodge;
@@ -76,6 +77,7 @@ public static class BishopEvents
     public static ModdedProcType IgnoreBishopComponentHealRestrictionProcType;
     public static DamageAPI.ModdedDamageType ParriableDamageType;
     public static DamageAPI.ModdedDamageType ParryDamageType;
+    public static DamageAPI.ModdedDamageType ParriableMeleeDamageType;
     public static DamageAPI.ModdedDamageType GloryKillDamageType;
     public static DamageAPI.ModdedDamageType SuperStunDamageType;
     public static CharacterBodyAPI.ModdedBodyFlag HeavyMonsterBodyFlag;
@@ -101,6 +103,7 @@ public static class BishopEvents
     public static float ParriableOverlapAttackSizeMultiplier = 2f;
     public static float ParriableBlastAttackSizeMultiplier = 2f;
     public static float GloryKillForce = 48f;
+    public static event Action<OnParryInfo> onParry;
     private static HashSet<GameObject> _parriableProjectileGhosts = [];
     private static bool init;
     private static List<ILHook> _hooks = new List<ILHook>();
@@ -118,8 +121,11 @@ public static class BishopEvents
     private static HashSet<Type> patchedBulletStates = [];
     private static HashSet<Type> patchedBlastStates = [];
     private static HashSet<Type> types3 = [];
+    private static Dictionary<ProjectileController, float> customProjectileSpeedMultiplier = [];
+    private static Dictionary<int, float> runtimeCustomProjectileSpeedMultiplier = [];
     private static Dictionary<string, DroneIndex> GearboxYouHadOneJob = [];
-    private static HashSet<string> purgeMonsters = new HashSet<string> { "BeetleMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster" };
+    private static bool projectilesCatalogInit;
+    private static HashSet<string> purgeMonsters = new HashSet<string> { "BeetleMaster", "WispMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster", "MagmaWormMaster", "ElectricWormMaster" };
     private static HashSet<string> purgeItems = new HashSet<string> { "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
     private static HashSet<string> purgeClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
     public static void Init(GameObject gameObject)
@@ -148,6 +154,8 @@ public static class BishopEvents
         On.RoR2.Run.Start += Run_Start;
         On.RoR2.CharacterAI.BaseAI.OnBodyDamaged += BaseAI_OnBodyDamaged;
         On.RoR2.CharacterAI.BaseAI.OnServerDamageDealt += BaseAI_OnServerDamageDealt;
+        Run.onRunSetRuleBookGlobal += Run_onRunSetRuleBookGlobal;
+        CaeliImperiumHooks.OnSetProjectilePrefabsIndividualPrefab += CaeliImperiumHooks_OnSetProjectilePrefabsIndividualPrefab;
         if (init) return;
         init = true;
         Body = gameObject.GetComponent<CharacterBody>();
@@ -169,12 +177,14 @@ public static class BishopEvents
         Utility = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopUtility.asset").RegisterSkillFamily();
         Special = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopSpecial.asset").RegisterSkillFamily();
         Sprint = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopSprint.asset").RegisterSkillFamily();
-        ShotgunFire = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopShotgunFire.asset").RegisterSkillDef();
-        AcceleratorFire = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopAcceleratorFire.asset").RegisterSkillDef();
-        SpearSwing = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSwing.asset").RegisterSkillDef();
-        Punch = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopPunch.asset").RegisterSkillDef();
-        Dash = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopDash.asset").RegisterSkillDef();
-        SpearSpecial = CaeliImperiumAssets.assetBundle.LoadAsset<SkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSpecial.asset").RegisterSkillDef();
+        ShotgunFire = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopShotgunFire.asset").RegisterSkillDef();
+        AcceleratorFire = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopAcceleratorFire.asset").RegisterSkillDef();
+        SpearSwing = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSwing.asset").RegisterSkillDef();
+        SpearSwing.restockOnParry = true; // TODO: Set this in Untiy Editor;
+        Punch = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopPunch.asset").RegisterSkillDef();
+        Punch.rechargePercentageOnMeleeParry = 0.2f; // TODO: Set this in Untiy Editor;
+        Dash = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopDash.asset").RegisterSkillDef();
+        SpearSpecial = CaeliImperiumAssets.assetBundle.LoadAsset<BishopSpecialSpearSkillDef>("Assets/CaeliImperium/Bodies/Bishop/sdBishopSpearSpecial.asset").RegisterSkillDef();
         PrepareParriableAttackCount = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdPrepareParriableAttackCount.asset").RegisterBuffDef();
         Parry = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdParry.asset").RegisterBuffDef();
         Dodge = CaeliImperiumAssets.assetBundle.LoadAsset<BuffDef>("Assets/CaeliImperium/Bodies/Bishop/bdDodge.asset").RegisterBuffDef();
@@ -202,6 +212,7 @@ public static class BishopEvents
         ParryDamageType = DamageAPI.ReserveDamageType();
         GloryKillDamageType = DamageAPI.ReserveDamageType();
         SuperStunDamageType = DamageAPI.ReserveDamageType();
+        ParriableMeleeDamageType = DamageAPI.ReserveDamageType();
         BishopSpearProjectileComponent bishopSpearProjectileComponent = SpearThrowProjectile.GetComponent<BishopSpearProjectileComponent>();
         bishopSpearProjectileComponent.damageTypeCombo.AddModdedDamageType(SuperStunDamageType);
         HeavyMonsterBodyFlag = CharacterBodyAPI.ReserveBodyFlag();
@@ -223,6 +234,7 @@ public static class BishopEvents
         AddParriableProjectileGhost(CaeliImperiumAssets.LemurianBruiserMegaFireballGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.VultureWindbladeProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.MiniMushroomSporeGrenadeGhost);
+        SetCustomProjectileSpeedMultiplier(CaeliImperiumAssets.MiniMushroomSporeGrenadeProjectile, 1f);
         AddParriableProjectileGhost(CaeliImperiumAssets.FlyingVerminSpitProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.MinorConstructProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.BellBallProjectileGhost);
@@ -300,6 +312,39 @@ public static class BishopEvents
             bishopStaggerOnHurt.staggerAmount = StaggerAmountForFinalBosses;
             bishopStaggerOnHurt.staggerDuration = StaggerDuration;
         }
+        if (CaeliImperiumPlugin.enemiesReturnsEnabled) EnemiesReturnsCompatability.BishopInit();
+    }
+
+    private static void CaeliImperiumHooks_OnSetProjectilePrefabsIndividualPrefab(ProjectileController obj)
+    {
+        if (!projectilesCatalogInit) projectilesCatalogInit = true;
+        if (customProjectileSpeedMultiplier.TryGetValue(obj, out float value)) runtimeCustomProjectileSpeedMultiplier.Add(obj.catalogIndex, value);
+    }
+
+    private static void Run_onRunSetRuleBookGlobal(Run arg1, RuleBook arg2)
+    {
+        if (!arg1.GetEventFlag("BishopRun")) return;
+        CaeliImperiumPlugin.Log.LogMessage("Start the item purge");
+        foreach (string itemName in purgeItems)
+        {
+            if (itemName.IsNullOrWhiteSpace()) continue;
+            CaeliImperiumPlugin.Log.LogMessage("Name: " + itemName);
+            ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
+            CaeliImperiumPlugin.Log.LogMessage("Index: " + itemIndex);
+            if (itemIndex == ItemIndex.None) continue;
+            CaeliImperiumPlugin.Log.LogMessage("Item has been succesfully purged");
+            arg1.availableItems.Remove(itemIndex);
+        }
+        foreach (string droneName in purgeClankers)
+        {
+            if (droneName.IsNullOrWhiteSpace()) continue;
+            CaeliImperiumPlugin.Log.LogMessage("Name: " + droneName);
+            DroneIndex droneIndex = GearboxYouHadOneJob[droneName];
+            CaeliImperiumPlugin.Log.LogMessage("Index: " + droneIndex);
+            if (droneIndex == DroneIndex.None) continue;
+            CaeliImperiumPlugin.Log.LogMessage("Drone has been succesfully purged");
+            arg1.availableDrones.Remove(droneIndex);
+        }
     }
 
     private static void BaseAI_OnServerDamageDealt(On.RoR2.CharacterAI.BaseAI.orig_OnServerDamageDealt orig, RoR2.CharacterAI.BaseAI self, DamageReport damageReport)
@@ -342,27 +387,6 @@ public static class BishopEvents
         if (!self.GetEventFlag("BishopRun"))
         {
             self.SetEventFlag("BishopRun");
-            CaeliImperiumPlugin.Log.LogMessage("Start the item purge");
-            foreach (string itemName in purgeItems)
-            {
-                if (itemName.IsNullOrWhiteSpace()) continue;
-                CaeliImperiumPlugin.Log.LogMessage("Name: " + itemName);
-                ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
-                CaeliImperiumPlugin.Log.LogMessage("Index: " + itemIndex);
-                if (itemIndex == ItemIndex.None) continue;
-                CaeliImperiumPlugin.Log.LogMessage("Item has been succesfully purged");
-                self.availableItems.Remove(itemIndex);
-            }
-            foreach (string droneName in purgeClankers)
-            {
-                if (droneName.IsNullOrWhiteSpace()) continue;
-                CaeliImperiumPlugin.Log.LogMessage("Name: " + droneName);
-                DroneIndex droneIndex = GearboxYouHadOneJob[droneName];
-                CaeliImperiumPlugin.Log.LogMessage("Index: " + droneIndex);
-                if (droneIndex == DroneIndex.None) continue;
-                CaeliImperiumPlugin.Log.LogMessage("Drone has been succesfully purged");
-                self.availableDrones.Remove(droneIndex);
-            }
             CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
         }
         else
@@ -384,6 +408,7 @@ public static class BishopEvents
             x => x.MatchBrfalse(out iLLabel)
         ))
         {
+            c.Emit(OpCodes.Ldarg_0);
             c.Emit(OpCodes.Ldloc, locId);
             c.EmitDelegate(TargetNonPlayers);
             c.Emit(OpCodes.Brfalse_S, iLLabel);
@@ -393,13 +418,16 @@ public static class BishopEvents
             CaeliImperiumPlugin.Log.LogError("IL Hook " + il.Method.Name + " failed!");
         }
     }
-    private static bool TargetNonPlayers(HurtBox hurtBox)
+    private static bool TargetNonPlayers(BaseAI baseAI, HurtBox hurtBox)
     {
-        if (BishopComponent.enableCount > 0)
+        if (baseAI.body && baseAI.body && baseAI.body.teamComponent && baseAI.body.teamComponent.teamIndex != TeamIndex.Player)
         {
-            if (hurtBox.healthComponent && hurtBox.healthComponent.body && !hurtBox.healthComponent.body.isPlayerControlled)
+            if (BishopComponent.enableCount > 0)
             {
-                return false;
+                if (hurtBox.healthComponent && hurtBox.healthComponent.body && !hurtBox.healthComponent.body.isPlayerControlled)
+                {
+                    return false;
+                }
             }
         }
         return true;
@@ -483,6 +511,7 @@ public static class BishopEvents
         if (blastAttack.HasModdedDamageType(ParriableDamageType)) return radius * ParriableBlastAttackSizeMultiplier;
         return radius;
     }
+    // This should have been an IL hook but I am lazy baaastaaard
     private static void ProjectileManager_InitializeProjectile(On.RoR2.Projectile.ProjectileManager.orig_InitializeProjectile orig, ProjectileController projectileController, FireProjectileInfo fireProjectileInfo)
     {
         if (BishopComponent.enableCount > 0)
@@ -490,9 +519,10 @@ public static class BishopEvents
             TeamIndex teamIndex = TeamComponent.GetObjectTeam(fireProjectileInfo.owner);
             if (TeamManager.IsTeamEnemy(teamIndex, TeamIndex.Player))
             {
+                if (!runtimeCustomProjectileSpeedMultiplier.TryGetValue(projectileController.catalogIndex, out float speedMultiplier)) speedMultiplier = GlobalProjectileSpeedMultiplier;
                 if (fireProjectileInfo.useSpeedOverride)
                 {
-                    fireProjectileInfo.speedOverride *= GlobalProjectileSpeedMultiplier;
+                    fireProjectileInfo.speedOverride *= speedMultiplier;
                 }
                 else
                 {
@@ -510,7 +540,7 @@ public static class BishopEvents
                         }
                         if (speed > 0f)
                         {
-                            fireProjectileInfo.speedOverride = speed * GlobalProjectileSpeedMultiplier;
+                            fireProjectileInfo.speedOverride = speed * speedMultiplier;
                         }
                     }
                 }
@@ -681,23 +711,37 @@ public static class BishopEvents
             }
             if (damageInfo.damageType.HasModdedDamageType(ParriableDamageType) && self.body.HasBuff(Parry))
             {
-                OnParry(self.body, damageInfo.position);
+                OnParry(self.body, damageInfo);
                 return;
             }
         }
         orig(self, damageInfo);
     }
     public static float ParryEffectScale = 3f;
-    public static void OnParry(CharacterBody bodyThatParries, Vector3 parryPosition)
+    public struct OnParryInfo
     {
+        public CharacterBody bodyThatParries;
+        public DamageInfo damageInfo;
+        public Vector3 parryPosition => damageInfo == null ? Vector3.zero : damageInfo.position;
+    }
+    public static void OnParry(CharacterBody bodyThatParries, DamageInfo damageInfo)
+    {
+        if (bodyThatParries.hasEffectiveAuthority) BishopOnParryNetMessage.SendToClients(bodyThatParries.netId, damageInfo);
         BishopSpecialSpearSkillDef.RechargeStocksForSpecialSpearSkills(bodyThatParries);
-        BishopRechargeSpecialSpearSkillsNetMessage.SendToClients(0, bodyThatParries.netId);
         EffectData effectData = new EffectData
         {
             scale = ParryEffectScale,
-            origin = parryPosition
+            origin = damageInfo.position
         };
-        EffectManager.SpawnEffect(SpearParryEffect.index, effectData, true);
+        EffectManager.SpawnEffect(SpearParryEffect.index, effectData, false);
+        if (onParry != null)
+        {
+            onParry.Invoke(new OnParryInfo
+            {
+                bodyThatParries = bodyThatParries,
+                damageInfo = damageInfo
+            });
+        }
     }
     private static void EntityState_OnExit(On.EntityStates.EntityState.orig_OnExit orig, EntityState self)
     {
@@ -825,12 +869,12 @@ public static class BishopEvents
             keyValuePairs.Remove(characterModel);
         }
     }
-    private static void PatchProjectileStateToParriable(Type type, string name, Type type1, int parriableCount) => PatchProjectileStateToParriable(type, name, type1, parriableCount, null);
-    private static void PatchProjectileStateToParriable(Type type, string name, int parriableCount) => PatchProjectileStateToParriable(type, name, type, parriableCount, null);
-    private static void PatchProjectileStateToParriable(Type type, string name, int parriableCount, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type, parriableCount, customParriableProjectile);
-    private static void PatchProjectileStateToParriable(Type type, string name, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type, 0, customParriableProjectile);
-    private static void PatchProjectileStateToParriable(Type type, string name, Type type1, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type1, 0, customParriableProjectile);
-    private static void PatchProjectileStateToParriable(Type type, string name, Type type1, int parriableCount, Predicate<ParriableProjectileStuff> customParriableProjectile)
+    internal static void PatchProjectileStateToParriable(Type type, string name, Type type1, int parriableCount) => PatchProjectileStateToParriable(type, name, type1, parriableCount, null);
+    internal static void PatchProjectileStateToParriable(Type type, string name, int parriableCount) => PatchProjectileStateToParriable(type, name, type, parriableCount, null);
+    internal static void PatchProjectileStateToParriable(Type type, string name, int parriableCount, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type, parriableCount, customParriableProjectile);
+    internal static void PatchProjectileStateToParriable(Type type, string name, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type, 0, customParriableProjectile);
+    internal static void PatchProjectileStateToParriable(Type type, string name, Type type1, Predicate<ParriableProjectileStuff> customParriableProjectile) => PatchProjectileStateToParriable(type, name, type1, 0, customParriableProjectile);
+    internal static void PatchProjectileStateToParriable(Type type, string name, Type type1, int parriableCount, Predicate<ParriableProjectileStuff> customParriableProjectile)
     {
         if (!patchedProjectileStates.Contains(type))
         {
@@ -845,8 +889,8 @@ public static class BishopEvents
         };
         types.Add(type1, parriableFireProjectileInfo);
     }
-    private static void PatchOverlapStateToParriable(Type type, string name) => PatchOverlapStateToParriable(type, name, type);
-    private static void PatchOverlapStateToParriable(Type type, string name, Type type1)
+    internal static void PatchOverlapStateToParriable(Type type, string name) => PatchOverlapStateToParriable(type, name, type);
+    internal static void PatchOverlapStateToParriable(Type type, string name, Type type1)
     {
         if (!patchedOverlapStates.Contains(type))
         {
@@ -856,8 +900,8 @@ public static class BishopEvents
         }
         types3.Add(type1);
     }
-    private static void PatchBlastAttackStateToParriable(Type type, string name) => PatchBlastAttackStateToParriable(type, name, type);
-    private static void PatchBlastAttackStateToParriable(Type type, string name, Type type1)
+    internal static void PatchBlastAttackStateToParriable(Type type, string name) => PatchBlastAttackStateToParriable(type, name, type);
+    internal static void PatchBlastAttackStateToParriable(Type type, string name, Type type1)
     {
         if (!patchedBlastStates.Contains(type))
         {
@@ -867,8 +911,8 @@ public static class BishopEvents
         }
         types3.Add(type1);
     }
-    private static void PatchBulletAttackStateToParriable(Type type, string name) => PatchBulletAttackStateToParriable(type, name, type);
-    private static void PatchBulletAttackStateToParriable(Type type, string name, Type type1)
+    internal static void PatchBulletAttackStateToParriable(Type type, string name) => PatchBulletAttackStateToParriable(type, name, type);
+    internal static void PatchBulletAttackStateToParriable(Type type, string name, Type type1)
     {
         if (!patchedBulletStates.Contains(type))
         {
@@ -886,6 +930,23 @@ public static class BishopEvents
         GradientColorKey[] gradientColorKeys = { new GradientColorKey { color = new Color(114f / 256f, 166f / 256f, 36f / 256f), time = 0f, }, new GradientColorKey { color = new Color(0f, 1f, 0.438499f), time = 1f, } };
         gradient.SetKeys(gradientColorKeys, gradientAlphaKeys);
         return gradient;
+    }
+    public static void SetCustomProjectileSpeedMultiplier(GameObject projectilePrefab, float speedMultiplier)
+    {
+        ProjectileController projectileController = projectilePrefab.GetComponent<ProjectileController>();
+        if (!projectileController) return;
+        SetCustomProjectileSpeedMultiplier(projectileController, speedMultiplier);
+    }
+    public static void SetCustomProjectileSpeedMultiplier(ProjectileController projectileController, float speedMultiplier)
+    {
+        if (projectilesCatalogInit)
+        {
+            runtimeCustomProjectileSpeedMultiplier[projectileController.catalogIndex] = speedMultiplier;
+        }
+        else
+        {
+            customProjectileSpeedMultiplier[projectileController] = speedMultiplier;
+        }
     }
     private static void ProjectileController_Start(On.RoR2.Projectile.ProjectileController.orig_Start orig, ProjectileController self)
     {
@@ -912,10 +973,7 @@ public static class BishopEvents
         DamageInfo damageInfo = obj.damageInfo;
         if (damageInfo == null) return;
         CharacterBody victimBody = obj.victimBody;
-        if (damageInfo.HasModdedDamageType(SuperStunDamageType))
-        {
-            victimBody.SuperStun(SuperStunDuration * damageInfo.procCoefficient);
-        }
+        if (damageInfo.HasModdedDamageType(SuperStunDamageType)) victimBody.SuperStun(SuperStunDuration * damageInfo.procCoefficient);
         bool hasDamageType = damageInfo.HasModdedDamageType(GloryKillDamageType);
         CharacterBody attackerBody = obj.attackerBody;
         if (attackerBody)
@@ -1050,6 +1108,12 @@ public static class BishopEvents
         float heal = orig(self, amount, procChainMask, nonRegen);
         return heal;
     }
+    public static void AddParriableProjectileGhostFromProjectile(GameObject projectile)
+    {
+        GameObject gameObject = CaeliImperiumUtils.GetProjectileGhost(projectile);
+        if (!gameObject) return;
+        AddParriableProjectileGhost(gameObject);
+    }
     public static void AddParriableProjectileGhost(GameObject projectileGhost)
     {
         if (_parriableProjectileGhosts.Contains(projectileGhost)) return;
@@ -1095,7 +1159,7 @@ public static class BishopEvents
     private static void HandleFireOverlapAttack(ILContext il)
     {
         ILCursor c = new ILCursor(il);
-        if (c.TryGotoNext(MoveType.Before,
+        while (c.TryGotoNext(MoveType.Before,
                 x => x.MatchCallvirt<OverlapAttack>(nameof(OverlapAttack.Fire))
             ))
         {
@@ -1108,7 +1172,7 @@ public static class BishopEvents
             c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ParriableOverlapStuff), nameof(ParriableOverlapStuff.overlapAttack)));
             c.Emit(OpCodes.Ldloc, valuesId);
             c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ParriableOverlapStuff), nameof(ParriableOverlapStuff.hurtBoxes)));
-            return;
+            c.Index++;
         }
     }
     private static void HandleFireBlastAttack(ILContext il)
@@ -1129,6 +1193,7 @@ public static class BishopEvents
         if (types3.Contains(baseState.GetType()))
         {
             if (!blastAttack.HasModdedDamageType(ParriableDamageType)) blastAttack.AddModdedDamageType(ParriableDamageType);
+            if (!blastAttack.HasModdedDamageType(ParriableMeleeDamageType)) blastAttack.AddModdedDamageType(ParriableMeleeDamageType);
         }
         return blastAttack;
     }
@@ -1163,6 +1228,7 @@ public static class BishopEvents
             if (types3.Contains(baseState.GetType()))
             {
                 if (!overlapAttack.HasModdedDamageType(ParriableDamageType)) overlapAttack.AddModdedDamageType(ParriableDamageType);
+                if (!overlapAttack.HasModdedDamageType(ParriableMeleeDamageType)) overlapAttack.AddModdedDamageType(ParriableMeleeDamageType);
             }
             return new ParriableOverlapStuff
             {

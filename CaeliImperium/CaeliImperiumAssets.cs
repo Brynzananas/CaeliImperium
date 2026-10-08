@@ -25,6 +25,7 @@ public static class CaeliImperiumAssets
     public static GameObject LemurianFireballGhost;
     public static GameObject LemurianBruiserMegaFireballGhost;
     public static GameObject VultureWindbladeProjectileGhost;
+    public static GameObject MiniMushroomSporeGrenadeProjectile;
     public static GameObject MiniMushroomSporeGrenadeGhost;
     public static GameObject MinorConstructProjectileGhost;
     public static GameObject FlyingVerminSpitProjectileGhost;
@@ -118,7 +119,8 @@ public static class CaeliImperiumAssets
         LemurianFireballGhost = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Lemurian/FireballGhost.prefab").WaitForCompletion();
         LemurianBruiserMegaFireballGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_LemurianBruiser.MegaFireballGhost_prefab).WaitForCompletion();
         VultureWindbladeProjectileGhost = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Vulture/WindbladeProjectileGhost.prefab").WaitForCompletion();
-        MiniMushroomSporeGrenadeGhost = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/MiniMushroom/SporeGrenadeGhost.prefab").WaitForCompletion();
+        MiniMushroomSporeGrenadeGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_MiniMushroom.SporeGrenadeGhost_prefab).WaitForCompletion();
+        MiniMushroomSporeGrenadeProjectile = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_MiniMushroom.SporeGrenadeProjectile_prefab).WaitForCompletion();
         MinorConstructProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_MajorAndMinorConstruct.MinorConstructProjectileGhost_prefab).WaitForCompletion();
         FlyingVerminSpitProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_FlyingVermin.VerminSpitGhost_prefab).WaitForCompletion();
         BellBallProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Bell.BellBallGhost_prefab).WaitForCompletion();

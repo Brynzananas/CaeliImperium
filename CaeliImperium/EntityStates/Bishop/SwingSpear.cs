@@ -137,7 +137,20 @@ public class SwingSpear : BishopState
                             ProjectileManager.instance.FireProjectile(fireProjectileInfo);
                         }
                     }
-                    BishopEvents.OnParry(characterBody, projectileDamage.transform.position);
+                    DamageInfo damageInfo = new DamageInfo
+                    {
+                        damage = projectileDamage.damage,
+                        attacker = projectileController ? projectileController.owner : null,
+                        canRejectForce = projectileDamage.force > 0f,
+                        crit = projectileDamage.crit,
+                        damageColorIndex = projectileDamage.damageColorIndex,
+                        damageType = projectileDamage.damageType,
+                        force = projectileDamage.transform.forward * projectileDamage.force,
+                        inflictor = projectileDamage.gameObject,
+                        position = projectileDamage.transform.position,
+                        procCoefficient = 0f // TODO: Create a method to get proc coefficient from projectile
+                    };
+                    BishopEvents.OnParry(characterBody, damageInfo);
                     if (NetworkServer.active)
                     {
                         Destroy(projectileDamage.gameObject);
