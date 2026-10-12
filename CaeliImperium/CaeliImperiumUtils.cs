@@ -1,11 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BrynzaAPI;
+using CaeliImperium.Bodies;
 using CaeliImperium.Components;
 using CaeliImperium.Components.Refinery;
 using CaeliImperium.Configs;
 using CaeliImperium.Interactables;
 using CaeliImperium.Items;
+using CaeliImperium.ModCompatibilities;
 using EntityStates;
 using Newtonsoft.Json;
 using R2API;
@@ -823,11 +825,7 @@ public static class CaeliImperiumUtils
         RenderTexture previousActive = RenderTexture.active;
         RenderTexture.active = renderTexture;
         Texture2D readableTexture = new Texture2D(sourceTexture.width, sourceTexture.height, TextureFormat.RGBA32, false);
-        readableTexture.wrapMode = sourceTexture.wrapMode;
-        readableTexture.wrapModeU = sourceTexture.wrapModeU;
-        readableTexture.wrapModeV = sourceTexture.wrapModeV;
-        readableTexture.wrapModeW = sourceTexture.wrapModeW;
-        readableTexture.mipMapBias = sourceTexture.mipMapBias;
+        CopyTextureSettings(sourceTexture, readableTexture);
         readableTexture.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
         readableTexture.Apply();
         RenderTexture.active = previousActive;
@@ -857,15 +855,102 @@ public static class CaeliImperiumUtils
             resultPixels[i] = gradientColor;
         }
         Texture2D resultTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        resultTexture.wrapMode = sourceTexture.wrapMode;
-        resultTexture.wrapModeU = sourceTexture.wrapModeU;
-        resultTexture.wrapModeV = sourceTexture.wrapModeV;
-        resultTexture.wrapModeW = sourceTexture.wrapModeW;
-        resultTexture.mipMapBias = sourceTexture.mipMapBias;
+        CopyTextureSettings(sourceTexture, resultTexture);
         resultTexture.SetPixels(resultPixels);
         resultTexture.Apply();
         if (destroySourceTexture) GameObject.Destroy(sourceTexture);
         return resultTexture;
+    }
+    public static Texture2D MultiplyHSV(this Texture2D sourceTexture, float hueShift, float saturationMultiplier, float valueMultiplier)
+    {
+        if (!sourceTexture) return null;
+        bool destroySourceTexture = false;
+        if (!sourceTexture.isReadable)
+        {
+            destroySourceTexture = true;
+            sourceTexture = sourceTexture.CreateReadableTexture();
+        }
+        Color[] pixels = sourceTexture.GetPixels();
+        Color[] modifiedPixels = new Color[pixels.Length];
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color col = pixels[i];
+            Color.RGBToHSV(col, out float h, out float s, out float v);
+            h = (h + (hueShift / 360f)) % 1.0f;
+            if (h < 0f) h += 1.0f;
+            s = Mathf.Clamp01(s * saturationMultiplier);
+            v = Mathf.Clamp01(v * valueMultiplier);
+            Color newCol = Color.HSVToRGB(h, s, v);
+            newCol.a = col.a;
+            modifiedPixels[i] = newCol;
+        }
+        Texture2D resultTexture = new Texture2D(sourceTexture.width, sourceTexture.height, sourceTexture.format, sourceTexture.mipmapCount > 1);
+        CopyTextureSettings(sourceTexture, resultTexture);
+        resultTexture.SetPixels(modifiedPixels);
+        resultTexture.Apply();
+        if (destroySourceTexture) GameObject.Destroy(sourceTexture);
+        return resultTexture;
+    }
+    public static Texture2D AdjustTextureHSV(this Texture2D sourceTexture, float hueShift, float saturationMultiplier, float valueMultiplier, float minSaturation, float maxSaturation, float minValue, float maxValue)
+    {
+        if (!sourceTexture) return null;
+        bool destroySourceTexture = false;
+        if (!sourceTexture.isReadable)
+        {
+            destroySourceTexture = true;
+            sourceTexture = sourceTexture.CreateReadableTexture();
+        }
+        Color[] pixels = sourceTexture.GetPixels();
+        Color[] modifiedPixels = new Color[pixels.Length];
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color col = pixels[i];
+            Color.RGBToHSV(col, out float h, out float s, out float v);
+            h = (h + (hueShift / 360f)) % 1.0f;
+            if (h < 0f) h += 1.0f;
+            s = Mathf.Max(Mathf.Min(Mathf.Clamp01(s * saturationMultiplier), maxSaturation), minSaturation);
+            v = Mathf.Max(Mathf.Min(Mathf.Clamp01(v * valueMultiplier), maxValue), minValue);
+            Color newCol = Color.HSVToRGB(h, s, v);
+            newCol.a = col.a;
+            modifiedPixels[i] = newCol;
+        }
+        Texture2D resultTexture = new Texture2D(sourceTexture.width, sourceTexture.height, sourceTexture.format, sourceTexture.mipmapCount > 1);
+        CopyTextureSettings(sourceTexture, resultTexture);
+        resultTexture.SetPixels(modifiedPixels);
+        resultTexture.Apply();
+        if (destroySourceTexture) GameObject.Destroy(sourceTexture);
+        return resultTexture;
+    }
+    private static void CopyTextureSettings(Texture source, Texture2D destination)
+    {
+        if (!source || !destination) return;
+        destination.wrapMode = source.wrapMode;
+        destination.wrapModeU = source.wrapModeU;
+        destination.wrapModeV = source.wrapModeV;
+        destination.wrapModeW = source.wrapModeW;
+        destination.filterMode = source.filterMode;
+        destination.anisoLevel = source.anisoLevel;
+        destination.mipMapBias = source.mipMapBias;
+    }
+    public static Color MultiplyHSV(this Color color, float hueMultiplier, float saturationMultiplier, float valueMultiplier)
+    {
+        Color.RGBToHSV(color, out float h, out float s, out float v);
+        h = Mathf.Repeat(h * hueMultiplier, 1f);
+        s = Mathf.Clamp01(s * saturationMultiplier);
+        v = Mathf.Clamp01(v * valueMultiplier);
+        Color modifiedColor = Color.HSVToRGB(h, s, v);
+        modifiedColor.a = color.a;
+        return modifiedColor;
+    }
+    public static Color MultiplyHSV(this Color color, float hueMultiplier, float saturationMultiplier, float valueMultiplier, float minSaturation, float maxSaturation, float minValue, float maxValue)
+    {
+        Color.RGBToHSV(color, out float h, out float s, out float v);
+        h = Mathf.Repeat(h * hueMultiplier, 1f);
+        s = Mathf.Max(Mathf.Min(Mathf.Clamp01(s * saturationMultiplier), maxSaturation), minSaturation);
+        v = Mathf.Max(Mathf.Min(Mathf.Clamp01(v * valueMultiplier), maxValue), minValue);
+        Color modifiedColor = Color.HSVToRGB(h, s, v);
+        modifiedColor.a = color.a;
+        return modifiedColor;
     }
     public static Vector3 GetColliderCenter(this Collider collider) => collider.bounds.center;
     public static ChildLocator GetModelChildLocator(this CharacterBody characterBody)
@@ -1046,6 +1131,18 @@ public static class CaeliImperiumUtils
         }
         return false;
     }
+    public static bool SelectedBishopSurvivor()
+    {
+        if (!BishopEvents.Bishop) return false;
+        LocalUser localUser = LocalUserManager.GetFirstLocalUser();
+        if (localUser == null) return false;
+        UserProfile userProfile = localUser.userProfile;
+        if (userProfile == null) return false;
+        SurvivorDef selectedSurvivor = userProfile.GetSurvivorPreference();
+        if (!selectedSurvivor) return false;
+        if (selectedSurvivor == BishopEvents.Bishop) return true;
+        return false;
+    }
     public static GameObject GetProjectileGhost(GameObject gameObject)
     {
         ProjectileController projectile = gameObject.GetComponent<ProjectileController>();
@@ -1053,6 +1150,50 @@ public static class CaeliImperiumUtils
         if (projectile.ghostPrefab) return projectile.ghostPrefab;
         // There should be logic for getting ghost prefab from assync reference but I am lazy to write and I don't think it will matter
         return null;
+    }
+    public static void CopyCollidersTo(this GameObject source, GameObject target)
+    {
+        Collider[] colliders = source.GetComponents<Collider>();
+        foreach (Collider col in colliders)
+        {
+            if (col is BoxCollider originalBox)
+            {
+                BoxCollider copy = target.AddComponent<BoxCollider>();
+                copy.center = originalBox.center;
+                copy.size = originalBox.size;
+                CopyColliderBaseProperties(originalBox, copy);
+            }
+            else if (col is SphereCollider originalSphere)
+            {
+                SphereCollider copy = target.AddComponent<SphereCollider>();
+                copy.center = originalSphere.center;
+                copy.radius = originalSphere.radius;
+                CopyColliderBaseProperties(originalSphere, copy);
+            }
+            else if (col is CapsuleCollider originalCapsule)
+            {
+                CapsuleCollider copy = target.AddComponent<CapsuleCollider>();
+                copy.center = originalCapsule.center;
+                copy.radius = originalCapsule.radius;
+                copy.height = originalCapsule.height;
+                copy.direction = originalCapsule.direction;
+                CopyColliderBaseProperties(originalCapsule, copy);
+            }
+            else if (col is MeshCollider originalMesh)
+            {
+                MeshCollider copy = target.AddComponent<MeshCollider>();
+                copy.sharedMesh = originalMesh.sharedMesh;
+                copy.convex = originalMesh.convex;
+                copy.cookingOptions = originalMesh.cookingOptions;
+                CopyColliderBaseProperties(originalMesh, copy);
+            }
+        }
+    }
+    private static void CopyColliderBaseProperties(Collider source, Collider target)
+    {
+        target.isTrigger = source.isTrigger;
+        target.sharedMaterial = source.sharedMaterial;
+        target.enabled = source.enabled;
     }
 }
  

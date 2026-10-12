@@ -32,8 +32,10 @@ public static class CaeliImperiumAssets
     public static GameObject BellBallProjectileGhost;
     public static GameObject BellBallSmallProjectileGhost;
     public static GameObject GreaterWispProjectileGhost;
-    public static GameObject HermitCrabProjectileGhost;
-    public static GameObject HermitCrabProjectileOptGhost;
+    public static GameObject HermitCrabBombProjectile;
+    public static GameObject HermitCrabBombOptProjectile;
+    public static GameObject HermitCrabBombGhost;
+    public static GameObject HermitCrabBombOptGhost;
     public static GameObject BeetleQueenSpitProejctileGhost;
     public static GameObject ClayBossTarBallProjectileGhost;
     public static GameObject GrandparentBossBoulderProjectileGhost;
@@ -111,6 +113,7 @@ public static class CaeliImperiumAssets
     public static void Init()
     {
         assetBundle = AssetBundle.LoadFromFileAsync(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(CaeliImperiumPlugin.PluginInfo.Location), "assetbundles", "caeliimperiumassets")).assetBundle;
+        SoundAPI.SoundBanks.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(CaeliImperiumPlugin.PluginInfo.Location), "soundbanks", "CaeliImperiumBankOld.bnk"));
         SoundAPI.SoundBanks.Add(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(CaeliImperiumPlugin.PluginInfo.Location), "soundbanks", "CaeliImperiumBank.bnk"));
         CaeliImperiumUtils.AddMusic("Play_CaeliImperiumMusicSystem", "CaeliImperiumMusic");
         PlayerCharacterMasterControllerPrefab = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Core/PlayerMaster.prefab").WaitForCompletion();
@@ -126,8 +129,10 @@ public static class CaeliImperiumAssets
         BellBallProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Bell.BellBallGhost_prefab).WaitForCompletion();
         BellBallSmallProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Bell.BellBallSmallGhost_prefab).WaitForCompletion();
         GreaterWispProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_GreaterWisp.WispCannonGhost_prefab).WaitForCompletion();
-        HermitCrabProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_prefab).WaitForCompletion();
-        HermitCrabProjectileOptGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_opt_prefab).WaitForCompletion();
+        HermitCrabBombProjectile = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombProjectile_prefab).WaitForCompletion();
+        HermitCrabBombOptProjectile = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombProjectile_opt_prefab).WaitForCompletion();
+        HermitCrabBombGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_prefab).WaitForCompletion();
+        HermitCrabBombOptGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_HermitCrab.HermitCrabBombGhost_opt_prefab).WaitForCompletion();
         BeetleQueenSpitProejctileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_BeetleQueen.BeetleQueenSpitGhost_prefab).WaitForCompletion();
         ClayBossTarBallProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_ClayBoss.TarballGhost_prefab).WaitForCompletion();
         GrandparentBossBoulderProjectileGhost = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Grandparent.GrandparentBoulderGhost_prefab).WaitForCompletion();

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace CaeliImperiumEntityStates.Bishop;
 public abstract class BishopMeleeState : BishopState
@@ -33,6 +34,7 @@ public abstract class BishopMeleeState : BishopState
     public abstract float backoffVelocity { get; }
     public abstract float minFlyToTargetSpeed { get; }
     public abstract float findTargetDistance { get; }
+    public abstract float regularFindTargetDistance { get; }
     public abstract float findTargetRadius { get; }
     public abstract bool giveEmpowermentOnExecute { get; }
     public BulletAttack bulletAttack;
@@ -43,7 +45,7 @@ public abstract class BishopMeleeState : BishopState
     public HurtBox target;
     public bool hitConfirmed;
     public Vector3 moveDirection;
-    public bool hasRequiredStockAndDelay;
+    public bool hasStock;
     public bool targetIsStaggered;
     public bool wasStaggeredOnHit;
     public float addDuration;
@@ -61,17 +63,39 @@ public abstract class BishopMeleeState : BishopState
         damage = damageCoefficient * characterBody.damage;
         duration = baseDuration / characterBody.attackSpeed;
         ray = GetAimRay();
-        hasRequiredStockAndDelay = activatorSkillSlot ? activatorSkillSlot.HasRequiredStockAndDelay() : false;
+        hasStock = activatorSkillSlot ? activatorSkillSlot.stock > 0 : false;
         flyToTargetSpeed = minFlyToTargetSpeed;
     }
     public virtual void FindTarget()
     {
-        Collider[] colliders = Physics.OverlapCapsule(ray.origin, ray.origin + (ray.direction * findTargetDistance), findTargetRadius, LayerIndex.entityPrecise.mask, QueryTriggerInteraction.UseGlobal);
+        float radius = findTargetRadius + TrajectoryAimAssist.GetAimAssistRadius(gameObject);
+        GetColliders(findTargetRadius, findTargetDistance, out bool atleastOneStaggered, out List<Collider> validColliders, out List<Collider> validAndStaggeredColliders);
+        if (!atleastOneStaggered && !hasStock) GetColliders(findTargetRadius, regularFindTargetDistance, out atleastOneStaggered, out validColliders, out validAndStaggeredColliders);
+        Collider nearestCollider = CaeliImperiumUtils.GetClosestColliderOnLine(atleastOneStaggered ? validAndStaggeredColliders : validColliders, ray.direction, ray.origin);
+        if (nearestCollider)
+        {
+            target = nearestCollider.GetComponent<HurtBox>();
+            targetIsStaggered = atleastOneStaggered;
+        }
+        if (target)
+        {
+            Vector3 vector3 = target.transform.position - transform.position;
+            moveDirection = vector3.normalized;
+            flyToTargetSpeed = Mathf.Max(flyToTargetSpeed, vector3.magnitude / duration);
+        }
+        else
+        {
+            moveDirection = Vector3.zero;
+        }
+    }
+    private void GetColliders(float radius, float distance, out bool atleastOneStaggered, out List<Collider> validColliders, out List<Collider> validAndStaggeredColliders)
+    {
+        validColliders = [];
+        validAndStaggeredColliders = [];
+        atleastOneStaggered = false;
+        Collider[] colliders = Physics.OverlapCapsule(ray.origin, ray.origin + (ray.direction * distance), radius, LayerIndex.entityPrecise.mask, QueryTriggerInteraction.UseGlobal);
         if (colliders != null && colliders.Length > 0)
         {
-            List<Collider> validColliders = [];
-            List<Collider> validAndStaggeredColliders = [];
-            bool atleastOneStaggered = false;
             foreach (Collider collider in colliders)
             {
                 HurtBox hurtBox = collider.GetComponent<HurtBox>();
@@ -87,25 +111,9 @@ public abstract class BishopMeleeState : BishopState
                 validAndStaggeredColliders.Add(collider);
                 if (!atleastOneStaggered) atleastOneStaggered = true;
             }
-            Collider nearestCollider = CaeliImperiumUtils.GetClosestColliderOnLine(atleastOneStaggered ? validAndStaggeredColliders : validColliders, ray.direction, ray.origin);
-            if (nearestCollider)
-            {
-                target = nearestCollider.GetComponent<HurtBox>();
-                targetIsStaggered = atleastOneStaggered;
-            }
-        }
-        if (target)
-        {
-            Vector3 vector3 = target.transform.position - transform.position;
-            moveDirection = vector3.normalized;
-            flyToTargetSpeed = Mathf.Max(flyToTargetSpeed, vector3.magnitude / duration);
-        }
-        else
-        {
-            moveDirection = Vector3.zero;
         }
     }
-    public virtual bool canFly => targetIsStaggered || hasRequiredStockAndDelay;
+    public virtual bool canFly => true;
     public override void FixedUpdate()
     {
         base.FixedUpdate();
@@ -193,7 +201,7 @@ public abstract class BishopMeleeState : BishopState
         {
             if (giveEmpowermentOnExecute) (this as IBishopState).RechargeSpecialSpearStocks();
         }
-        else if (hasRequiredStockAndDelay)
+        else if (hasStock)
         {
             activatorSkillSlot.DeductStock(1);
         }

@@ -2,6 +2,7 @@
 using BrynzaAPI;
 using CaeliImperium.Components;
 using CaeliImperium.Components.Bishop;
+using CaeliImperium.ModCompatibilities;
 using CaeliImperium.NetworkMessages;
 using CaeliImperium.ScriptableObjects;
 using CaeliImperiumComponents.Bishop;
@@ -32,6 +33,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using static CaeliImperium.Bodies.BishopEvents;
 using static UnityEngine.ParticleSystem.PlaybackState;
@@ -87,8 +89,9 @@ public static class BishopEvents
     public static float HealFromGloryKillCoeffecient = 1f / 32f;
     public static float HealFromGloryHeavyKillCoeffecient = 1f / 8f;
     public static float HealFromWhiffedGloryKillCoeffecient = 0f;
-    public static float ReserveHealFromGloryKillCoeffecient = 1f / 3f;
-    public static float ReserveHealFromGloryHeavyKillCoeffecient = 0.3f;
+    public static float ReserveHealFromWhiffedGloryKillCoeffecient = 0f;
+    public static float ReserveHealFromGloryKillCoeffecient = 0.1f;
+    public static float ReserveHealFromGloryHeavyKillCoeffecient = 0.25f;
     public static float ReserveHealFromGloryChampionKillCoeffecient = 0.5f;
     public static float DefaultOnParryStunDuration = 0.6f;  
     public static int StaggerAmount = 3;
@@ -103,6 +106,17 @@ public static class BishopEvents
     public static float ParriableOverlapAttackSizeMultiplier = 2f;
     public static float ParriableBlastAttackSizeMultiplier = 2f;
     public static float GloryKillForce = 48f;
+    public static float StageTextureSaturationMultiplier = 0.3f;
+    public static float StageTextureValueMultiplier = 0.85f;
+    public static float StageTextureSizeMultiplier = 2f;
+    public static float StageLightSaturationMultiplier = 0.3f;
+    public static float StageLightValueMultiplier = 0.9f;
+    public static float StageRampFogSaturationMultiplier = 1f;
+    public static float StageRampFogValueMultiplier = 0.3f;
+    public static float StageAmbientSaturationMultiplier = 0.2f;
+    public static float StageAmbientValueMultiplier = 0.8f;
+    public static float StageSkyboxSaturationMultiplier = 0.2f;
+    public static float StageSkyboxValueMultiplier = 0.8f;
     public static event Action<OnParryInfo> onParry;
     private static HashSet<GameObject> _parriableProjectileGhosts = [];
     private static bool init;
@@ -125,14 +139,13 @@ public static class BishopEvents
     private static Dictionary<int, float> runtimeCustomProjectileSpeedMultiplier = [];
     private static Dictionary<string, DroneIndex> GearboxYouHadOneJob = [];
     private static bool projectilesCatalogInit;
-    private static HashSet<string> purgeMonsters = new HashSet<string> { "BeetleMaster", "WispMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster", "MagmaWormMaster", "ElectricWormMaster" };
-    private static HashSet<string> purgeItems = new HashSet<string> { "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
-    private static HashSet<string> purgeClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
+    private static HashSet<string> purgeMonsters = new HashSet<string> { "BeetleMaster", "WispMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster", "MagmaWormMaster", "ElectricWormMaster" , "HermitCrabMaster" };
+    private static HashSet<string> purgeItems = new HashSet<string> { "Clover", "StunChanceOnHit", "Mushroom", "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid" };
+    private static HashSet<string> purgeClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "HaulerDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone" };
     public static void Init(GameObject gameObject)
     {
         On.RoR2.HealthComponent.Heal += HealthComponent_Heal;
         GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
-        On.RoR2.Projectile.ProjectileController.Start += ProjectileController_Start;
         On.RoR2.CharacterModel.UpdateOverlays += CharacterModel_UpdateOverlays;
         On.EntityStates.EntityState.OnEnter += EntityState_OnEnter;
         On.EntityStates.EntityState.OnExit += EntityState_OnExit;
@@ -141,7 +154,7 @@ public static class BishopEvents
         On.EntityStates.Bell.BellWeapon.ChargeTrioBomb.OnEnter += ChargeTrioBomb_OnEnter;
         /*On.EntityStates.LemurianBruiserMonster.FireMegaFireball.OnEnter += FireMegaFireball_OnEnter;
         On.EntityStates.LemurianBruiserMonster.FireMegaFireball.OnExit += FireMegaFireball_OnExit;*/
-        On.RoR2.GenericSkill.RunRecharge += GenericSkill_RunRecharge;
+        On.RoR2.GenericSkill.RunRecharge_float += GenericSkill_RunRecharge_float;
         IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess1;
         On.RoR2.Projectile.ProjectileManager.InitializeProjectile += ProjectileManager_InitializeProjectile;
         IL.RoR2.OverlapAttack.Fire += OverlapAttack_Fire;
@@ -156,6 +169,8 @@ public static class BishopEvents
         On.RoR2.CharacterAI.BaseAI.OnServerDamageDealt += BaseAI_OnServerDamageDealt;
         Run.onRunSetRuleBookGlobal += Run_onRunSetRuleBookGlobal;
         CaeliImperiumHooks.OnSetProjectilePrefabsIndividualPrefab += CaeliImperiumHooks_OnSetProjectilePrefabsIndividualPrefab;
+        On.RoR2.HealthComponent.GetHealthBarValues += HealthComponent_GetHealthBarValues;
+        //SceneManager.sceneLoaded += SceneManager_sceneLoaded;
         if (init) return;
         init = true;
         Body = gameObject.GetComponent<CharacterBody>();
@@ -170,7 +185,9 @@ public static class BishopEvents
         Transform camera = firstPersonCameraController.transform.Find("Camera");
         PostProcessLayer postProcessLayer = camera.GetComponent<PostProcessLayer>();
         PostProcessLayer postProcessLayer2 = CaeliImperiumAssets.MainCamera.GetComponentInChildren<PostProcessLayer>();
-        postProcessLayer.m_Resources = postProcessLayer2.m_Resources;*/
+        postProcessLayer.m_Resources = postProcessLayer2.m_Resources;
+        postProcessLayer.volumeLayer = LayerMask.GetMask(["SplitscreenPlayer2"]);
+        postProcessLayer.enabled = true;*/
         Bishop = CaeliImperiumAssets.assetBundle.LoadAsset<SurvivorDef>("Assets/CaeliImperium/Bodies/Bishop/Bishop.asset").RegisterSurvivor();
         Primary = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopPrimary.asset").RegisterSkillFamily();
         Secondary = CaeliImperiumAssets.assetBundle.LoadAsset<SkillFamily>("Assets/CaeliImperium/Bodies/Bishop/sfBishopSecondary.asset").RegisterSkillFamily();
@@ -240,8 +257,10 @@ public static class BishopEvents
         AddParriableProjectileGhost(CaeliImperiumAssets.BellBallProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.BellBallSmallProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.GreaterWispProjectileGhost);
-        AddParriableProjectileGhost(CaeliImperiumAssets.HermitCrabProjectileGhost);
-        AddParriableProjectileGhost(CaeliImperiumAssets.HermitCrabProjectileOptGhost);
+        AddParriableProjectileGhost(CaeliImperiumAssets.HermitCrabBombGhost);
+        SetCustomProjectileSpeedMultiplier(CaeliImperiumAssets.HermitCrabBombProjectile, 1f);
+        AddParriableProjectileGhost(CaeliImperiumAssets.HermitCrabBombOptGhost);
+        SetCustomProjectileSpeedMultiplier(CaeliImperiumAssets.HermitCrabBombOptProjectile, 1f);
         AddParriableProjectileGhost(CaeliImperiumAssets.BeetleQueenSpitProejctileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.ClayBossTarBallProjectileGhost);
         AddParriableProjectileGhost(CaeliImperiumAssets.GrandparentBossBoulderProjectileGhost);
@@ -291,11 +310,20 @@ public static class BishopEvents
         AddParriableStateVisuals<EntityStates.ImpMonster.DoubleSlash>();
         PatchOverlapStateToParriable(typeof(EntityStates.ImpMonster.DoubleSlash), nameof(EntityStates.ImpMonster.DoubleSlash.HandleSlash));
         AddParriableStateVisuals<EntityStates.ImpMonster.DoubleSlash>();
+        PatchOverlapStateToParriable(typeof(EntityStates.Lynx2Monster.TwoSwipes), nameof(EntityStates.Lynx2Monster.TwoSwipes.FixedUpdate));
+        AddParriableStateVisuals<EntityStates.Lynx2Monster.TwoSwipes>();
+        PatchOverlapStateToParriable(typeof(EntityStates.LynxAmbusher.SpearStrike), nameof(EntityStates.LynxAmbusher.SpearStrike.FireSpearStrike));
+        PatchOverlapStateToParriable(typeof(EntityStates.LynxAmbusher.SpearStrikeStationary), nameof(EntityStates.LynxAmbusher.SpearStrikeStationary.FireSpearStrike));
+        AddParriableStateVisuals<EntityStates.LynxAmbusher.SpearStrikeWindup>();
         PatchOverlapStateToParriable(typeof(EntityStates.BasicMeleeAttack), nameof(EntityStates.BasicMeleeAttack.AuthorityFireAttack), typeof(EntityStates.ImpMonster.DoubleSlash));
         AddParriableStateVisuals<EntityStates.GrandParentBoss.GroundSwipe>();
         PatchOverlapStateToParriable(typeof(EntityStates.BasicMeleeAttack), nameof(EntityStates.BasicMeleeAttack.AuthorityFireAttack), typeof(EntityStates.GrandParentBoss.GroundSwipe));
         AddParriableStateVisuals<EntityStates.BrotherMonster.SprintBash>();
         PatchOverlapStateToParriable(typeof(EntityStates.BasicMeleeAttack), nameof(EntityStates.BasicMeleeAttack.AuthorityFireAttack), typeof(EntityStates.BrotherMonster.SprintBash));
+        AddParriableStateVisuals<EntityStates.Halcyonite.GoldenSlash>();
+        PatchOverlapStateToParriable(typeof(EntityStates.BasicMeleeAttack), nameof(EntityStates.BasicMeleeAttack.AuthorityFireAttack), typeof(EntityStates.Halcyonite.GoldenSlash));
+        AddParriableStateVisuals<EntityStates.Halcyonite.GoldenSwipe>();
+        PatchOverlapStateToParriable(typeof(EntityStates.BasicMeleeAttack), nameof(EntityStates.BasicMeleeAttack.AuthorityFireAttack), typeof(EntityStates.Halcyonite.GoldenSwipe));
         AddParriableStateVisuals<EntityStates.BrotherMonster.WeaponSlam>();
         PatchOverlapStateToParriable(typeof(EntityStates.BrotherMonster.WeaponSlam), nameof(EntityStates.BrotherMonster.WeaponSlam.FixedUpdate));
         PatchBlastAttackStateToParriable(typeof(EntityStates.BrotherMonster.WeaponSlam), nameof(EntityStates.BrotherMonster.WeaponSlam.FixedUpdate));
@@ -313,10 +341,194 @@ public static class BishopEvents
             bishopStaggerOnHurt.staggerDuration = StaggerDuration;
         }
         if (CaeliImperiumPlugin.enemiesReturnsEnabled) EnemiesReturnsCompatability.BishopInit();
+        if (CaeliImperiumPlugin.enemyAbilitiesEnabled) EnemyAbilitiesCompatibility.BishopInit();
+    }
+    /*private static void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1) // This is bullshit
+    {
+        if (!CaeliImperiumUtils.SelectedBishopSurvivor() || !Run.instance) return;
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
+        List<GameObject> rootObjects = [];
+        arg0.GetRootGameObjects(rootObjects);
+        List<Renderer> renderers = [];
+        List<Light> lights = [];
+        List<PostProcessVolume> postProcessVolumes = [];
+        Dictionary<Material, Material> keyValuePairs = [];
+        Dictionary<Texture2D, Texture2D> keyValuePairs2 = [];
+        HashSet<string> supportedShaders = new HashSet<string> { "Hopoo Games/Deferred/Triplanar Terrain Blend Emissive", "Hopoo Games/Deferred/Snow Topped", "Hopoo Games/Deferred/Triplanar Terrain Blend", "Hopoo Games/Deferred/Standard", "SpeedtreeOverride/SpeedtreeCustom" };
+        foreach (GameObject gameObject in rootObjects)
+        {
+            Renderer[] renderers1 = gameObject.GetComponentsInChildren<Renderer>();
+            renderers.AddRange(renderers1);
+            Light[] lights1 = gameObject.GetComponentsInChildren<Light>();
+            lights.AddRange(lights1);
+            PostProcessVolume[] postProcessVolumes1 = gameObject.GetComponentsInChildren<PostProcessVolume>();
+            postProcessVolumes.AddRange(postProcessVolumes1);
+        }
+        foreach (Renderer renderer in renderers)
+        {
+            if (!renderer) continue;
+            Material[] materials = new Material[renderer.sharedMaterials.Length];
+            for (int i = 0; i < materials.Length; i++)
+            {
+                Material material = renderer.sharedMaterials[i];
+                if (!material) continue;
+                string shaderName = material.shader.name;
+                if (!supportedShaders.Contains(shaderName))
+                {
+                    materials[i] = material;
+                    continue;
+                }
+                if (!keyValuePairs.TryGetValue(material, out Material darkAgesMaterial))
+                {
+                    darkAgesMaterial = GameObject.Instantiate(material);
+                    darkAgesMaterial.name = material.name + "DarkAges";
+                    switch (shaderName)
+                    {
+                        case "Hopoo Games/Deferred/Triplanar Terrain Blend":
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_BlueChannelTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_GreenChannelTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_RedChannelSideTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_RedChannelTopTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_SplatmapTex", keyValuePairs2);
+                            break;
+                        case "Hopoo Games/Deferred/Triplanar Terrain Blend Emissive":
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_BlueChannelTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_GreenChannelTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_RedChannelSideTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_RedChannelTopTex", keyValuePairs2);
+                            HandleTriplanarTerrainBlend(darkAgesMaterial, "_SplatmapTex", keyValuePairs2);
+                            break;
+                        case "Hopoo Games/Deferred/Standard":
+                            if (darkAgesMaterial.mainTexture)
+                            {
+                                HandleStandard(darkAgesMaterial, "_MainTex", keyValuePairs2);
+                            }
+                            else
+                            {
+                                HandleStageColor(darkAgesMaterial, "_Color");
+                            }
+                            break;
+                        case "Hopoo Games/Deferred/Snow Topped":
+                            HandleStandard(darkAgesMaterial, "_DirtTex", keyValuePairs2);
+                            HandleStandard(darkAgesMaterial, "_SnowTex", keyValuePairs2);
+                            if (darkAgesMaterial.mainTexture)
+                            {
+                                HandleStandard(darkAgesMaterial, "_MainTex", keyValuePairs2);
+                            }
+                            else
+                            {
+                                HandleStageColor(darkAgesMaterial, "_Color");
+                            }
+                            break;
+                        case "SpeedtreeOverride/SpeedtreeCustom":
+                            if (darkAgesMaterial.mainTexture)
+                            {
+                                HandleStandard(darkAgesMaterial, "_MainTex", keyValuePairs2);
+                            }
+                            else
+                            {
+                                HandleStageColor(darkAgesMaterial, "_Color");
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    keyValuePairs.Add(material, darkAgesMaterial);
+                }
+                materials[i] = darkAgesMaterial;
+            }
+            renderer.sharedMaterials = materials;
+        }
+        foreach (Light light in lights)
+        {
+            if (!light) continue;
+            light.color = light.color.MultiplyHSV(1f, StageLightSaturationMultiplier, StageLightValueMultiplier);
+        }
+        foreach (PostProcessVolume postProcessVolume in postProcessVolumes)
+        {
+            if (!postProcessVolume || !postProcessVolume.profile) continue;
+            foreach (PostProcessEffectSettings postProcessEffectSettings in postProcessVolume.profile.settings)
+            {
+                if (postProcessEffectSettings is not RampFog rampFog) continue;
+                rampFog.fogColorStart.value = rampFog.fogColorStart.value.MultiplyHSV(1f, StageRampFogSaturationMultiplier, StageRampFogValueMultiplier);
+                rampFog.fogColorMid.value = rampFog.fogColorStart.value.MultiplyHSV(1f, StageRampFogSaturationMultiplier, StageRampFogValueMultiplier);
+                rampFog.fogColorEnd.value = rampFog.fogColorStart.value.MultiplyHSV(1f, StageRampFogSaturationMultiplier, StageRampFogValueMultiplier);
+            }
+        }
+        RenderSettings.ambientEquatorColor = RenderSettings.ambientEquatorColor.MultiplyHSV(1f, StageAmbientSaturationMultiplier, StageAmbientValueMultiplier);
+        RenderSettings.ambientGroundColor = RenderSettings.ambientGroundColor.MultiplyHSV(1f, StageAmbientSaturationMultiplier, StageAmbientValueMultiplier);
+        RenderSettings.ambientSkyColor = RenderSettings.ambientSkyColor.MultiplyHSV(1f, StageAmbientSaturationMultiplier, StageAmbientValueMultiplier);
+        Material material1 = RenderSettings.skybox;
+        Material material2 = GameObject.Instantiate(RenderSettings.skybox);
+        material2.name += "DarkAges";
+        //HandleStandard(material2, "_Tex", keyValuePairs2);
+        HandleSkyboxColor(material2, "_SkyColor1");
+        HandleSkyboxColor(material2, "_SkyColor2");
+        HandleSkyboxColor(material2, "_SkyColor3");
+        HandleSkyboxColor(material2, "_SunColor");
+        RenderSettings.skybox = material2;
+        stopwatch.Stop();
+        CaeliImperiumPlugin.Log.LogMessage("Completed making the stage dark and griddy in " + stopwatch.ElapsedMilliseconds / 1000f + " seconds");
+    }
+    private static void HandleTriplanarTerrainBlend(Material material, string name, Dictionary<Texture2D, Texture2D> keyValuePairs)
+    {
+        Texture texture = material.GetTexture(name);
+        if (!texture) return;
+        material.SetTexture(name, GetDarkAgesTexture(texture, keyValuePairs));
+        material.SetTextureScale(name, material.GetTextureScale(name) * StageTextureSizeMultiplier);
+    }
+    private static void HandleStandard(Material material, string name, Dictionary<Texture2D, Texture2D> keyValuePairs)
+    {
+        Texture texture = material.GetTexture(name);
+        if (!texture) return;
+        material.SetTexture(name, GetDarkAgesTexture(texture, keyValuePairs));
+    }
+    private static void HandleStageColor(Material material, string name)
+    {
+        material.SetColor(name, material.GetColor(name).MultiplyHSV(1f, StageTextureSaturationMultiplier, StageTextureValueMultiplier));
+    }
+    private static void HandleSkyboxColor(Material material, string name)
+    {
+        material.SetColor(name, material.GetColor(name).MultiplyHSV(1f, StageSkyboxSaturationMultiplier, StageSkyboxValueMultiplier));
+    }
+    private static Texture GetDarkAgesTexture(Texture texture, Dictionary<Texture2D, Texture2D> keyValuePairs)
+    {
+        if (!texture) return texture;
+        if (texture is not Texture2D texture2D) return texture;
+        if (!keyValuePairs.TryGetValue(texture2D, out Texture2D texture2D1))
+        {
+            texture2D1 = texture2D.MultiplyHSV(1f, StageTextureSaturationMultiplier, StageTextureValueMultiplier);
+            keyValuePairs.Add(texture2D, texture2D1);
+        }
+        return texture2D1;
+    }*/
+    private static HealthComponent.HealthBarValues HealthComponent_GetHealthBarValues(On.RoR2.HealthComponent.orig_GetHealthBarValues orig, HealthComponent self)
+    {
+        HealthComponent.HealthBarValues healthBarValues = orig(self);
+        if (!self || !self.body) return healthBarValues;
+        BishopComponent bishopComponent = self.body.GetComponent<BishopComponent>();
+        if (!bishopComponent) return healthBarValues;
+        float num = 1f - 1f / self.body.cursePenalty;
+        float num2 = (1f - num) / self.fullHealth;
+        healthBarValues.regainableHealthFraction = Mathf.Clamp01(healthBarValues.regainableHealthFraction + (bishopComponent.reservedHealPercentage * self.fullHealth * num2));
+        return healthBarValues;
+    }
+
+    private static void GenericSkill_RunRecharge_float(On.RoR2.GenericSkill.orig_RunRecharge_float orig, GenericSkill self, float dt)
+    {
+        if (self && self.characterBody && self.skillDef && self.skillDef is BishopSkillDef bishopSkillDef && bishopSkillDef.rechargeOnlyOnGround && self.characterBody.characterMotor && !self.characterBody.characterMotor.isGrounded) // This if is so stupidly long but funny
+        {
+            dt = 0f;
+        }
+        orig(self, dt);
     }
 
     private static void CaeliImperiumHooks_OnSetProjectilePrefabsIndividualPrefab(ProjectileController obj)
     {
+        ParriableProjectileController parriableProjectileController = obj.EnsureComponent<ParriableProjectileController>();
+        parriableProjectileController.projectileDamage = obj.GetComponent<ProjectileDamage>();
+        parriableProjectileController.projectileController = obj;
         if (!projectilesCatalogInit) projectilesCatalogInit = true;
         if (customProjectileSpeedMultiplier.TryGetValue(obj, out float value)) runtimeCustomProjectileSpeedMultiplier.Add(obj.catalogIndex, value);
     }
@@ -383,15 +595,17 @@ public static class BishopEvents
                 break;
             }
         }
-        if (!foundBishop) return;
-        if (!self.GetEventFlag("BishopRun"))
+        if (foundBishop)
         {
-            self.SetEventFlag("BishopRun");
-            CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
-        }
-        else
-        {
-            CaeliImperiumPlugin.Log.LogMessage("BishopRun Flag Already Set");
+            if (!self.GetEventFlag("BishopRun"))
+            {
+                self.SetEventFlag("BishopRun");
+                CaeliImperiumPlugin.Log.LogMessage("Set BishopRun Flag");
+            }
+            else
+            {
+                CaeliImperiumPlugin.Log.LogMessage("BishopRun Flag Already Set");
+            }
         }
         orig(self);
     }
@@ -610,7 +824,7 @@ public static class BishopEvents
             return false;
         }
         if (characterBody.HasBuff(WasStaggered)) return true;
-        if (BishopComponent.enableCount > 0 && !characterBody.HasBuff(WasStaggered))
+        if (BishopComponent.enableCount > 0 && !characterBody.HasBuff(WasStaggered) && !characterBody.isPlayerControlled)
         {
             healthComponent.Networkhealth = 1f;
             characterBody.AddStagger(StaggerDuration, StaggerInvincibilityDuration, WasStaggeredDuration);
@@ -627,14 +841,6 @@ public static class BishopEvents
         if (staggerDuration > 0f) characterBody.AddTimedBuff(Stagger, staggerDuration);
         if (staggerInvincibilityDuration > 0f) characterBody.AddTimedBuff(StaggerInvincibility, staggerInvincibilityDuration);
         if (wasStaggeredDuration > 0f) characterBody.AddTimedBuff(WasStaggered, wasStaggeredDuration);
-    }
-    private static void GenericSkill_RunRecharge(On.RoR2.GenericSkill.orig_RunRecharge orig, GenericSkill self, float dt)
-    {
-        if (self && self.characterBody && self.skillDef && self.skillDef is BishopSkillDef bishopSkillDef && bishopSkillDef.rechargeOnlyOnGround && self.characterBody.characterMotor && !self.characterBody.characterMotor.isGrounded) // This if is so stupidly long but funny
-        {
-            dt = 0f;
-        }
-        orig(self, dt);
     }
 
     private static Dictionary<EntityStates.LemurianBruiserMonster.FireMegaFireball, int> keyValuePairs15 = [];
@@ -948,25 +1154,6 @@ public static class BishopEvents
             customProjectileSpeedMultiplier[projectileController] = speedMultiplier;
         }
     }
-    private static void ProjectileController_Start(On.RoR2.Projectile.ProjectileController.orig_Start orig, ProjectileController self)
-    {
-        orig(self);
-        ProjectileGhostController projectileGhostController = self.ghost;
-        if (!projectileGhostController) return;
-        ParriableProjectileGhostColorChanger parriableProjectileGhostColorChanger = projectileGhostController.GetComponent<ParriableProjectileGhostColorChanger>();
-        if (!parriableProjectileGhostColorChanger) return;
-        ProjectileDamage projectileDamage = self.GetComponent<ProjectileDamage>();
-        if (!projectileDamage) return;
-        if (projectileDamage.damageColorIndex == ParriableDamageColor)
-        {
-            parriableProjectileGhostColorChanger.ApplyParriableMaterial();
-            RoR2.Util.PlaySound("Play_DoomTDA_ParryableProjectile_Loop", self.gameObject);
-        }
-        else
-        {
-            parriableProjectileGhostColorChanger.ApplyDefaultMaterial();
-        }
-    }
     
     private static void GlobalEventManager_onServerDamageDealt(DamageReport obj)
     {
@@ -982,8 +1169,8 @@ public static class BishopEvents
             {
                 ProcChainMask procChainMask = new ProcChainMask();
                 float healCoof = hasDamageType ? victimBody.isChampion ? HealFromGloryChampionKillCoeffecient : victimBody.IsHeavyMonster() ? HealFromGloryHeavyKillCoeffecient :  HealFromGloryKillCoeffecient : HealFromWhiffedGloryKillCoeffecient;
-                float reserveHealCoof = ReserveHealFromGloryKillCoeffecient;
-                if (BishopStaggerOnHurt.keyValuePairs.TryGetValue(obj, out BishopStaggerOnHurt bishopStaggerOnHurt))
+                float reserveHealCoof = hasDamageType ? victimBody.isChampion ? ReserveHealFromGloryChampionKillCoeffecient : victimBody.IsHeavyMonster() ? ReserveHealFromGloryHeavyKillCoeffecient : ReserveHealFromGloryKillCoeffecient : ReserveHealFromWhiffedGloryKillCoeffecient;
+                if (hasDamageType && BishopStaggerOnHurt.keyValuePairs.TryGetValue(obj, out BishopStaggerOnHurt bishopStaggerOnHurt))
                 {
                     if (bishopStaggerOnHurt.overrideGloryKillHeal) healCoof = bishopStaggerOnHurt.overrideGloryKillHealFraction;
                     if (bishopStaggerOnHurt.overrideGloryKillHealFromReserve) reserveHealCoof = bishopStaggerOnHurt.overrideGloryKillHealFromReserveFraction;
@@ -994,94 +1181,46 @@ public static class BishopEvents
                 BishopComponent bishopComponent = attackerBody.GetComponent<BishopComponent>();
                 if (hasDamageType && bishopComponent && bishopComponent.reservedHealPercentage > 0f)
                 {
-                    float reservedHeal = Mathf.Min(bishopComponent.reservedHealPercentage * attackerBody.healthComponent.fullHealth, attackerBody.healthComponent.fullHealth * reserveHealCoof);
+                    float reservedHealPercentage = Mathf.Min(bishopComponent.reservedHealPercentage, reserveHealCoof);
+                    float reservedHeal = reservedHealPercentage * attackerBody.healthComponent.fullHealth;
                     float predictedHealth2 = predictedHealth + healAmount;
                     float overHeal = predictedHealth2 - attackerBody.healthComponent.fullHealth;
                     if (overHeal > 0f) reservedHeal -= overHeal;
                     if (reservedHeal > 0f)
                     {
-                        bishopComponent.reservedHealPercentage -= reservedHeal;
+                        bishopComponent.reservedHealPercentage -= reservedHeal / attackerBody.healthComponent.fullHealth;
                         healAmount += reservedHeal;
                     }
                 }
                 attackerBody.healthComponent.Heal(healAmount, procChainMask);
-                if (hasDamageType) victimBody.SetBuffCount(Stagger.buffIndex, 0);
-            }
-        }
-        if (victimBody && victimBody.healthComponent && !victimBody.healthComponent.alive && victimBody.HasBuff(Stagger) && hasDamageType)
-        {
-            PhysForceInfo physForceInfo = new PhysForceInfo
-            {
-                force = damageInfo.force.normalized * GloryKillForce,
-                doNotExceed = false,
-                ignoreGroundStick = true,
-                massIsOne = true,
-                respectKnockupImmune = false,
-                resetVelocity = false,
-                disableAirControlUntilCollision = true
-            };
-            if (victimBody.characterMotor)
-            {
-                victimBody.characterMotor.ApplyForceImpulse(physForceInfo);
-            }
-            else if (victimBody.rigidbody)
-            {
-                victimBody.rigidbody.AddForceWithInfo(physForceInfo);
-            }
-        }
-        /*if (victimBody)
-        {
-            DamageSource damageSource = damageInfo.damageType.damageSource;
-            if (victimBody.HasBuff(Stagger) && (damageSource.HasFlag(DamageSource.Primary) || damageSource.HasFlag(DamageSource.Secondary) || damageSource.HasFlag(DamageSource.Utility) || damageSource.HasFlag(DamageSource.Special)))
-            {
-                victimBody.RemoveBuff(Stagger);
-                if (victimBody.HasBuff(StaggerInvincibility))
+                if (hasDamageType)
                 {
-                    victimBody.RemoveBuff(StaggerInvincibility);
-                }
-            }
-        }*/
-        /*if (victimBody)
-        {
-            if (damageInfo.HasModdedDamageType(ParryDamageType))
-            {
-                if (keyValuePairs3.TryGetValue(victimBody, out HashSet<BaseState> baseStates))
-                {
-                    foreach (BaseState state in baseStates)
+                    if (!victimBody.healthComponent.alive)
                     {
-                        Type type = state.GetType();
-                        if (keyValuePairs4.TryGetValue(type, out OnBodyParried onBodyParried))
+                        PhysForceInfo physForceInfo = new PhysForceInfo
                         {
-                            onBodyParried.Invoke(obj, state);
+                            force = damageInfo.force.normalized * GloryKillForce,
+                            doNotExceed = false,
+                            ignoreGroundStick = true,
+                            massIsOne = true,
+                            respectKnockupImmune = false,
+                            resetVelocity = false,
+                            disableAirControlUntilCollision = true
+                        };
+                        if (victimBody.characterMotor)
+                        {
+                            victimBody.characterMotor.ApplyForceImpulse(physForceInfo);
                         }
-                        else
+                        else if (victimBody.rigidbody)
                         {
-                            StunState stunState = new StunState();
-                            stunState.stunDuration = DefaultOnParryStunDuration;
-                            state.outer.SetNextState(stunState);
+                            victimBody.rigidbody.AddForceWithInfo(physForceInfo);
                         }
                     }
+                    victimBody.SetBuffCount(Stagger.buffIndex, 0);
                 }
+                
             }
         }
-        if (!attackerBody) return;
-        if (!attackerBody.healthComponent) return;
-        if (damageInfo.HasModdedDamageType(HealMeleeDamageType))
-        {
-            ProcChainMask procChainMask = new ProcChainMask();
-            procChainMask.AddModdedProc(HealMeleeProcType);
-            float healAmount = attackerBody.healthComponent.fullHealth * HealMeleeCooffecient;
-            BishopComponent bishopComponent = attackerBody.GetComponent<BishopComponent>();
-            if (bishopComponent && bishopComponent.reservedHeal > 0f)
-            {
-                float reservedHeal = Mathf.Min(bishopComponent.reservedHeal, attackerBody.healthComponent.fullHealth * ReserveHealMeleeCooffecient);
-                bishopComponent.reservedHeal -= reservedHeal;
-                healAmount += reservedHeal;
-            }
-            attackerBody.healthComponent.Heal(healAmount, procChainMask);
-        }*/
-        
-
     }
     
     private static float HealthComponent_Heal(On.RoR2.HealthComponent.orig_Heal orig, HealthComponent self, float amount, ProcChainMask procChainMask, bool nonRegen)

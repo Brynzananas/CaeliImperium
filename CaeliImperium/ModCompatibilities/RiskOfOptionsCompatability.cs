@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-namespace CaeliImperium
+namespace CaeliImperium.ModCompatibilities
 {
     public static class RiskOfOptionsCompatability
     {

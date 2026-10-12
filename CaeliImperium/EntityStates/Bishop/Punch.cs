@@ -4,6 +4,7 @@ using CaeliImperium.Bodies;
 using CaeliImperium.NetworkMessages;
 using EntityStates;
 using R2API;
+using R2API.Networking;
 using RoR2;
 using System;
 using System.Collections.Generic;
@@ -12,15 +13,15 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Networking;
-using static RoR2.Skills.ComboSkillDef;
 
 namespace CaeliImperiumEntityStates.Bishop;
 public class Punch : BishopMeleeState
 {
     public static float _damageCoefficient = 1f;
-    public static float _damageCoefficientPerCombo = 1f;
+    public static float _damageCoefficientCombo = 8f;
+    public static float _damageCoefficientStagger = 10f;
     public static float _maxDamageCoefficient = 7f;
-    public override float damageCoefficient => Mathf.Min((_damageCoefficient + (characterBody.GetBuffCount(BishopEvents.MeleeCombo) + (hasRequiredStockAndDelay ? 1 : 0)) * _damageCoefficientPerCombo), _maxDamageCoefficient);
+    public override float damageCoefficient => _damageCoefficient;
     public static float _procCoefficient = 1f;
     public override float procCoefficient => _procCoefficient;
     public static float _minSpread = 0f;
@@ -56,14 +57,16 @@ public class Punch : BishopMeleeState
     public override float backoffVelocity => _backoffVelocity;
     public static float _flyToTargetSpeed = 96f;
     public override float minFlyToTargetSpeed => _flyToTargetSpeed;
-    public static float _findTargetDistance = 48f;
+    public static float _findTargetDistance = 128f;
     public override float findTargetDistance => _findTargetDistance;
     public static float _findTargetRadius = 3f;
     public override float findTargetRadius => _findTargetRadius;
     public override bool giveEmpowermentOnExecute => true;
+    public static float _regularFindTargetDistance = 8f;
+    public override float regularFindTargetDistance => _regularFindTargetDistance;
 
     public static float leftPunchTimerSet = 1f;
-
+    public static int maxComboBuff = 2;
     public override void OnEnter()
     {
         base.OnEnter();
@@ -83,10 +86,26 @@ public class Punch : BishopMeleeState
         (this as IBishopState).PlayFirstPersonCrossfade(leftHandPunch ? "LeftArm, Override" : "RightArm, Override", "PunchStart", leftHandPunch ? "leftArm.playbackRate" : "rightArm.playbackRate", attackSpeedStat, 0.05f, true);
         (this as IBishopState).PlayFirstPersonCrossfade(!leftHandPunch ? "LeftArm, Override" : "RightArm, Override", "Idle", !leftHandPunch ? "leftArm.playbackRate" : "rightArm.playbackRate", attackSpeedStat, 0.05f, true);
     }
+    public override void PreMeleeHit(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo, HealthComponent victimHealthComponent)
+    {
+        base.PreMeleeHit(bulletAttack, ref hitInfo, victimHealthComponent);
+        if (wasStaggeredOnHit)
+        {
+            bulletAttack.damage = characterBody.damage * _damageCoefficientStagger;
+            return;
+        }
+        if (hasStock)
+        {
+            bulletAttack.damage = characterBody.damage * _damageCoefficientCombo;
+        }
+    }
     public override void OnMeleeHit(BulletAttack bulletAttack, ref BulletAttack.BulletHit hitInfo, HealthComponent victimHealthComponent)
     {
         base.OnMeleeHit(bulletAttack, ref hitInfo, victimHealthComponent);
-        Util.PlaySound(wasStaggeredOnHit || hasRequiredStockAndDelay ? "Play_DoomTDA_Punch_Combo" : "Play_DoomTDA_Punch", gameObject);
-        if (!wasStaggeredOnHit && hasRequiredStockAndDelay) AddTimeBuffAndResetTimerForAllStacksNetMessage.Send(characterBody, BishopEvents.MeleeCombo.buffIndex, BishopEvents.MeleeComboDuration);
+        Util.PlaySound(wasStaggeredOnHit || hasStock ? "Play_DoomTDA_Punch_Combo" : "Play_DoomTDA_Punch", gameObject);
+        if (!wasStaggeredOnHit && hasStock)
+        {
+            AddTimeBuffAndResetTimerForAllStacksNetMessage.Send(characterBody, BishopEvents.MeleeCombo.buffIndex, BishopEvents.MeleeComboDuration);
+        }
     }
 }

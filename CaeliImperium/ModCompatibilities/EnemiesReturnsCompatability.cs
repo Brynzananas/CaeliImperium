@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using static CaeliImperium.Bodies.BishopEvents;
 
-namespace CaeliImperium;
+namespace CaeliImperium.ModCompatibilities;
 public static class EnemiesReturnsCompatability
 {
     public const string GUID = "com.Viliger.EnemiesReturns";
@@ -39,7 +39,7 @@ public static class EnemiesReturnsCompatability
         PatchOverlapStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.Spitter.Bite), nameof(EnemiesReturns.ModdedEntityStates.Spitter.Bite.Fire));
         AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.Spitter.Bite>();
         PatchOverlapStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.SandCrab.Snip.FireSnip), nameof(EnemiesReturns.ModdedEntityStates.SandCrab.Snip.FireSnip.FixedUpdate));
-        AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.SandCrab.Snip.ChargeSnip>();
+        AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.SandCrab.Snip.HoldSnip>();
         PatchOverlapStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompBase), nameof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompBase.FixedUpdate), typeof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompL));
         PatchOverlapStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompBase), nameof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompBase.FixedUpdate), typeof(EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompR));
         AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.Colossus.Stomp.StompBase>();
@@ -57,5 +57,7 @@ public static class EnemiesReturnsCompatability
         AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.trackingProjectilePrefab);
         AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile.groundpoundProjectilePrefab);
         AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit.projectilePrefab);
+        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab);
+        SetCustomProjectileSpeedMultiplier(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab, 1f);
     }
 }

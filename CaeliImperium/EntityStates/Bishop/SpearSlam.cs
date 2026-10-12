@@ -20,8 +20,8 @@ public class SpearSlam : BishopState
     public static AttackerFiltering attackerFiltering = AttackerFiltering.Default;
     public static BlastAttack.FalloffModel falloffModel = BlastAttack.FalloffModel.HalfLinear;
     public static BlastAttack.LoSType loSType = BlastAttack.LoSType.None;
-    public static PhysForceFlags physForceFlags = PhysForceFlags.respectKnockbackImmuneFlag;
-    public static DamageType damageType = DamageType.Stun1s;
+    public static PhysForceFlags physForceFlags = PhysForceFlags.respectKnockupImmuneFlag;
+    public static DamageType damageType = DamageType.Generic;
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
     public static float moveVectorSmoothTime = 0.05f;
     public float damage;

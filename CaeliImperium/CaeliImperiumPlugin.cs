@@ -4,6 +4,7 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using CaeliImperium.Components;
 using CaeliImperium.Configs;
+using CaeliImperium.ModCompatibilities;
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -38,6 +39,7 @@ namespace CaeliImperium;
 [BepInDependency(BrynzaAPI.BrynzaAPI.ModGuid)]
 [BepInDependency(RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(EnemiesReturnsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(EnemyAbilitiesCompatibility.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [System.Serializable]
 public class CaeliImperiumPlugin : BaseUnityPlugin
 {
@@ -48,6 +50,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
     public static bool emotesEnabled;
     public static bool riskOfOptionsEnabled;
     public static bool enemiesReturnsEnabled;
+    public static bool enemyAbilitiesEnabled;
     public static ExpansionDef expansionDef;
     public static PluginInfo PluginInfo { get; private set; }
     public static ConfigFile configFile { get; private set; }
@@ -62,7 +65,8 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         configFile = Config;
         instance = this;
         riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(RiskOfOptionsCompatability.GUID);
-        enemiesReturnsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(RiskOfOptionsCompatability.GUID);
+        enemiesReturnsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(EnemiesReturnsCompatability.GUID);
+        enemyAbilitiesEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(EnemyAbilitiesCompatibility.GUID);
         CaeliImperiumSave.Init();
         CaeliImperiumConfigs.OverrideConfigValuesOnUpdate = Config.Bind(CaeliImperiumConfigs.sectionName, "Override config values on update", true, "Update config values with new default values if existing config value matches old default value on mod update?");
         CaeliImperiumAssets.Init();

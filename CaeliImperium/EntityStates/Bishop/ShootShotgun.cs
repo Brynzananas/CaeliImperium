@@ -11,18 +11,18 @@ using UnityEngine;
 namespace CaeliImperiumEntityStates.Bishop;
 public class ShootShotgun : BishopRightWeaponState
 {
-    public static float damageCoefficient = 1f;
+    public static float damageCoefficient = 1.2f;
     public static float procCoefficient = 1f;
-    public static float minSpread = 7f;
-    public static float maxSpread = 7f;
+    public static float minSpread = 15f;
+    public static float maxSpread = 15f;
     public static float baseDuration = 0.8f;
     public static float durationMultiplierWhenOrbiting = 0.7f;
     public static bool allowTrajectoryAimAssist = true;
     public static uint bulletCount = 5;
     public static DamageType damageType = DamageType.Generic;
     public static DamageTypeExtended damageTypeExtended = DamageTypeExtended.Generic;
-    public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.None;
-    public static float force = 300f;
+    public static BulletAttack.FalloffModel falloffModel = BulletAttack.FalloffModel.Slug;
+    public static float force = 0f;
     public static float radius = 0.1f;
     public static float trajectoryAimAssistMultiplier = 0.75f;
     public static bool smartCollision = true;

@@ -4,15 +4,20 @@ using HG;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using R2API;
 using R2API.Utils;
 using RoR2;
+using RoR2.EntitlementManagement;
 using RoR2.Projectile;
+using RoR2BepInExPack.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 using static RoR2.DotController;
 
@@ -22,6 +27,7 @@ namespace CaeliImperium
     {
         private static bool _saveHooksSet;
         private static bool _hooksSet;
+        private static FixedConditionalWeakTable<PostProcessVolume, PostProcessVolume> keyValuePairs = [];
         public static void SetHooks()
         {
             if (_hooksSet) return;
@@ -35,8 +41,42 @@ namespace CaeliImperium
             MusicController.pickTrackHook += MusicController_pickTrackHook;
             NetworkUser.onNetworkUserDiscovered += NetworkUser_onNetworkUserDiscovered;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
+            //Hook hook = new Hook(typeof(PostProcessVolume).GetMethod(nameof(PostProcessVolume.OnEnable), BindingFlags.NonPublic | BindingFlags.Instance), typeof(CaeliImperiumHooks).GetMethod(nameof(PostProcessVolumeOnEnable), BindingFlags.NonPublic | BindingFlags.Static), new HookConfig());
+            //Hook hook1 = new Hook(typeof(PostProcessVolume).GetMethod(nameof(PostProcessVolume.OnDisable), BindingFlags.NonPublic | BindingFlags.Instance), typeof(CaeliImperiumHooks).GetMethod(nameof(PostProcessVolumeOnDisable), BindingFlags.NonPublic | BindingFlags.Static), new HookConfig());
         }
 
+        private static bool doNotRunOnEnable;
+        private static void PostProcessVolumeOnEnable(Action<PostProcessVolume> action, PostProcessVolume postProcessVolume)
+        {
+            if (doNotRunOnEnable) return;
+            action.Invoke(postProcessVolume);
+            if (postProcessVolume.gameObject.name.EndsWith("FPVCopy")) return;
+            GameObject gameObject = new GameObject(postProcessVolume.gameObject.name + "FPVCopy");
+            CopyLocalTransforms copyLocalTransforms = gameObject.AddComponent<CopyLocalTransforms>();
+            copyLocalTransforms.transformToCopy = postProcessVolume.transform;
+            copyLocalTransforms.Copy();
+            postProcessVolume.gameObject.CopyCollidersTo(gameObject);
+            doNotRunOnEnable = true;
+            PostProcessVolume postProcessVolume1 = gameObject.AddComponent<PostProcessVolume>();
+            doNotRunOnEnable = false;
+            CopyPostProcessVolume copyPostProcessVolume = gameObject.AddComponent<CopyPostProcessVolume>();
+            copyPostProcessVolume.sourcePostProcessVolume = postProcessVolume;
+            copyPostProcessVolume.destinationPostProcessVolume = postProcessVolume1;
+            copyPostProcessVolume.Copy();
+            postProcessVolume1.OnEnable();
+            postProcessVolume1.gameObject.layer = 26;
+            keyValuePairs[postProcessVolume] = postProcessVolume1;
+        }
+        private static void PostProcessVolumeOnDisable(Action<PostProcessVolume> action, PostProcessVolume postProcessVolume)
+        {
+            action.Invoke(postProcessVolume);
+            if (postProcessVolume.gameObject.name.EndsWith("FPVCopy")) return;
+            if (keyValuePairs.TryGetValue(postProcessVolume, out PostProcessVolume postProcessVolume1))
+            {
+                keyValuePairs.Remove(postProcessVolume);
+                if (postProcessVolume1) GameObject.DestroyImmediate(postProcessVolume1.gameObject);
+            }
+        }
         private static void SceneManager_activeSceneChanged(Scene arg0, Scene arg1)
         {
             if (arg1.name == "title")

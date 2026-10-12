@@ -102,7 +102,7 @@ namespace CaeliImperium.Items
             if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex && DrawSpeedPathConfigs.SpeedPathAutosprint.Value)
             {
                 arg1.isSprinting = true;
-                if (arg1.inputBank)
+                if (arg1.inputBank && !arg1.HasModdedBodyFlag(CharacterBodyAPI.AlwaysSprint) && !arg1.HasModdedBodyFlag(BrynzaAPI.Assets.SprintAllTime))
                 {
                     arg1.inputBank.sprint.down = true;
                 }

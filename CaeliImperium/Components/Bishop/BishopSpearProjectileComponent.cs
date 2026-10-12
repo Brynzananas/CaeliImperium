@@ -17,7 +17,7 @@ public class BishopSpearProjectileComponent : MonoBehaviour
     public AttackerFiltering headshotExplosionAttackerFiltering = AttackerFiltering.Default;
     public BlastAttack.FalloffModel headshotExplosionFalloffModel = BlastAttack.FalloffModel.None;
     public BlastAttack.LoSType headshotExplosionLoSType = BlastAttack.LoSType.None;
-    public PhysForceFlags headshotExplosionPhysForceFlags = PhysForceFlags.respectKnockbackImmuneFlag;
+    public PhysForceFlags headshotExplosionPhysForceFlags = PhysForceFlags.respectKnockupImmuneFlag;
     public DamageTypeCombo damageTypeCombo = new DamageTypeCombo(DamageType.Generic, DamageTypeExtended.Generic, DamageSource.NoneSpecified);
     public ProjectileExplosion projectileExplosion;
     private bool eventAdded;
