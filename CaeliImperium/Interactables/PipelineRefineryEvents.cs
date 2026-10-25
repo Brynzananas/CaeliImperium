@@ -27,6 +27,7 @@ public static class PipelineRefineryEvents
     public static GameObject WellExtractor;
     public static GameObject PipelineBuilder;
     public static GameObject PipelineZiprailVehicle;
+    public static GameObject PipelineBuilderCrosshair;
     public static InteractableSpawnCard PipelineRefinerySpawnCard;
     public static InteractableSpawnCard ResourceWellSpawnCard;
     public static InteractableSpawnRules DefaultSpawnRules = new InteractableSpawnRules
@@ -73,11 +74,13 @@ public static class PipelineRefineryEvents
         }
         PipelineRefinerySpawnCard = CaeliImperiumAssets.assetBundle.LoadAsset<InteractableSpawnCard>("Assets/CaeliImperium/Interactables/PipelineRefinery/Refinery/iscPipelineRefinery.asset");
         ResourceWellSpawnCard = CaeliImperiumAssets.assetBundle.LoadAsset<InteractableSpawnCard>("Assets/CaeliImperium/Interactables/PipelineRefinery/ResourceWell/iscResourceWell.asset");
+        PipelineBuilderCrosshair = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Interactables/PipelineRefinery/PipelineBuilderHUD.prefab");
         R2API.Networking.NetworkingAPI.RegisterMessageType<PipelineBuilderDisablePreviewNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<PipelineBuilderPlaceNodeNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<PipelineBuilderPlacePreviewNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<PipelineBuilderRemoveCurrentInteractorNetMessage>();
         R2API.Networking.NetworkingAPI.RegisterMessageType<WellExtractorControllerOnPipeConnectedNetMessage>();
+        LayerIndex.CommonMasks.interactable.value |= (1 << LayerIndex.debris.intVal);
     }
 
     private static void ContextManager_Update(ILContext il)
@@ -177,7 +180,7 @@ public static class PipelineRefineryEvents
         IL.RoR2.MusicController.PickCurrentTrack -= MusicController_PickCurrentTrack;
         IL.RoR2.UI.ContextManager.Update -= ContextManager_Update;
     }
-    private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj) => CaeliImperiumUtils.SimulateInteractableSpawnUsingSpawnRules(obj, PipelineRefineryConfigs.pipelineRefinerySpawnRules, PipelineRefineryEvents.DefaultSpawnRules, SpawnPipelineRefinery, SpawnResourceWells);
+    private static void SceneDirector_onPostPopulateSceneServer(SceneDirector obj) => CaeliImperiumUtils.SimulateInteractableSpawnUsingSpawnRules(obj, PipelineRefineryConfigs.pipelineRefinerySpawnRules, PipelineRefineryEvents.DefaultSpawnRules, SpawnPipelineRefinery, null);
     public static void SpawnPipelineRefinery()
     {
         if (PlayerCharacterMasterController.instances.Count <= 0) return;
@@ -198,25 +201,66 @@ public static class PipelineRefineryEvents
             position = characterBody.transform.position,
         }, xoroshiro128Plus));
     }
+    public static Vector3 OnSiteRefineryPosition;
+    public static Vector3[] OnSiteRefineryDirections;
+    public static SceneDirector sceneDirector1;
     public static void SpawnPipelineRefinery(SceneDirector sceneDirector)
     {
+        if (!Run.instance || Run.instance.GetEventFlag("BishopRun")) return;
         Xoroshiro128Plus xoroshiro128Plus = new Xoroshiro128Plus(sceneDirector.rng.nextUlong);
-        DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(PipelineRefinerySpawnCard, new DirectorPlacementRule
+        DirectorSpawnRequest directorSpawnRequest = new DirectorSpawnRequest(PipelineRefinerySpawnCard, new DirectorPlacementRule
         {
             placementMode = DirectorPlacementRule.PlacementMode.Random,
-        }, xoroshiro128Plus));
+        }, xoroshiro128Plus);
+        sceneDirector1 = sceneDirector;
+        directorSpawnRequest.onSpawnedServer = OnRefinerySpawned;
+        DirectorCore.instance.TrySpawnObject(directorSpawnRequest);
     }
+
+    private static void OnRefinerySpawned(SpawnCard.SpawnResult result)
+    {
+        OnSiteRefineryDirections = CaeliImperiumUtils.GetCircleDirections(PipelineRefineryConfigs.ResourceWellSpawnCount.Value, result.rotation * Vector3.forward, Vector3.up);
+        OnSiteRefineryPosition = result.position;
+        SpawnResourceWells(sceneDirector1, 1);
+    }
+
     public static void SpawnResourceWells(SceneDirector sceneDirector, int count)
     {
         Xoroshiro128Plus xoroshiro128Plus = new Xoroshiro128Plus(sceneDirector.rng.nextUlong);
         int spawnCount = count;
         if (PipelineRefineryConfigs.ResourceWellSpawnCount != null) spawnCount *= PipelineRefineryConfigs.ResourceWellSpawnCount.Value;
-        for (int i = 0; i < spawnCount; i++)
+        switch (PipelineRefineryConfigs.ResourceWellsPlacementRule.Value)
         {
-            DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(ResourceWellSpawnCard, new DirectorPlacementRule
-            {
-                placementMode = DirectorPlacementRule.PlacementMode.Random,
-            }, xoroshiro128Plus));
+            case ResourceWellsPlacementRule.AroundRefinery:
+                foreach (Vector3 vector3 in OnSiteRefineryDirections)
+                {
+                    float distanceAroundRefinery = UnityEngine.Random.Range(PipelineRefineryConfigs.ResourceWellMinSpawnDistanceAroundRefinery.Value, PipelineRefineryConfigs.ResourceWellMaxSpawnDistanceAroundRefinery.Value);
+                    DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(ResourceWellSpawnCard, new DirectorPlacementRule
+                    {
+                        placementMode = DirectorPlacementRule.PlacementMode.NearestNode,
+                        minDistance = PipelineRefineryConfigs.ResourceWellMinSpawnDistance.Value,
+                        maxDistance = PipelineRefineryConfigs.ResourceWellMaxSpawnDistance.Value,
+                        position = OnSiteRefineryPosition + vector3 * distanceAroundRefinery,
+                    }, xoroshiro128Plus));
+                }
+                break;
+            case ResourceWellsPlacementRule.Random:
+                for (int i = 0; i < spawnCount; i++)
+                {
+                    DirectorCore.instance.TrySpawnObject(new DirectorSpawnRequest(ResourceWellSpawnCard, new DirectorPlacementRule
+                    {
+                        placementMode = DirectorPlacementRule.PlacementMode.Random,
+                    }, xoroshiro128Plus));
+                }
+                break;
+            default:
+                break;
         }
+        
+    }
+    public enum ResourceWellsPlacementRule
+    {
+        AroundRefinery,
+        Random
     }
 }

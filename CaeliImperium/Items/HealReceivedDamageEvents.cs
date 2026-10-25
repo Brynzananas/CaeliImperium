@@ -1,4 +1,5 @@
-﻿using CaeliImperium.Configs;
+﻿using CaeliImperium.Components.Doomguy;
+using CaeliImperium.Configs;
 using CaeliImperium.ItemBehaviours;
 using RoR2;
 using System;
@@ -11,6 +12,7 @@ namespace CaeliImperium.Items
     {
         public static float HealReceivedHealCoefficient => HealReceivedDamageConfigs.HealReceivedDamageHealCoefficient.Value;
         public static float HealReceivedHealCoefficientPerStack => HealReceivedDamageConfigs.HealReceivedDamageHealCoefficientPerStack.Value;
+        public static float HealReceivedMaxHealCoefficient => HealReceivedDamageConfigs.HealReceivedDamageMaxHealCoefficient.Value;
         public static float HealReceivedDamageTime => HealReceivedDamageConfigs.HealReceivedDamageTime.Value;
         public static float HealReceivedDamageStackTimeReduction => HealReceivedDamageConfigs.HealReceivedDamageStackTimeReduction.Value;
         public static float neededHealRateToTypeBeat = 0.25f;
@@ -19,7 +21,6 @@ namespace CaeliImperium.Items
         private static bool inited;
         public static void Init(ItemDef itemDef)
         {
-            CaeliImperiumHooks.OnInventoryChanged += Events_OnInventoryChanged;
             CaeliImperiumAssets.onMaterialFound += OnMaterialFound;
             CaeliImperiumPlugin.onPluginDestroyed += OnPluginDestroyed;
             if (inited) return;
@@ -32,15 +33,8 @@ namespace CaeliImperium.Items
         }
         private static void OnPluginDestroyed()
         {
-            CaeliImperiumHooks.OnInventoryChanged -= Events_OnInventoryChanged;
             CaeliImperiumAssets.onMaterialFound -= OnMaterialFound;
             CaeliImperiumPlugin.onPluginDestroyed -= OnPluginDestroyed;
-        }
-        public static void Events_OnInventoryChanged(CharacterBody obj)
-        {
-            if (!NetworkServer.active) return;
-            int stacks = obj.inventory ? obj.inventory.GetItemCountEffective(CaeliImperiumContent.Items.HealReceivedDamage) : 0;
-            obj.AddItemBehavior<HealReceivedDamageBehaviour>(stacks);
         }
     }
 }

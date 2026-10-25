@@ -1,4 +1,5 @@
 ﻿using CaeliImperium.Components;
+using CaeliImperium.Components.Doomguy;
 using CaeliImperium.Configs;
 using RoR2;
 using RoR2.UI;
@@ -82,6 +83,7 @@ namespace CaeliImperium
         }
         public void FixedUpdate()
         {
+            DoomguyComponent.StaticFixedUpdate();
             if (NetworkServer.active && Stage.instance && !Stage.instance.completed)
             {
                 if (superSecretScreamTimer <= 0f)
@@ -103,7 +105,6 @@ namespace CaeliImperium
                 caeliImperiumRunAction.caeliImperiumExpansionRunComponent = this;
                 caeliImperiumRunAction.FixedUpdate();
             }
-
         }
         public void Update()
         {

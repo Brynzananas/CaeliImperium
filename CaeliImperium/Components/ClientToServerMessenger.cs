@@ -1,4 +1,5 @@
-﻿using CaeliImperium.Components.Refinery;
+﻿using CaeliImperium.Components.MonsterChest;
+using CaeliImperium.Components.Refinery;
 using RoR2;
 using RoR2BepInExPack.Utilities;
 using System;

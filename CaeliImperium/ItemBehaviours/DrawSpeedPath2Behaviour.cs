@@ -1,5 +1,6 @@
 ﻿using CaeliImperium.Items;
 using RoR2;
+using RoR2.Items;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ using static CaeliImperium.Items.DrawSpeedPathEvents;
 
 namespace CaeliImperium.ItemBehaviours
 {
-    public class DrawSpeedPath2Behaviour : CharacterBody.ItemBehavior
+    public class DrawSpeedPath2Behaviour : BaseItemBodyBehavior
     {
         private static List<DrawSpeedPath2Behaviour> _instances = [];
         public static ReadOnlyCollection<DrawSpeedPath2Behaviour> readOnlyInstances => _instances.AsReadOnly();
@@ -35,6 +36,8 @@ namespace CaeliImperium.ItemBehaviours
         public Transform startMarker => lineRenderer.transform.Find("ChalkStart");
         public Transform endMarker => lineRenderer.transform.Find("ChalkEnd");
         public TeamComponent teamComponent;
+        [BaseItemBodyBehavior.ItemDefAssociationAttribute(useOnServer = true, useOnClient = true)]
+        private static ItemDef GetItemDef() => CaeliImperiumContent.Items.DrawSpeedPath;
 
         public void OnEnable()
         {

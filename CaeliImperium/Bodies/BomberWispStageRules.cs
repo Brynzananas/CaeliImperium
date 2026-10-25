@@ -19,6 +19,30 @@ public class BomberWispStageRules
             {
                 _default = new BomberWispStageRules();
                 _default.stageRules = new StageRule[] {
+                    new StageRule
+                {
+                    useStageName = true,
+                    stageName = "soul1",
+                    blastRadius = 12f,
+                    detonationTime = 2f,
+                    blastDamageCoefficient = 1.5f
+                },
+                        new StageRule
+                {
+                    useStageName = true,
+                    stageName = "sad1",
+                    blastRadius = 12f,
+                    detonationTime = 2f,
+                    blastDamageCoefficient = 1.5f
+                },
+                            new StageRule
+                {
+                    useStageName = true,
+                    stageName = "surv2",
+                    blastRadius = 12f,
+                    detonationTime = 2f,
+                    blastDamageCoefficient = 1.5f
+                },
                 new StageRule
                 {
                     useStageCount = true,

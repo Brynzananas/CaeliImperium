@@ -1,4 +1,4 @@
-﻿using CaeliImperium.Components;
+﻿using CaeliImperium.Components.FirstPerson;
 using System;
 using System.Collections.Generic;
 using System.Text;

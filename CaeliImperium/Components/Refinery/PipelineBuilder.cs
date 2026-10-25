@@ -1,12 +1,16 @@
 ﻿using BrynzaAPI;
+using CaeliImperium.Bodies;
+using CaeliImperium.Interactables;
 using CaeliImperium.NetworkMessages;
 using RoR2;
+using RoR2.HudOverlay;
 using RoR2BepInExPack.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using static CaeliImperium.Components.Refinery.PipelineBuilder;
 
 namespace CaeliImperium.Components.Refinery;
 
@@ -55,6 +59,8 @@ public class PipelineBuilder : NetworkBehaviour
     public List<PipelineInteractor> pipelineInteractors = [];
     public List<PipeMeshGenerator> pipeMeshGenerators = [];
     public bool cancelBuilding;
+    public OverlayController overlayController;
+    public BuildInfo? buildInfo;
     private Transform _currentSourceNode;
     public Transform currentSourceNode
     {
@@ -102,6 +108,7 @@ public class PipelineBuilder : NetworkBehaviour
         if (initialized) return;
         initialized = true;
         CreatePreviewPipe();
+        if (pipelineRefineryController) pipelineRefineryController.clientPipelineBuilders.Add(this);
         if (currentSourceNode || !NetworkServer.active) return;
         GameObject newNode = Instantiate(pointPrefab, startObject);
         PipelineInteractor pipelineInteractor = newNode.GetComponent<PipelineInteractor>();
@@ -149,16 +156,38 @@ public class PipelineBuilder : NetworkBehaviour
         GameObject gameObject = Util.FindNetworkObject(networkInstanceId);
         if (!gameObject) return;
         currentInteractor = gameObject.GetComponent<Interactor>();
-        if (!currentInteractor || !Util.HasEffectiveAuthority(currentInteractor.netIdentity)) return;
+        if (!currentInteractor) return;
+        if (!Util.HasEffectiveAuthority(currentInteractor.netIdentity)) return;
+        OverlayCreationParams overlayCreationParams = new OverlayCreationParams
+        {
+            prefab = PipelineRefineryEvents.PipelineBuilderCrosshair,
+            childLocatorEntry = "CrosshairExtras"
+        };
+        overlayController = HudOverlayManager.AddOverlay(gameObject, overlayCreationParams);
+        overlayController.onInstanceAdded += OverlayController_onInstanceAdded;
         Camera camera = Camera.main;
         if (!camera) return;
         Util.PlaySound("Play_DRG_Hologram_Up", camera.gameObject);
     }
+
+    private void OverlayController_onInstanceAdded(OverlayController arg1, GameObject arg2)
+    {
+        PipelineBuildInfoHUDController pipelineBuildInfoHUDController = arg2.GetComponent<PipelineBuildInfoHUDController>();
+        if (!pipelineBuildInfoHUDController) return;
+        pipelineBuildInfoHUDController.pipelineBuilder = this;
+    }
+
     [Command]
     public void CmdRemoveCurrentInteractor() => RpcRemoveCurrentInteractor();
     [ClientRpc]
     public void RpcRemoveCurrentInteractor()
     {
+        if (overlayController != null)
+        {
+            overlayController.onInstanceAdded -= OverlayController_onInstanceAdded;
+            HudOverlayManager.RemoveOverlay(overlayController);
+            overlayController = null;
+        }
         if (NetworkServer.active) return;
         currentInteractor = null;
     }
@@ -268,7 +297,15 @@ public class PipelineBuilder : NetworkBehaviour
             return;
         }
         if (!characterBody.hasEffectiveAuthority) return;
-        if (ziprailController && ziprailController is ZiprailControllerWithInactivityDuration ziprailControllerWithInactivityDuration) ziprailControllerWithInactivityDuration.SetInactivityDuration();
+        if (pipelineRefineryController)
+        {
+            foreach (PipelineBuilder pipelineBuilder in pipelineRefineryController.clientPipelineBuilders)
+            {
+                if (!pipelineBuilder || !pipelineBuilder.ziprailController || pipelineBuilder.ziprailController is not ZiprailControllerWithInactivityDuration ziprailControllerWithInactivityDuration) continue;
+                ziprailControllerWithInactivityDuration.SetInactivityDuration();
+            }
+        }
+        buildInfo = null;
         Vector3 point;
         Ray ray1 = characterBody.GetAimRay();
         Vector3 endPoistion;
@@ -310,14 +347,14 @@ public class PipelineBuilder : NetworkBehaviour
             point = ray1.origin + ray1.direction * (characterBody.bestFitActualRadius + firstRaycastAddDistance);
         }
         Ray ray = new Ray(point, Physics.gravity.normalized);
+        Vector3 aimDirection = inputBankTest.aimDirection;
+        aimDirection.y = 0f;
+        aimDirection.Normalize();
+        if (aimDirection == Vector3.zero) aimDirection = characterBody.transform.forward;
         if (Physics.Raycast(ray, out RaycastHit hit, secondRaycastAddDistance, LayerIndex.world.mask))
         {
             canPlace = true;
             Vector3 targetPos = hit.point;
-            Vector3 aimDirection = inputBankTest.aimDirection;
-            aimDirection.y = 0f;
-            aimDirection.Normalize();
-            if (aimDirection == Vector3.zero) aimDirection = characterBody.transform.forward;
             aimDirection *= -1f;
             endPoistion = targetPos + endPositionOffset;
             endNormal = aimDirection;
@@ -410,6 +447,7 @@ public class PipelineBuilder : NetworkBehaviour
             }
                 
         }
+        
     }
     public void CreatePreviewPipe()
     {
@@ -434,16 +472,31 @@ public class PipelineBuilder : NetworkBehaviour
     }
     public bool ValidateSegment(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
     {
-        Vector3 vector3 = p0 - p3;
-        float sqrMagnitude = vector3.sqrMagnitude;
-        if (sqrMagnitude < minLength * minLength || sqrMagnitude > maxLength * maxLength) return false;
+        BuildInfo buildInfo = new BuildInfo();
+        bool valid = true;
+        float distance = CaeliImperiumUtils.BezierGetLength(p0, p1, p2 , p3);
+        buildInfo.distance = distance;
+        buildInfo.minDistance = minLength;
+        buildInfo.maxDistance = maxLength;
+        if (distance < minLength || distance > maxLength)
+        {
+            buildInfo.distanceInvalid = true;
+            valid = false;
+        }
         Vector3 lastDir = CaeliImperiumUtils.BezierGetFirstDerivative(p0, p1, p2, p3, 0f).normalized;
         for (int i = 1; i <= checkSamples; i++)
         {
             float t = (float)i / checkSamples;
             Vector3 currentDir = CaeliImperiumUtils.BezierGetFirstDerivative(p0, p1, p2, p3, t).normalized;
             float angle = Vector3.Angle(lastDir, currentDir);
-            if (angle > maxBendAngle) return false;
+            buildInfo.angle = angle;
+            buildInfo.maxAngle = maxBendAngle;
+            if (angle > maxBendAngle)
+            {
+                buildInfo.angleInvalid = true;
+                valid = false;
+                break;
+            }
             lastDir = currentDir;
         }
         for (int i = 0; i < checkSamples; i++)
@@ -452,13 +505,26 @@ public class PipelineBuilder : NetworkBehaviour
             float t2 = (float)(i + 1) / checkSamples;
             Vector3 pos1 = CaeliImperiumUtils.BezierGetPoint(p0, p1, p2, p3, t1);
             Vector3 pos2 = CaeliImperiumUtils.BezierGetPoint(p0, p1, p2, p3, t2);
-            if (Physics.Linecast(pos1, pos2, LayerIndex.world.mask))  return false;
+            bool collides = Physics.Linecast(pos1, pos2, LayerIndex.world.mask);
+            if (collides)
+            {
+                buildInfo.collides = true;
+                valid = false;
+                break;
+            }
         }
-        return true;
+        this.buildInfo = buildInfo;
+        return valid;
     }
     public void PlaceNode(Vector3 position, Vector3 normal, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, bool end)
     {
         currentInteractor = null;
+        if (overlayController != null)
+        {
+            overlayController.onInstanceAdded -= OverlayController_onInstanceAdded;
+            HudOverlayManager.RemoveOverlay(overlayController);
+            overlayController = null;
+        }
         DisablePreview();
         GameObject placedPipe = Instantiate(pipePrefab);
         PipeMeshGenerator pipeMeshGenerator = placedPipe.GetComponent<PipeMeshGenerator>();
@@ -509,5 +575,16 @@ public class PipelineBuilder : NetworkBehaviour
             bezierSegmentDatas.Add(pipelineInteractor.bezierSegmentData);
         }
         basicBezierSpline = CaeliImperiumUtils.CreateSplineFromSegments(gameObject, [.. bezierSegmentDatas], out generatedControlPoints);
+    }
+    public struct BuildInfo
+    {
+        public float angle;
+        public float maxAngle;
+        public bool angleInvalid;
+        public float distance;
+        public float maxDistance;
+        public float minDistance;
+        public bool distanceInvalid;
+        public bool collides;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BrynzaAPI;
+using CaeliImperium.Bodies;
 using CaeliImperium.Components;
 using CaeliImperium.Configs;
 using CaeliImperium.ItemBehaviours;
@@ -41,7 +42,6 @@ namespace CaeliImperium.Items
         private static DrawSpeedPathRunAction drawSpeedPathRunAction;
         public static void Init(ItemDef itemDef)
         {
-            CharacterBody.onBodyInventoryChangedGlobal += CharacterBody_onBodyInventoryChangedGlobal;
             GetStatCoefficients += Events_GetStatCoefficients;
             OnBuffFirstStackGained += Events_OnBuffFirstStackGained;
             OnBuffFinalStackLost += Events_OnBuffFinalStackLost;
@@ -63,17 +63,12 @@ namespace CaeliImperium.Items
         public static void OnPluginDestroyed()
         {
             CaeliImperiumPlugin.onPluginDestroyed -= OnPluginDestroyed;
-            CharacterBody.onBodyInventoryChangedGlobal -= CharacterBody_onBodyInventoryChangedGlobal;
             GetStatCoefficients -= Events_GetStatCoefficients;
             OnBuffFirstStackGained -= Events_OnBuffFirstStackGained;
             OnBuffFinalStackLost -= Events_OnBuffFinalStackLost;
             CaeliImperiumExpansionRunComponent.caeliImperiumRunActions.Remove(drawSpeedPathRunAction);
             drawSpeedPathRunAction = null;
             R2API.FootstepAPI.OnFootstep -= FootstepAPI_OnFootstep;
-        }
-        private static void CharacterBody_onBodyInventoryChangedGlobal(CharacterBody obj)
-        {
-            obj.AddItemBehavior<DrawSpeedPath2Behaviour>(obj.inventory.GetItemCountEffective(CaeliImperiumContent.Items.DrawSpeedPath));
         }
         private static void FootstepAPI_OnFootstep(R2API.FootstepAPI.FootstepReport footstepReport)
         {
@@ -87,7 +82,7 @@ namespace CaeliImperium.Items
         public class SpeedPathGradient
         {
             public Collider nearestSpeedPath;
-            public float distance= float.MaxValue;
+            public float distance = float.MaxValue;
             public Transform globalSpeedPath;
         }
         public static void Events_GetStatCoefficients(CharacterBody sender, StatHookEventArgs args)
@@ -97,7 +92,7 @@ namespace CaeliImperium.Items
         }
         public static void Events_OnBuffFinalStackLost(CharacterBody arg1, BuffDef arg2)
         {
-            if (!arg1) return;
+            if (!arg1 || (DoomguyEvents.init && arg1.HasModdedBodyFlag(DoomguyEvents.DoomguyBodyFlag))) return;
             if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathGravityWell.buffIndex) arg1.ModifyCharacterGravityParams(-1);
             if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathSpeedBonus.buffIndex && DrawSpeedPathConfigs.SpeedPathAutosprint.Value)
             {
@@ -110,7 +105,7 @@ namespace CaeliImperium.Items
         }
         public static void Events_OnBuffFirstStackGained(CharacterBody arg1, BuffDef arg2)
         {
-            if (!arg1) return;
+            if (!arg1 || (DoomguyEvents.init && arg1.HasModdedBodyFlag(DoomguyEvents.DoomguyBodyFlag))) return;
             if (arg2.buffIndex == CaeliImperiumContent.Buffs.SpeedPathGravityWell.buffIndex) arg1.ModifyCharacterGravityParams(1);
         }
     }

@@ -1,5 +1,5 @@
 ﻿using BepInEx;
-using CaeliImperium.Components;
+using CaeliImperium.Components.MonsterChest;
 using CaeliImperium.Configs;
 using CaeliImperium.Items;
 using CaeliImperium.NetworkMessages;
@@ -43,35 +43,6 @@ namespace CaeliImperium.Interactables
             inited = true;
             MonsterChest = gameObject;
             MonsterChestPickerPanel = CaeliImperiumAssets.assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Interactables/MonsterChest/MonsterChestPickerPanel.prefab");
-            PickupPickerPanel pickupPickerPanel = MonsterChestPickerPanel.GetComponent<PickupPickerPanel>();
-            if (pickupPickerPanel)
-            {
-                if (pickupPickerPanel.buttonPrefab)
-                {
-                    Transform iconTransform = pickupPickerPanel.buttonPrefab.transform.Find("Icon");
-                    if (iconTransform)
-                    {
-                        Image image = iconTransform.GetComponent<Image>();
-                        if (image)
-                        {
-                            AsyncImage asyncImage = iconTransform.EnsureComponent<AsyncImage>();
-                            asyncImage.assetAoDR = new RoR2.ContentManagement.AssetOrDirectReference<Sprite>();
-                            asyncImage.assetAoDR.directRef = image.sprite;
-                            CaeliImperiumPlugin.Log.LogMessage("Manualy fixed Monster Chest AsyncImage 1");
-                        }
-
-                    }
-                }
-            }
-            MonsterChestPanelHelper monsterChestPanelHelper = MonsterChestPickerPanel.GetComponent<MonsterChestPanelHelper>();
-            if (monsterChestPanelHelper)
-            {
-                if (monsterChestPanelHelper.inspectPanelController)
-                {
-                    monsterChestPanelHelper.inspectPanelController.asyncIconImage = monsterChestPanelHelper.inspectPanelController.EnsureComponent<AsyncImage>();
-                    CaeliImperiumPlugin.Log.LogMessage("Manualy fixed Monster Chest AsyncImage 2");
-                }
-            }
             LeTai.Asset.TranslucentImage.TranslucentImage translucentImage = MonsterChestPickerPanel.GetComponent<LeTai.Asset.TranslucentImage.TranslucentImage>();
             if (translucentImage)
             {
@@ -90,7 +61,7 @@ namespace CaeliImperium.Interactables
                     inspectPanelController.UnknownItemDefOverride = UnknownItemDefOverride;
                 }
             }
-            Transform MonsterChestPickerPanelInspectPanel1 = MonsterChestPickerPanel.transform.Find("MainPanel/Juice/Label/InspectPanel");
+            Transform MonsterChestPickerPanelInspectPanel1 = MonsterChestPickerPanel.transform.Find("MainPanel/Juice/ScrapperDetailsVertical/FillbarAndResultbar/InspectPanel");
             if (MonsterChestPickerPanelInspectPanel1)
             {
                 InspectPanelController inspectPanelController = MonsterChestPickerPanelInspectPanel1.GetComponent<InspectPanelController>();

@@ -40,6 +40,7 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
     public bool shouldShowOnScanner;
     public List<WellExtractorController> wellExtractorControllers = [];
     private PipelineBuilder[] pipelineBuilders;
+    public List<PipelineBuilder> clientPipelineBuilders = [];
     [SyncVar] public int sabotagesCompleted;
     [SyncVar] public float nextSabotage;
     [SyncVar] public bool underSabotage;
@@ -170,18 +171,6 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         if (!NetworkServer.active) return;
         AddDirectorHook();
         if (PipelineRefineryConfigs.PipelineRefineryEnableExtraCombatDirector != null && PipelineRefineryConfigs.PipelineRefineryEnableExtraCombatDirector.Value && combatDirector && !combatDirector.enabled) combatDirector.enabled = true;
-        if (DirectorCore.instance)
-        {
-            CombatDirector[] components = DirectorCore.instance.GetComponents<CombatDirector>();
-            if (components.Length != 0)
-            {
-                CombatDirector[] array = components;
-                for (int i = 0; i < array.Length; i++)
-                {
-                    array[i].enabled = true;
-                }
-            }
-        }
     }
     private void DirectorAPI_GetCombatDirectorActivityCount(CombatDirector combatDirector, ref int activityCount)
     {

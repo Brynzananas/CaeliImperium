@@ -1,10 +1,10 @@
-﻿using CaeliImperium.Components.Bishop;
+﻿using CaeliImperium.Components.Doomguy;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using static CaeliImperium.Bodies.BishopEvents;
+using static CaeliImperium.Bodies.DoomguyEvents;
 
 namespace CaeliImperium.ModCompatibilities;
 public static class EnemyAbilitiesCompatibility
@@ -21,7 +21,7 @@ public static class EnemyAbilitiesCompatibility
     }
     private static void TeleportToEnemyOnEnter(Action<EnemyAbilities.Abilities.Child.TeleportToEnemyModule.TeleportToEnemy> orig, EnemyAbilities.Abilities.Child.TeleportToEnemyModule.TeleportToEnemy self)
     {
-        if (BishopComponent.enableCount > 0)
+        if (CaeliImperiumUtils.IsDoom())
         {
             self.outer.SetNextStateToMain();
             return;

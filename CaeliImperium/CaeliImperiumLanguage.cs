@@ -1,6 +1,7 @@
 ﻿using CaeliImperium.Bodies;
 using CaeliImperium.Interactables;
 using CaeliImperium.Items;
+using CaeliImperiumEntityStates.Doomguy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -124,6 +125,18 @@ namespace CaeliImperium
             AddLanguageToken("CI_RESOURCEWELL_CONTEXT", "Вызвать Бур", "ru");
             AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Slide off");
             AddLanguageToken("CI_PIPELINEVEHICLE_EXIT", "Съехать", "ru");
+            AddLanguageToken("CI_BUILDER_ANGLE", "Angle:");
+            AddLanguageToken("CI_BUILDER_ANGLE", "Угл:", "ru");
+            AddLanguageToken("CI_BUILDER_DISTANCE", "Distance:");
+            AddLanguageToken("CI_BUILDER_DISTANCE", "Длина:", "ru");
+            AddLanguageToken("CI_BUILDER_ERROR", "ERROR");
+            AddLanguageToken("CI_BUILDER_ERROR", "ОШИБКА", "ru");
+            AddLanguageToken("CI_BUILDER_COLLISION", "Collision");
+            AddLanguageToken("CI_BUILDER_COLLISION", "Коллизия", "ru");
+            AddLanguageToken("CI_BUILDER_COLLIDES_VALID", "No");
+            AddLanguageToken("CI_BUILDER_COLLIDES_VALID", "Нет", "ru");
+            AddLanguageToken("CI_BUILDER_COLLIDES_INVALID", "Yes");
+            AddLanguageToken("CI_BUILDER_COLLIDES_INVALID", "Да", "ru");
         }
         public static void InitBishop()
         {
@@ -131,9 +144,94 @@ namespace CaeliImperium
             AddLanguageToken("CI_BISHOP_SPEAR_THROW", "Бросить", "ru");
             AddLanguageToken("CI_BISHOP_SPEAR_SLAM", "Slam");
             AddLanguageToken("CI_BISHOP_SPEAR_SLAM", "Ебануться", "ru");
-            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "Pull");
-            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "Притянуть", "ru");
-            if (!BishopEvents.Body) return;
+            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "WIP");
+            AddLanguageToken("CI_BISHOP_SPEAR_CHAIN", "НЕРАБОТАЕТ", "ru");
+            AddLanguageToken("CI_DIFFICULTY_HURTMEPLENTY_NAME", "Hurt Me Plenty");
+            AddLanguageToken("CI_DIFFICULTY_HURTMEPLENTY_DESC", $"This is the way the game is meant to be played as Doomguy! Beat The Main Final Boss as Doomguy to unlock this difficulty for all survivors and unlock the rest of the difficulties for Doomguy (right now this feature is not implemented yet).<style=cStack>\n" +
+"\n" +
+"Monsters Projectile Speed: <style=cIsHealing>-35%</style>\n" +
+"Monsters Flight Height: <style=cIsHealing>8m</style>\n" +
+"Elites: <style=cIsHealing>Gone</style>\n" +
+"Knockback: <style=cIsDamage>Gone</style>\n" +
+"Drones, Items And Equipments: <style=cIsDamage>Repooled</style>. <style=cIsHealth>-75% damage. Cannot stun, shock, immobilize and freeze</style>\n" +
+"Monsters: <style=cIsHealth>Do not target minions</style>\n" +
+"Heavy Monsters Health: <style=cIsHealth>+100%</style>\n" +
+"Boss Monsters Health: <style=cIsHealth>+200%</style>\n" +
+"Printers And Scrappers: <style=cIsHealth>Gone</style>\n" +
+"Void And Lunar Items: <style=cIsHealth>Gone</style>\n" +
+"Weak Monsters: <style=cIsHealth>Gone</style>\n" +
+"Hitstuns: <style=cIsHealth>Gone</style></style>");
+            AddLanguageToken("CI_DIFFICULTY_HURTMEPLENTY_NAME", "Сломай Меня Зорошенько", "ru");
+            AddLanguageToken("CI_DIFFICULTY_HURTMEPLENTY_DESC", $"Основной метод игры за Думагая! Победи Главного Финального Босса чтобы разблокировать эту сложность для всех выживших и раблокировать все сложности для Думгая (функция еще не сделана пока что).<style=cStack>\n" +
+"\n" +
+"Скорость Поле Снарядов Монстро: <style=cIsHealing>-35%</style>\n" +
+"Высота Полета Монстров: <style=cIsHealing>8m</style>\n" +
+"Элитные Монстры: <style=cIsHealing>Отсутствуют</style>\n" +
+"Отброс: <style=cIsDamage>Отсутствует</style>\n" +
+"Дроны, Предметы и Снарядение: <style=cIsDamage>Пересобранны</style>. <style=cIsHealth>-75% урона. Не могут замораживать, оглушать и шокрировать</style>\n" +
+"Монстры: <style=cIsHealth>Больше не атакуют приспешников</style>\n" +
+"Здоровье Тяжелых Монстров: <style=cIsHealth>+100%</style>\n" +
+"Здоровье Босс Монстров: <style=cIsHealth>+200%</style>\n" +
+"Принтеры и Разборщики: <style=cIsHealth>Отсутствуют</style>\n" +
+"Лунные и Пустотные Предметы: <style=cIsHealth>Отсутствуют</style>\n" +
+"Слабые Монстры: <style=cIsHealth>Отсутствуют</style>\n" +
+"Оглушение при Уроне: <style=cIsHealth>Отсутствует</style></style>", "ru");
+            if (DoomguyEvents.Body)
+            {
+                AddLanguageToken(DoomguyEvents.Body.baseNameToken, "Doomguy");
+                AddLanguageToken(DoomguyEvents.Body.subtitleNameToken, "Doomed guy or dooming guy or something idk");
+                AddLanguageToken(DoomguyEvents.Body.baseNameToken, "Думгай", "ru");
+                AddLanguageToken(DoomguyEvents.Body.subtitleNameToken, "Думающий гай или думный гай или чтото яхз", "ru");
+            }
+            if (DoomguyEvents.Doomguy)
+            {
+                AddLanguageToken(DoomguyEvents.Doomguy.displayNameToken, "Doomguy or something (no proper display name yet)");
+                AddLanguageToken(DoomguyEvents.Doomguy.descriptionToken, "He is da doomguy!");
+                AddLanguageToken(DoomguyEvents.Doomguy.displayNameToken, "Думгай или чтото (нормальное показное имя еще не придуманно)", "ru");
+                AddLanguageToken(DoomguyEvents.Doomguy.descriptionToken, "Думгай!", "ru");
+            }
+            if (DoomguyEvents.ShotgunFire)
+            {
+                AddLanguageToken(DoomguyEvents.ShotgunFire.skillNameToken, "Combat Shotgun");
+                AddLanguageToken(DoomguyEvents.ShotgunFire.skillDescriptionToken, $"Shoot pellets for {damagePrefix}{ShootShotgun.bulletCount}x{ShootShotgun.damageCoefficient * 100f}% damage{endPrefix}");
+                AddLanguageToken(DoomguyEvents.ShotgunFire.skillNameToken, "Боевой Дробовик", "ru");
+                AddLanguageToken(DoomguyEvents.ShotgunFire.skillDescriptionToken, $"Выстрели дробью наносящий {damagePrefix}{ShootShotgun.bulletCount}x{ShootShotgun.damageCoefficient * 100f}% урона{endPrefix}", "ru");
+            }
+            if (DoomguyEvents.SpearSwing)
+            {
+                AddLanguageToken(DoomguyEvents.SpearSwing.skillNameToken, "Spear Swing");
+                AddLanguageToken(DoomguyEvents.SpearSwing.skillDescriptionToken, $"Swing spear for {damagePrefix}{SwingSpear.baseDamageCoefficient * 100f}% damage{endPrefix}. {utilityPrefix}Parry{endPrefix} incoming {healingPrefix}parriable{endPrefix} attacks and projectiles. Gain {deathPrefix}empowerement{endPrefix} and {utilityPrefix}reduce cooldown{endPrefix} of your Utility skill on {healingPrefix}successful parry{endPrefix}");
+                AddLanguageToken(DoomguyEvents.SpearSwing.skillNameToken, "Взмах Копьем", "ru");
+                AddLanguageToken(DoomguyEvents.SpearSwing.skillDescriptionToken, $"Взмахни копьем нанося {damagePrefix}{SwingSpear.baseDamageCoefficient * 100f}% урона{endPrefix}. {utilityPrefix}Паррируй{endPrefix} входящие {healingPrefix}паррируемые{endPrefix} атаки и снаряды. Получи заряд {deathPrefix}усиления{endPrefix} и {utilityPrefix}снизь время перезарядки{endPrefix} вашего Вспомогательного навыка при {healingPrefix}успешном парировании{endPrefix}", "ru");
+            }
+            if (DoomguyEvents.AcceleratorFire)
+            {
+                AddLanguageToken(DoomguyEvents.AcceleratorFire.skillNameToken, "Plasma Accelerator");
+                AddLanguageToken(DoomguyEvents.AcceleratorFire.skillDescriptionToken, $"Shoot plasma projectile for {damagePrefix}{ShootAccelerator.damageCoefficient * 100f}% damage{endPrefix}. Continious fire will supercharge acceletrator and increase plasma projectile damage to {damagePrefix}{ShootAccelerator.superchargeDamageCoefficient * 100f}% damage{endPrefix}. Release supercharge on trigger exit and deal {damagePrefix}{ExitAccelerator.damageCoefficient * 100f}% damage{endPrefix}");
+                AddLanguageToken(DoomguyEvents.AcceleratorFire.skillNameToken, "Ускоритель Плазмы", "ru");
+                AddLanguageToken(DoomguyEvents.AcceleratorFire.skillDescriptionToken, $"Выстрели снаряд плазмы наносящий {damagePrefix}{ShootAccelerator.damageCoefficient * 100f}% урон{endPrefix}. Продолжительное ведение огня зарядит ускоритель до максимума повышая урон плазменного снаряда до {damagePrefix}{ShootAccelerator.superchargeDamageCoefficient * 100f}% урона{endPrefix}. Разряди весь заряд при спуске триггера и нанеси {damagePrefix}{ExitAccelerator.damageCoefficient * 100f}% урона{endPrefix}", "ru");
+            }
+            if (DoomguyEvents.Dash)
+            {
+                AddLanguageToken(DoomguyEvents.Dash.skillNameToken, "Dash");
+                AddLanguageToken(DoomguyEvents.Dash.skillDescriptionToken, $"{utilityPrefix}Dash{endPrefix} to move direction");
+                AddLanguageToken(DoomguyEvents.Dash.skillNameToken, "Рывок", "ru");
+                AddLanguageToken(DoomguyEvents.Dash.skillDescriptionToken, $"Соверши {utilityPrefix}рывок{endPrefix} в направлении хода", "ru");
+            }
+            if (DoomguyEvents.SpearSpecial)
+            {
+                AddLanguageToken(DoomguyEvents.SpearSpecial.skillNameToken, "Spear Empowerement");
+                AddLanguageToken(DoomguyEvents.SpearSpecial.skillDescriptionToken, $"Prepare spear for {deathPrefix}empowerement{endPrefix}. Consume 5 {deathPrefix}empowerement{endPrefix} on use.\n\nPrimary: Throw spear for {damagePrefix}{SpearThrow.damageCoefficient * 100f}% damage{endPrefix}. {damagePrefix}Crits{endPrefix} and {damagePrefix}super stuns{endPrefix} on headshot.\n\nSecondary: WIP\n\nUtility: Leap downwards dealing {damagePrefix}{SpearSlam.damageCoefficient * 100f}% damage{endPrefix} in {utilityPrefix}{SpearSlam.radius} meters radius{endPrefix}");
+                AddLanguageToken(DoomguyEvents.SpearSpecial.skillNameToken, "Усиление Копья", "ru");
+                AddLanguageToken(DoomguyEvents.SpearSpecial.skillDescriptionToken, $"Приготовь копья для {deathPrefix}усиления{endPrefix}. Потрать 5 зарядов {deathPrefix}усиления{endPrefix} при использовании.\n\nОсновной: Брось копье наносящий {damagePrefix}{SpearThrow.damageCoefficient * 100f}% урона{endPrefix}. Наносит {damagePrefix}критический{endPrefix} урон и {damagePrefix}супер оглушает{endPrefix} при попадании в голову.\n\nВторостепеный: ДОДЕЛАТЬ\n\nВспомогательный: Снизь свысока вниз нанося {damagePrefix}{SpearSlam.damageCoefficient * 100f}% урона{endPrefix} в {utilityPrefix}радиусе {SpearSlam.radius} метров{endPrefix}", "ru");
+            }
+            if (DoomguyEvents.Punch)
+            {
+                AddLanguageToken(DoomguyEvents.Punch.skillNameToken, "Punch");
+                AddLanguageToken(DoomguyEvents.Punch.skillDescriptionToken, $"Punch target for {damagePrefix}{Punch._damageCoefficientCombo * 100f}% damage{endPrefix}. If target is {deathPrefix}staggered{endPrefix} charge is not consumed and heal for {healingPrefix}{DoomguyEvents.HealFromGloryKillCoeffecient * 100f}%/{DoomguyEvents.HealFromGloryHeavyKillCoeffecient * 100f}%/{DoomguyEvents.HealFromGloryChampionKillCoeffecient * 100f}%{endPrefix} max health and {healingPrefix}{DoomguyEvents.ReserveHealFromGloryKillCoeffecient * 100f}%/{DoomguyEvents.ReserveHealFromGloryHeavyKillCoeffecient * 100f}%/{DoomguyEvents.ReserveHealFromGloryChampionKillCoeffecient * 100f}%{endPrefix} reserve heal based on target class and gain {deathPrefix}empowerement{endPrefix}");
+                AddLanguageToken(DoomguyEvents.Punch.skillNameToken, "Удар", "ru");
+                AddLanguageToken(DoomguyEvents.Punch.skillDescriptionToken, $"Ударь цель нанося {damagePrefix}{Punch._damageCoefficientCombo * 100f}% урона{endPrefix}. Если цель {deathPrefix}пораженна{endPrefix} заряд не расходуется и исцели {healingPrefix}{DoomguyEvents.HealFromGloryKillCoeffecient * 100f}%/{DoomguyEvents.HealFromGloryHeavyKillCoeffecient * 100f}%/{DoomguyEvents.HealFromGloryChampionKillCoeffecient * 100f}%{endPrefix} масимального здоровья и {healingPrefix}{DoomguyEvents.ReserveHealFromGloryKillCoeffecient * 100f}%/{DoomguyEvents.ReserveHealFromGloryHeavyKillCoeffecient * 100f}%/{DoomguyEvents.ReserveHealFromGloryChampionKillCoeffecient * 100f}%{endPrefix} сдержанного здоворья смотря на класс цели и получи заряд {deathPrefix}усиления{endPrefix}", "ru");
+            }
         }
         public static void AddLanguageToken(string token, string text) => AddLanguageToken(token, text, "en");
         public static void AddLanguageToken(string token, string text, string lang)

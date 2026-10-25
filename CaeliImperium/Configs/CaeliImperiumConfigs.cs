@@ -21,4 +21,5 @@ public static class CaeliImperiumConfigs
     }
     public static ConfigEntry<bool> OverrideConfigValuesOnUpdate;
     public static ConfigEntry<bool> Screaming;
+    public static ConfigEntry<bool> AlphaContent;
 }

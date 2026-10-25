@@ -1,4 +1,4 @@
-﻿using CaeliImperium.Components;
+﻿using CaeliImperium.Components.MonsterChest;
 using EntityStates;
 using RoR2;
 using System;

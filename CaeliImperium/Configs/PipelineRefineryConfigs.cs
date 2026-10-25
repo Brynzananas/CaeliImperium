@@ -20,6 +20,11 @@ public static class PipelineRefineryConfigs
         PipelineRefinerySpawnRules = CaeliImperiumUtils.CreateConfig(sectionName, "Spawn Rules", Interactables.PipelineRefineryEvents.DefaultSpawnRules.ToXml().ConvertToString(), "");
         PipelineRefinerySpawnRules.SettingChanged += PipelineRefinerySpawnRules_SettingChanged;
         ResourceWellSpawnCount = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Well Spawn Count", 3, "");
+        ResourceWellsPlacementRule = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Wells Placement Rule", PipelineRefineryEvents.ResourceWellsPlacementRule.AroundRefinery, "");
+        ResourceWellMinSpawnDistanceAroundRefinery = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Well Min Spawn Distance Around Refinery", 60f, "");
+        ResourceWellMaxSpawnDistanceAroundRefinery = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Well Max Spawn Distance Around Refinery", 240f, "");
+        ResourceWellMinSpawnDistance = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Well Min Spawn Distance", 0f, "");
+        ResourceWellMaxSpawnDistance = CaeliImperiumUtils.CreateConfig(sectionName, "Resource Well Max Spawn Distance", 60f, "");
         UpdatePipelineRefinerySpawnRules();
         InitPipelineRefineryController();
         InitPipelineRefineryDropTable();
@@ -219,6 +224,11 @@ public static class PipelineRefineryConfigs
     }
     public static ConfigEntry<string> PipelineRefinerySpawnRules;
     public static ConfigEntry<int> ResourceWellSpawnCount;
+    public static ConfigEntry<PipelineRefineryEvents.ResourceWellsPlacementRule> ResourceWellsPlacementRule;
+    public static ConfigEntry<float> ResourceWellMinSpawnDistanceAroundRefinery;
+    public static ConfigEntry<float> ResourceWellMaxSpawnDistanceAroundRefinery;
+    public static ConfigEntry<float> ResourceWellMinSpawnDistance;
+    public static ConfigEntry<float> ResourceWellMaxSpawnDistance;
     public static ConfigEntry<float> PipelineRefineryTimeToComplete;
     public static ConfigEntry<int> PipelineRefinerySabotagesCount;
     public static ConfigEntry<int> PipelineRefineryNeededCompletedBuilders;

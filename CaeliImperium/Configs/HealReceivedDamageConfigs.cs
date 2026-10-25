@@ -11,8 +11,9 @@ namespace CaeliImperium.Configs
     {
         public static void Init()
         {
-            HealReceivedDamageHealCoefficient = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Heal coefficient", 0.5f, "");
-            HealReceivedDamageHealCoefficientPerStack = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Heal coefficient per stack", 0f, "");
+            HealReceivedDamageHealCoefficient = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Heal coefficient", 0.2f, "");
+            HealReceivedDamageHealCoefficientPerStack = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Heal coefficient per stack", 0.05f, "");
+            HealReceivedDamageMaxHealCoefficient = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Max heal coefficient", 1f, "");
             HealReceivedDamageTime = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Time to fully heal received damage", 15f, "");
             HealReceivedDamageStackTimeReduction = CreateConfig(CaeliImperiumContent.Items.HealReceivedDamage.configName, "Time percentage reduction per stack", 15f, "");
             HealReceivedDamageHealCoefficient.SettingChanged += SettingChanged;
@@ -24,6 +25,7 @@ namespace CaeliImperium.Configs
 
         public static ConfigEntry<float> HealReceivedDamageHealCoefficient;
         public static ConfigEntry<float> HealReceivedDamageHealCoefficientPerStack;
+        public static ConfigEntry<float> HealReceivedDamageMaxHealCoefficient;
         public static ConfigEntry<float> HealReceivedDamageTime;
         public static ConfigEntry<float> HealReceivedDamageStackTimeReduction;
     }

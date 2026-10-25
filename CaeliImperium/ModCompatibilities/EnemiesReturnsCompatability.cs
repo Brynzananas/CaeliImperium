@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using static CaeliImperium.Bodies.BishopEvents;
+using static CaeliImperium.Bodies.DoomguyEvents;
 
 namespace CaeliImperium.ModCompatibilities;
 public static class EnemiesReturnsCompatability
@@ -16,10 +16,10 @@ public static class EnemiesReturnsCompatability
         RoR2Application.onLoadFinished += OnLoadFinished;
         PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.BaseFire), nameof(EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.BaseFire.FireProjectile), typeof(EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.Enemy.Fire), 0);
         AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.Enemy.Fire>();
-        PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow), nameof(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.FireProjectile), 0);
-        AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow>();
-        PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun), nameof(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.FixedUpdate), 0);
-        AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun>();
+        PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow), nameof(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.FireProjectile), 3);
+        AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow>(3);
+        //PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun), nameof(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.FixedUpdate), 0);
+        //AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun>();
         PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile), nameof(EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile.FixedUpdate), 0);
         AddParriableStateVisuals<EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile>();
         PatchProjectileStateToParriable(typeof(EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit), nameof(EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit.FireAttackAuthority), 0);

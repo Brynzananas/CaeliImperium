@@ -1,4 +1,5 @@
 ﻿using CaeliImperium.Components;
+using CaeliImperium.Components.FirstPerson;
 using EntityStates.AffixVoid;
 using HG;
 using Mono.Cecil;
@@ -19,6 +20,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
+using static CaeliImperium.ScriptableObjects.ReloadSkillDef;
 using static RoR2.DotController;
 
 namespace CaeliImperium
@@ -38,11 +40,19 @@ namespace CaeliImperium
             IL.RoR2.SetStateOnHurt.OnTakeDamageServer += SetStateOnHurt_OnTakeDamageServer;
             On.RoR2.DitherModel.RefreshObstructorsForCamera += DitherModel_RefreshObstructorsForCamera;
             On.RoR2.CharacterModel.RefreshObstructorsForCamera += CharacterModel_RefreshObstructorsForCamera;
+            On.RoR2.GenericSkill.RecalculateFinalRechargeInterval += GenericSkill_RecalculateFinalRechargeInterval;
             MusicController.pickTrackHook += MusicController_pickTrackHook;
             NetworkUser.onNetworkUserDiscovered += NetworkUser_onNetworkUserDiscovered;
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
             //Hook hook = new Hook(typeof(PostProcessVolume).GetMethod(nameof(PostProcessVolume.OnEnable), BindingFlags.NonPublic | BindingFlags.Instance), typeof(CaeliImperiumHooks).GetMethod(nameof(PostProcessVolumeOnEnable), BindingFlags.NonPublic | BindingFlags.Static), new HookConfig());
             //Hook hook1 = new Hook(typeof(PostProcessVolume).GetMethod(nameof(PostProcessVolume.OnDisable), BindingFlags.NonPublic | BindingFlags.Instance), typeof(CaeliImperiumHooks).GetMethod(nameof(PostProcessVolumeOnDisable), BindingFlags.NonPublic | BindingFlags.Static), new HookConfig());
+        }
+
+        private static void GenericSkill_RecalculateFinalRechargeInterval(On.RoR2.GenericSkill.orig_RecalculateFinalRechargeInterval orig, GenericSkill self)
+        {
+            orig(self);
+            if (!self || self.skillInstanceData == null || self.skillInstanceData is not ReloadSkillInstanceData reloadSkillInstanceData) return;
+            reloadSkillInstanceData.RecalculateFinalReloadInterval();
         }
 
         private static bool doNotRunOnEnable;
@@ -81,7 +91,7 @@ namespace CaeliImperium
         {
             if (arg1.name == "title")
             {
-                new GameObject("CaeliImperiumTitleController", [typeof(CaeliImperiumTitleController)]);
+                GameObject.Instantiate(CaeliImperiumAssets.TitleController);
             }
         }
 
@@ -133,6 +143,7 @@ namespace CaeliImperium
             IL.RoR2.SetStateOnHurt.OnTakeDamageServer -= SetStateOnHurt_OnTakeDamageServer;
             On.RoR2.DitherModel.RefreshObstructorsForCamera -= DitherModel_RefreshObstructorsForCamera;
             On.RoR2.CharacterModel.RefreshObstructorsForCamera -= CharacterModel_RefreshObstructorsForCamera;
+            On.RoR2.GenericSkill.RecalculateFinalRechargeInterval -= GenericSkill_RecalculateFinalRechargeInterval;
         }
         private static void SetStateOnHurt_OnTakeDamageServer(ILContext il)
         {

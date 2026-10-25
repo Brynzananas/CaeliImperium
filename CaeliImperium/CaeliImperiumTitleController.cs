@@ -1,5 +1,6 @@
 ﻿using CaeliImperium.Components;
 using CaeliImperium.Interactables;
+using R2API;
 using RoR2;
 using System;
 using System.Collections.Generic;
@@ -20,14 +21,20 @@ public class CaeliImperiumTitleController : MonoBehaviour
     public static Vector3 RefineryScale = new Vector3(-3f, 3f, 3f);
     public static Vector3 CameraPosition = Vector3.zero;
     public static Vector3 CameraRotation = new Vector3(15f, 0f, 0f);
-    public Image logoImage;
-    public Sprite previousLogoSprite;
-    public PostProcessVolume postProcessVolume;
-    public bool applied;
-    public bool init;
-    public GameObject resourceWell1;
-    public GameObject refinery;
-    public CameraOverride cameraOverride;
+    [HideInInspector] public Image logoImage;
+    [HideInInspector] public Sprite previousLogoSprite;
+    [HideInInspector] public PostProcessVolume postProcessVolume;
+    [HideInInspector] public bool applied;
+    [HideInInspector] public bool init;
+    [HideInInspector] public GameObject resourceWell1;
+    [HideInInspector] public GameObject refinery;
+    public PostProcessVolume whooshPostProcessVolume;
+    public PostProcessDuration whooshPostProcessDuration;
+    public ShakeEmitter beatShakeEmitter;
+    public float beatShakeDelay;
+    public float beatShakeRadius;
+    public float beatShakeFrequency;
+    public float beatShakeAmplitude;
     public void Awake()
     {
         if (init) return;
@@ -46,15 +53,8 @@ public class CaeliImperiumTitleController : MonoBehaviour
                 this.postProcessVolume.enabled = false;
             }
         }
-        cameraOverride = new GameObject("CameraOverride", [typeof(CameraOverride)]).GetComponent<CameraOverride>();
-        cameraOverride.getCameraStateDelegate += CameraOverride_getCameraStateDelegate;
-        cameraOverride.doesntNeedCharacterBody = true;
+        if (whooshPostProcessDuration) whooshPostProcessDuration.stopwatch = whooshPostProcessDuration.maxDuration;
         init = true;
-    }
-
-    private void CameraOverride_getCameraStateDelegate(CameraRigController cameraRigController, ref CameraState state)
-    {
-        state.position = transform.position;
     }
 
     public void Update()
@@ -72,13 +72,13 @@ public class CaeliImperiumTitleController : MonoBehaviour
     {
         if (applied) return;
         applied = true;
+        R2API.SoundAPI.onMusicCallback += SoundAPI_onMusicCallback;
         if (logoImage)
         {
             previousLogoSprite = logoImage.sprite;
             logoImage.sprite = CaeliImperiumAssets.CaeliImperiumLogo;
         }
         if (postProcessVolume) postProcessVolume.enabled = true;
-        if (cameraOverride) cameraOverride.UpdateCameras(null);
         if (!PipelineRefineryEvents.init) return;
         if (resourceWell1)
         {
@@ -109,14 +109,31 @@ public class CaeliImperiumTitleController : MonoBehaviour
             refinery.transform.localScale = RefineryScale;
         }
     }
+
+    private void SoundAPI_onMusicCallback(object in_cookie, AkCallbackType in_type, AkMusicSyncCallbackInfo akMusicSyncCallbackInfo)
+    {
+        if (in_type != AkCallbackType.AK_MusicSyncUserCue) return;
+        switch (akMusicSyncCallbackInfo.userCueName)
+        {
+            case "Whoosh":
+                if (whooshPostProcessDuration) whooshPostProcessDuration.stopwatch = 0f;
+                break;
+            case "Beat":
+                beatShakeEmitter.Shake(beatShakeDelay, beatShakeRadius, beatShakeFrequency, beatShakeAmplitude);
+                break;
+            default:
+                break;
+        }
+    }
+
     public void Revert()
     {
         if (!applied) return;
         applied = false;
+        R2API.SoundAPI.onMusicCallback -= SoundAPI_onMusicCallback;
         if (logoImage) logoImage.sprite = previousLogoSprite;
         if (postProcessVolume) postProcessVolume.enabled = false;
         if (resourceWell1) resourceWell1.SetActive(false);
         if (refinery) refinery.SetActive(false);
-        if (cameraOverride) cameraOverride.UpdateCameras(null);
     }
 }

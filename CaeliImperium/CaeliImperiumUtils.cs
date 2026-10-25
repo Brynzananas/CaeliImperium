@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using BrynzaAPI;
 using CaeliImperium.Bodies;
 using CaeliImperium.Components;
+using CaeliImperium.Components.MonsterChest;
 using CaeliImperium.Components.Refinery;
 using CaeliImperium.Configs;
 using CaeliImperium.Interactables;
@@ -578,6 +579,23 @@ public static class CaeliImperiumUtils
         float oneMinusT = 1f - t;
         return 3f * oneMinusT * oneMinusT * (p1 - p0) + 6f * oneMinusT * t * (p2 - p1) + 3f * t * t * (p3 - p2);
     }
+    private static readonly float[] GaussPositions = {
+        -0.9061798459f, -0.5384693101f, 0.0f, 0.5384693101f, 0.9061798459f
+    };
+    private static readonly float[] GaussWeights = {
+        0.2369268851f, 0.4786286705f, 0.5688888889f, 0.4786286705f, 0.2369268851f
+    };
+    public static float BezierGetLength(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
+    {
+        float length = 0f;
+        for (int i = 0; i < GaussPositions.Length; i++)
+        {
+            float t = 0.5f * (GaussPositions[i] + 1f);
+            Vector3 derivative = BezierGetFirstDerivative(p0, p1, p2, p3, t);
+            length += GaussWeights[i] * derivative.magnitude;
+        }
+        return 0.5f * length;
+    }
     public static Ray GetAimRay(this CharacterBody characterBody)
     {
         if (characterBody.inputBank) return new Ray(characterBody.inputBank.aimOrigin, characterBody.inputBank.aimDirection);
@@ -731,7 +749,7 @@ public static class CaeliImperiumUtils
         int spawnCount = 0;
         float spawmChance = 0f;
         Scene scene = SceneManager.GetActiveScene();
-        InteractableSpawnRules.SpawnRule spawnRule = monsterChestSpawnRules.GetSpawnRule(Run.instance.stageClearCountInCurrentLoop + 1, scene == null ? null : scene.name, sceneDef);
+        InteractableSpawnRules.SpawnRule spawnRule = monsterChestSpawnRules.GetSpawnRule(Run.instance.stageClearCount + 1, scene == null ? null : scene.name, sceneDef);
         spawmChance = spawnRule.spawnChance;
         spawnCount = spawnRule.spawnCount;
         if (spawnCount <= 0 || spawmChance <= 0f) return;
@@ -978,9 +996,8 @@ public static class CaeliImperiumUtils
         {
             if (entityStateMachine.customName == "Body")
             {
-                if (entityStateMachine.state is StunState)
+                if (entityStateMachine.state is StunState stunState)
                 {
-                    StunState stunState = entityStateMachine.state as StunState;
                     if (stunState.timeRemaining < duration) stunState.ExtendStun(duration - stunState.timeRemaining);
                 }
                 else
@@ -1133,14 +1150,14 @@ public static class CaeliImperiumUtils
     }
     public static bool SelectedBishopSurvivor()
     {
-        if (!BishopEvents.Bishop) return false;
+        if (!DoomguyEvents.Doomguy) return false;
         LocalUser localUser = LocalUserManager.GetFirstLocalUser();
         if (localUser == null) return false;
         UserProfile userProfile = localUser.userProfile;
         if (userProfile == null) return false;
         SurvivorDef selectedSurvivor = userProfile.GetSurvivorPreference();
         if (!selectedSurvivor) return false;
-        if (selectedSurvivor == BishopEvents.Bishop) return true;
+        if (selectedSurvivor == DoomguyEvents.Doomguy) return true;
         return false;
     }
     public static GameObject GetProjectileGhost(GameObject gameObject)
@@ -1194,6 +1211,76 @@ public static class CaeliImperiumUtils
         target.isTrigger = source.isTrigger;
         target.sharedMaterial = source.sharedMaterial;
         target.enabled = source.enabled;
+    }
+    public static Vector3[] GetCircleDirections(int count, Vector3 startDirection, Vector3 rotateAxis)
+    {
+        if (count <= 0) return new Vector3[0];
+        Vector3[] directions = new Vector3[count];
+        float angleStep = 360f / count;
+        Vector3 normalizedAxis = rotateAxis.normalized;
+        for (int i = 0; i < count; i++)
+        {
+            float currentAngle = i * angleStep;
+            Quaternion rotation = Quaternion.AngleAxis(currentAngle, normalizedAxis);
+            directions[i] = rotation * startDirection;
+        }
+        return directions;
+    }
+    public static void Shake(this ShakeEmitter shakeEmitter, float duration, float radius, float frequency, float amplitude)
+    {
+        if (!shakeEmitter) return;
+        shakeEmitter.duration = duration;
+        shakeEmitter.stopwatch = 0f;
+        shakeEmitter.wave.frequency = frequency;
+        shakeEmitter.wave.amplitude = amplitude;
+        shakeEmitter.radius = radius;
+    }
+    public static bool IsDoom()
+    {
+        if (Run.instance)
+        {
+            return Run.instance.IsDoom();
+        }
+        else
+        {
+            return false;
+        }
+    }
+    public static bool IsDoom(this Run run)
+    {
+        if (DoomguyEvents.init && run.selectedDifficulty == DoomguyEvents.HurtMePlentyDifficultyIndex)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    public static DifficultyDef CreateDifficulty(float scalingValue, string nameToken, string descriptionToken, Sprite iconSprite, Color color, string serverTag, bool countsAsHard, out DifficultyIndex difficultyIndex)
+    {
+        DifficultyDef difficultyDef = new DifficultyDef(scalingValue, nameToken, null, descriptionToken, color, serverTag, countsAsHard);
+        difficultyDef.foundIconSprite = iconSprite;
+        difficultyDef.iconSprite = iconSprite;
+        difficultyIndex = R2API.DifficultyAPI.AddDifficulty(difficultyDef);
+        return difficultyDef;
+    }
+    public static bool AnyoneSelectedDoomguy()
+    {
+        if (!DoomguyEvents.init) return false;
+        bool foundBishop = false;
+        foreach (NetworkUser networkUser in NetworkUser.instancesList)
+        {
+            if (!networkUser) continue;
+            SurvivorDef survivorDef = networkUser.GetSurvivorPreference();
+            if (!survivorDef) continue;
+            if (survivorDef == DoomguyEvents.Doomguy)
+            {
+                foundBishop = true;
+                break;
+            }
+        }
+        return foundBishop;
     }
 }
  

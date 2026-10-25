@@ -16,6 +16,7 @@ using CaeliImperium.Stages;
 using CaeliImperium.Components;
 using CaeliImperium.ScriptableObjects;
 using UnityEngine.Rendering.PostProcessing;
+using CaeliImperium.Configs;
 
 namespace CaeliImperium;
 
@@ -65,6 +66,8 @@ public static class CaeliImperiumAssets
     public static GameObject MiniVoidRaidCrabPhase1Body;
     public static GameObject MiniVoidRaidCrabPhase2Body;
     public static GameObject MiniVoidRaidCrabPhase3Body;
+    public static GameObject ReaperBody;
+    public static GameObject ProvidenceBody;
     public static GameObject SimpleDotCrosshair;
     public static CharacterCameraParams StandardCharacterCameraParams;
     public static CharacterCameraParams StandardHugeCharacterCameraParams;
@@ -108,6 +111,7 @@ public static class CaeliImperiumAssets
     public static SurfaceDef MetalSurface;
     public static GameObject GlitchHUD;
     public static GameObject VoiceMessage;
+    public static GameObject TitleController;
     public static Action<Material> onMaterialFound;
     public static R2API.DamageAPI.ModdedDamageType CannotHitstun;
     public static void Init()
@@ -163,6 +167,8 @@ public static class CaeliImperiumAssets
         MiniVoidRaidCrabPhase1Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase1_prefab).WaitForCompletion();
         MiniVoidRaidCrabPhase2Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase2_prefab).WaitForCompletion();
         MiniVoidRaidCrabPhase3Body = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_VoidRaidCrab.MiniVoidRaidCrabBodyPhase3_prefab).WaitForCompletion();
+        ReaperBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC4_ReaperBoss.ReaperBossBody_prefab).WaitForCompletion();
+        ProvidenceBody = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC4.ProvBody_prefab).WaitForCompletion();
         LoaderExplosion = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Loader.LoaderGroundSlam_prefab).WaitForCompletion();
         HuntressArrowRainIndicator = Addressables.LoadAssetAsync<GameObject>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Huntress.HuntressArrowRainIndicator_prefab).WaitForCompletion();
         GenericFootstepDust = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Common/VFX/GenericFootstepDust.prefab").WaitForCompletion();
@@ -186,6 +192,7 @@ public static class CaeliImperiumAssets
         NestPP = Addressables.LoadAssetAsync<PostProcessProfile>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC3_nest.ppSceneNest_asset).WaitForCompletion();
         GlitchHUD = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/GlitchHUD.prefab");
         VoiceMessage = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Prefabs/VoiceMessage.prefab");
+        TitleController = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/CaeliImperiumTitleController.prefab");
         CaeliImperiumMainMenuMusic = assetBundle.LoadAsset<CIMusicTrackDef>("Assets/CaeliImperium/cmtdCIMainMenu.asset");
         CaeliImperiumLogo = assetBundle.LoadAsset<Sprite>("Assets/CaeliImperium/caeliLogo1.png");
         SuperSecretScreamEffect = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Effects/SuperSecretScreamEffect.prefab").RegisterEffect();
@@ -197,7 +204,7 @@ public static class CaeliImperiumAssets
         BomberWisp2Events.BodyPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/BomberWisp2/CIBomberWisp2Body.prefab").RegisterBody(BomberWisp2Events.Init, Configs.BomberWispConfigs.sectionName);
         //ClaySwordsmanEvents.BodyPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/ClaySwordsman/CIClaySwordsmanBody.prefab").RegisterBody(ClaySwordsmanEvents.Init);
         //VictorEvents.BodyPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Victor/Character/CIVictorBody.prefab").RegisterBody(VictorEvents.Init);
-        BishopEvents.BodyPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Bishop/CIBishopBody.prefab").RegisterBody(BishopEvents.Init);
+        if (CaeliImperiumConfigs.AlphaContent.Value) DoomguyEvents.BodyPrefab = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Bodies/Doomguy/CIDoomguyBody.prefab").RegisterBody(DoomguyEvents.Init);
         CannotbeCraftedFromMonsterChest = ItemAPI.AddItemTag("CannotbeCraftedFromMonsterChest");
         MonsterChestEvents.MonsterChest = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Interactables/MonsterChest/MonsterChest.prefab").RegisterNetworkPrefab(MonsterChestEvents.Init, Configs.MonsterChestConfigs.sectionName);
         PipelineRefineryEvents.PipelineRefinery = assetBundle.LoadAsset<GameObject>("Assets/CaeliImperium/Interactables/PipelineRefinery/Refinery/PipelineRefinery.prefab").RegisterNetworkPrefab(PipelineRefineryEvents.Init);
@@ -238,7 +245,6 @@ public static class CaeliImperiumAssets
             addContentPackProvider(new CaeliImperiumContent());
         };
     }
-    
 }
 public enum BaseFootstepDustType
 {

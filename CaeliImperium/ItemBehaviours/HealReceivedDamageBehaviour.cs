@@ -1,7 +1,9 @@
 ﻿using CaeliImperium.Items;
 using CaeliImperium.NetworkMessages;
 using R2API.Networking.Interfaces;
+using R2API.Utils;
 using RoR2;
+using RoR2.Items;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +11,7 @@ using UnityEngine;
 
 namespace CaeliImperium.ItemBehaviours
 {
-    public class HealReceivedDamageBehaviour : CharacterBody.ItemBehavior
+    public class HealReceivedDamageBehaviour : BaseItemBodyBehavior
     {
         public List<HealReceivedDamage> healReceivedDamageBits = [];
         private float healRate;
@@ -27,6 +29,8 @@ namespace CaeliImperium.ItemBehaviours
             {
             }
         }
+        [BaseItemBodyBehavior.ItemDefAssociationAttribute(useOnServer = true, useOnClient = false)]
+        private static ItemDef GetItemDef() => CaeliImperiumContent.Items.HealReceivedDamage;
         public void OnEnable()
         {
             GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
@@ -36,7 +40,7 @@ namespace CaeliImperium.ItemBehaviours
             if (!body || obj.victimBody != body) return;
             float time = HealReceivedDamageEvents.HealReceivedDamageTime;
             for (int i = 0; i < stack; i++) time -= time * (HealReceivedDamageEvents.HealReceivedDamageStackTimeReduction / 100f);
-            float coefficient = stack.Stack(HealReceivedDamageEvents.HealReceivedHealCoefficient, HealReceivedDamageEvents.HealReceivedHealCoefficientPerStack);
+            float coefficient = Mathf.Min(stack.Stack(HealReceivedDamageEvents.HealReceivedHealCoefficient, HealReceivedDamageEvents.HealReceivedHealCoefficientPerStack), HealReceivedDamageEvents.HealReceivedMaxHealCoefficient);
             AddHealReceivedDamageBit(obj.damageDealt * coefficient, time);
         }
         public void OnDisable()

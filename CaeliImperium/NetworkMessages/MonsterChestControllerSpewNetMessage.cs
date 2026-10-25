@@ -1,4 +1,4 @@
-﻿using CaeliImperium.Components;
+﻿using CaeliImperium.Components.MonsterChest;
 using R2API.Networking.Interfaces;
 using UnityEngine.Networking;
 
