@@ -805,7 +805,7 @@ public static class DoomguyEvents
     {
         if (!arg1.GetEventFlag("BishopRun")) return;
         arg1.availableItems.Clear();
-        foreach (string itemName in purgeItems)
+        foreach (string itemName in keepItems)
         {
             if (itemName.IsNullOrWhiteSpace()) continue;
             ItemIndex itemIndex = ItemCatalog.FindItemIndex(itemName);
@@ -813,7 +813,7 @@ public static class DoomguyEvents
             arg1.availableItems.Add(itemIndex);
         }
         arg1.availableDrones.Clear();
-        foreach (string droneName in purgeClankers)
+        foreach (string droneName in keepClankers)
         {
             if (droneName.IsNullOrWhiteSpace()) continue;
             DroneIndex droneIndex = DroneCatalog.FindDroneIndex(droneName);
@@ -821,7 +821,7 @@ public static class DoomguyEvents
             arg1.availableDrones.Add(droneIndex);
         }
         arg1.availableEquipment.Clear();
-        foreach (string equipmentName in purgeEquipments)
+        foreach (string equipmentName in keepEquipments)
         {
             if (equipmentName.IsNullOrWhiteSpace()) continue;
             EquipmentIndex equipmentIndex = EquipmentCatalog.FindEquipmentIndex(equipmentName);
