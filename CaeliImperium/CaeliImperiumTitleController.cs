@@ -72,7 +72,7 @@ public class CaeliImperiumTitleController : MonoBehaviour
     {
         if (applied) return;
         applied = true;
-        R2API.SoundAPI.onMusicCallback += SoundAPI_onMusicCallback;
+        //R2API.SoundAPI.onMusicCallback += SoundAPI_onMusicCallback;
         if (logoImage)
         {
             previousLogoSprite = logoImage.sprite;
@@ -130,7 +130,7 @@ public class CaeliImperiumTitleController : MonoBehaviour
     {
         if (!applied) return;
         applied = false;
-        R2API.SoundAPI.onMusicCallback -= SoundAPI_onMusicCallback;
+        //R2API.SoundAPI.onMusicCallback -= SoundAPI_onMusicCallback;
         if (logoImage) logoImage.sprite = previousLogoSprite;
         if (postProcessVolume) postProcessVolume.enabled = false;
         if (resourceWell1) resourceWell1.SetActive(false);
