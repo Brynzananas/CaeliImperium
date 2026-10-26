@@ -1238,7 +1238,12 @@ public static class DoomguyEvents
                     damageInfo.rejected = true;
                     return;
                 }
-                if (self.body.HasBuff(Dodge)) return;
+                if (self.body.HasBuff(Dodge))
+                {
+                    damageInfo.rejected = true;
+                    return;
+                }
+                
             }
         }
         orig(self, damageInfo);
