@@ -155,8 +155,8 @@ namespace CaeliImperium
 "Knockback: <style=cIsDamage>Gone</style>\n" +
 "Drones, Items And Equipments: <style=cIsDamage>Repooled</style>. <style=cIsHealth>-75% damage. Cannot stun, shock, immobilize and freeze</style>\n" +
 "Monsters: <style=cIsHealth>Do not target minions</style>\n" +
-"Heavy Monsters Health: <style=cIsHealth>+100%</style>\n" +
-"Boss Monsters Health: <style=cIsHealth>+200%</style>\n" +
+"Heavy Monsters Health: <style=cIsHealth>+60%</style>\n" +
+"Boss Monsters Health: <style=cIsHealth>+120%</style>\n" +
 "Printers And Scrappers: <style=cIsHealth>Gone</style>\n" +
 "Void And Lunar Items: <style=cIsHealth>Gone</style>\n" +
 "Weak Monsters: <style=cIsHealth>Gone</style>\n" +
@@ -170,8 +170,8 @@ namespace CaeliImperium
 "Отброс: <style=cIsDamage>Отсутствует</style>\n" +
 "Дроны, Предметы и Снарядение: <style=cIsDamage>Пересобранны</style>. <style=cIsHealth>-75% урона. Не могут замораживать, оглушать и шокрировать</style>\n" +
 "Монстры: <style=cIsHealth>Больше не атакуют приспешников</style>\n" +
-"Здоровье Тяжелых Монстров: <style=cIsHealth>+100%</style>\n" +
-"Здоровье Босс Монстров: <style=cIsHealth>+200%</style>\n" +
+"Здоровье Тяжелых Монстров: <style=cIsHealth>+60%</style>\n" +
+"Здоровье Босс Монстров: <style=cIsHealth>+120%</style>\n" +
 "Принтеры и Разборщики: <style=cIsHealth>Отсутствуют</style>\n" +
 "Лунные и Пустотные Предметы: <style=cIsHealth>Отсутствуют</style>\n" +
 "Слабые Монстры: <style=cIsHealth>Отсутствуют</style>\n" +

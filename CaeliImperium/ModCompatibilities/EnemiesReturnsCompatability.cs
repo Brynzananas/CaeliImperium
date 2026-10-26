@@ -51,13 +51,13 @@ public static class EnemiesReturnsCompatability
 
     private static void OnLoadFinished()
     {
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.BaseFire.projectilePrefab);
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab);
-        SetCustomProjectileSpeedMultiplier(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab, 1f);
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.trackingProjectilePrefab);
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile.groundpoundProjectilePrefab);
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit.projectilePrefab);
-        AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab);
-        SetCustomProjectileSpeedMultiplier(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab, 1f);
+        if (EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.BaseFire.projectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.MechanicalSpider.DoubleShot.BaseFire.projectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab) SetCustomProjectileSpeedMultiplier(EnemiesReturns.ModdedEntityStates.LynxTribe.Archer.FireArrow.projectilePrefab, 1f);
+        if (EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.trackingProjectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Shaman.SummonTrackingProjectilesShotgun.trackingProjectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile.groundpoundProjectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.LynxTribe.Totem.GroundpoundProjectile.groundpoundProjectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit.projectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.ArcherBugs.FireCausticSpit.projectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab) AddParriableProjectileGhostFromProjectile(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab);
+        if (EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab) SetCustomProjectileSpeedMultiplier(EnemiesReturns.ModdedEntityStates.Spitter.FireChargedSpit.projectilePrefab, 1f);
     }
 }

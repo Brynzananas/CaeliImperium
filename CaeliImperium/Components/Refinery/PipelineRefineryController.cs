@@ -308,7 +308,7 @@ public class PipelineRefineryController : NetworkBehaviour, IInteractable
         {
             UniquePickup pickup2 = pickup;
             PickupDropletController.CreatePickupDroplet(pickup2, dropPosition.position, vector, false);
-            if (PipelineRefineryConfigs.PipelineRefineryRerollEachItem != null && PipelineRefineryConfigs.PipelineRefineryRerollEachItem.Value) RerollRewardItem(ref pickup2, rng);
+            if (PipelineRefineryConfigs.PipelineRefineryRerollEachItem != null && PipelineRefineryConfigs.PipelineRefineryRerollEachItem.Value) RerollRewardItem(ref pickup, rng);
             num2++;
             vector = quaternion * vector;
         }

@@ -138,8 +138,8 @@ public static class DoomguyEvents
     public static float FlyingEnemiesBelowCeiling = 4f;
     public static float FlyingEnemiesUpdateInterval = 0.1f;
     public static float FlyingEnemiesMaxMoveSpeed = 24f;
-    public static float HeavyHealthMultiplier = 2f;
-    public static float BossHealthMultiplier = 3f;
+    public static float HeavyHealthMultiplier = 1.6f;
+    public static float BossHealthMultiplier = 2.2f;
     public static float ChampRushDurationMultiplier = 3f;
     public static float OverrideAimAssist = 10f;
     public static event Action<OnParryInfo> onParry;
@@ -164,14 +164,15 @@ public static class DoomguyEvents
     private static Dictionary<ProjectileController, float> customProjectileSpeedMultiplier = [];
     private static Dictionary<int, float> runtimeCustomProjectileSpeedMultiplier = [];
     private static bool projectilesCatalogInit;
-    private static HashSet<string> purgeMonstersAndInteractables = new HashSet<string> { "BeetleMaster", "WispMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster", "MagmaWormMaster", "ElectricWormMaster" , "HermitCrabMaster", "PipelineRefinery", "VoidChest", "ShrineRebirth", "Shrine of Ruin", "ProvShrine", "Duplicator", "DuplicatorLarge", "DuplicatorMilitary", "DuplicatorWild", "Scrapper", "repairStation", "ShrinePlanet", "Barrel1" };
+    private static HashSet<string> purgeMonstersAndInteractables = new HashSet<string> { "BeetleMaster", "WispMaster" ,"GipMaster", "GeepMaster", "GupMaster", "JellyfishMaster", "AcidLarvaMaster", "MegaConstructMaster", "MagmaWormMaster", "ElectricWormMaster" , "HermitCrabMaster", "PipelineRefinery", "VoidChest", "ShrineRebirth", "Shrine of Ruin", "ProvShrine", "Duplicator", "DuplicatorLarge", "DuplicatorMilitary", "DuplicatorWild", "Scrapper", "repairStation", "ShrinePlanet", "Barrel1", "DroneScrapper" };
     private static HashSet<string> purgeItems = new HashSet<string> { "Clover", "StunChanceOnHit", "Mushroom", "SecondarySkillMagazine", "FlatHealth", "Firework", "HealingPotion", "GoldOnHurt", "WardOnLevel", "Missile", "DronesDropDynamite", "BonusGoldPackOnKill", "ExecuteLowHealthElite", "Phasing", "ExtraStatsOnLevelUp", "StrengthenBurn", "LowerPricedChests", "FreeChest", "Thorns", "SprintOutOfCombat", "RegeneratingScrap", "Squid", "ExtraShrineItem", "ChainLightning", "RandomEquipmentTrigger", "StunAndPierce", "GhostOnKill", "PhysicsProjectile", "MoreMissile", "MeteorAttackOnHighDamage", "ItemDropChanceOnKill", "DroneWeapons", "ShockNearby", "Icicle", "HeadHunter", "BarrageOnBoss", "CritGlassesVoid", "ChainLightningVoid", "ArmedBackpack", "Diary", "Malice", "UniversalCharger", "X4", "UraniumHorseshoe", "CrypticSource", "LowQualitySpeakers", "LightningOnKill", "JetBoots", "WatchMetronome", "DroidHead", "ErraticGadget", "GalvanicCore", "NkotasHeritage", "PortableReactor", "SwiftSkateboard", "IceTool", "BlastKnuckles", "PoisonousGland", "InfiniteSecondarySkillCharges", "ITEM_SANDSWEPT_AMBER_KNIFE", "ITEM_SANDSWEPT_TEMPORAL_TRANSISTOR", "ITEM_SANDSWEPT_FRACTURED_TIMEPIECE", "ITEM_SANDSWEPT_CROWNS_DIAMOND", "ITEM_SANDSWEPT_SUN_FRAGMENT", "ITEM_SANDSWEPT_DRIFTING_PERCEPTION", "ITEM_SANDSWEPT_NUCLEAR_SALVO", "ITEM_SANDSWEPT_UNIVERSAL_VIP_PASS", "ITEM_SANDSWEPT_TORN_FEATHER", "ITEM_SANDSWEPT_GLACIAL_PLASMA", "HermitsShawl", "SecondHand", "SpaciousUmbrella", "TargetingMatrix", "RadiantTimepiece", "ITEM_CALENDAR", "ITEM_ARSON", "ITEM_BloodMask", "ITEM_BLUELEMURIAN", "ITEM_INFINITYCODEX", "ProcBoost", "GlassShield", "FlatHealingIncrease", "HealOnCooldown", "DebuffBoss", "GoldStar", "UpgradeChests", "DropYellowItemOnKill", "HealOnLevelUp", "RuneChance", "RevengeDamageBonus", "Placebo", "FrenzyOnBossKill", "ITEM_AOEONCRIT", "ITEM_CLOUDBOTTLE", "ITEM_FARTBOTTLE", "ITEM_DISCOUNTCARDNEW", "ITEM_BOSSITEMCONSUMABLE", "ITEM_BORBOFUSE", "ITEM_GAMMAKNIF", "ITEM_BORBODISCOUNT", "ITEM_KALEIDOSKULL", "ITEM_LIGHTNINGATTRACTOR", "ITEM_MAGICQUIVER", "ITEM_GOODEXECUTIONITEM", "ITEM_PHOTOGRAPH", "BlastBoot", "itembarriercrit", "itemenigmatickeycard", "EXPEDITION_PAPERDOG", "EXPEDITION_NITROGEN", "EXPEDITION_MRE", "EXPEDITION_TRASHBOX", "EXPEDITION_GEOLOCATOR", "EXPEDITION_SMILINGPLANT", "EXPEDITION_REDGUITAR", "EXPEDITION_COMPASS" };
-    private static HashSet<string> keepItems = new HashSet<string> { "BossDamageBonus", "AttackSpeedPerNearbyAllyOrEnemy", "HealWhileSafe", "IncreaseDamageOnMultiKill", "BarrierOnCooldown", "SpeedBoostPickup", "NearbyDamageBonus", "Crowbar", "IgniteOnKill", "CritAtLowerElevation", "CritGlasses", "Medkit", "AttackSpeedAndMoveSpeed", "Tooth", "OutOfCombatArmor", "PersonalShield", "ArmorPlate", "Syringe", "StickyBomb", "BarrierOnKill", "Bear", "BleedOnHit", "DelayedDamage", "Bandolier", "WarCryOnMultiKill", "KnockBackHitEnemies", "SlowOnHit", "SpeedOnPickup", "DeathMark", "Feather", "Infusion", "ShieldBooster", "FireRing", "IncreasePrimaryDamage", "DrawSpeedPath", "HealReceivedDamage", "TriggerEnemyDebuffs", "AttackSpeedOnCrit", "SprintArmor", "IceRing", "TeleportOnLowHealth", "EnergizedOnEquipmentUse", "JumpBoost", "ExplodeOnDeath", "AlienHead", "KillEliteFrenzy", "Behemoth", "BoostAllStats", "UtilitySkillMagazine", "Plant", "CritDamage", "NovaOnHeal", "SharedSuffering", "IncreaseHealing", "LaserTurbine", "BounceNearby", "ArmorReductionOnHit", "Talisman", "PermanentDebuffOnHit", "BloodTester", "CoffeeBag", "DetritiveTrematode", "Fork", "GuardingAmulet", "MoltenCoin", "Needles", "HuntersSigil", "StrangeCan", "GreenChocolate", "Insecticide", "ITEM_SANDSWEPT_RED_SPRING_WATER", "ITEM_SANDSWEPT_CEREMONIAL_JAR", "ITEM_SANDSWEPT_POCKET_PLUTONIUM", "ITEM_SANDSWEPT_SACRIFICIAL_BAND", "ITEM_SANDSWEPT_SMOULDERING_DOCUMENT", "EXPEDITION_FEATHER", "EXPEDITION_SHITTYCAPE", "EXPEDITION_BIODUDE" };
+    private static HashSet<string> keepItems = new HashSet<string> { "BossDamageBonus", "AttackSpeedPerNearbyAllyOrEnemy", "HealWhileSafe", "IncreaseDamageOnMultiKill", "BarrierOnCooldown", "SpeedBoostPickup", "NearbyDamageBonus", "Crowbar", "IgniteOnKill", "CritAtLowerElevation", "CritGlasses", "Medkit", "AttackSpeedAndMoveSpeed", "Tooth", "OutOfCombatArmor", "PersonalShield", "ArmorPlate", "Syringe", "StickyBomb", "BarrierOnKill", "Bear", "BleedOnHit", "DelayedDamage", "Bandolier", "WarCryOnMultiKill", "KnockBackHitEnemies", "SlowOnHit", "SpeedOnPickup", "DeathMark", "Feather", "Infusion", "ShieldBooster", "FireRing", "IncreasePrimaryDamage", "DrawSpeedPath", "HealReceivedDamage", "TriggerEnemyDebuffs", "AttackSpeedOnCrit", "SprintArmor", "IceRing", "TeleportOnLowHealth", "EnergizedOnEquipmentUse", "JumpBoost", "ExplodeOnDeath", "AlienHead", "KillEliteFrenzy", "Behemoth", "BoostAllStats", "UtilitySkillMagazine", "Plant", "CritDamage", "NovaOnHeal", "SharedSuffering", "IncreaseHealing", "LaserTurbine", "BounceNearby", "ArmorReductionOnHit", "Talisman", "PermanentDebuffOnHit", "BloodTester", "CoffeeBag", "DetritiveTrematode", "Fork", "GuardingAmulet", "MoltenCoin", "Needles", "HuntersSigil", "StrangeCan", "GreenChocolate", "Insecticide", "ITEM_SANDSWEPT_RED_SPRING_WATER", "ITEM_SANDSWEPT_CEREMONIAL_JAR", "ITEM_SANDSWEPT_POCKET_PLUTONIUM", "ITEM_SANDSWEPT_SACRIFICIAL_BAND", "ITEM_SANDSWEPT_SMOULDERING_DOCUMENT", "EXPEDITION_FEATHER", "EXPEDITION_SHITTYCAPE", "EXPEDITION_BIODUDE", "SlipperyGround", "LowerHealing", "HexHaunting", "RoamingItemDisable", "RoamingItemDisable", "Mimicry", "HexCurse", "OutOfTPRadius", "IncreasedDifficulty", "HexMountain", "DreamDemon", "SanguineChalice", "GhostBlades", "VengefulSpirit", "VileCenser", "PageClarity", "PagePurify", "PageDie", "PageTeamInvisibility", "PageWarpGate" };
     private static HashSet<string> purgeEquipments = new HashSet<string> { "MIDAS", "Magnet", "WhiteFlag", "Parry", "CommandMissile", "MultiShopCard", "GummyClone", "Blackhole", "Recycle", "DroneBackup", "GoldGat", "BossHunter", "GALVANIC_CELL_SHIELD", "ImpulseFrostShield", "DeathImmunity", "SlowTime", "FireBurstOnFreeze", "EQUIPMENT_NINJAGEAR", "EQUIPMENT_QUICKSTARTEQUIPMENT", "EQUIPMENT_THEMACHINE", "EQUIPMENT_BROKENZAPINATOR" };
     private static HashSet<string> keepEquipments = ["Cleanse", "Gateway", "Fruit", "PassiveHealing", "TeamWarCry", "GainArmor", "Jetpack", "Molotov", "CritOnUse", "BFG", "VendingMachine", "Lightning", "Saw", "LifestealOnHit", "FireBallDash", "BackThruster", "CloakingHeadband", "GreaterWarbanner", "EQUIPMENT_SANDSWEPT_THE_SAND_SWEEPER", "EXPEDITION_TERRAFORMER"];
     private static HashSet<string> purgeClankers = new HashSet<string> { "Drone1", "FlameDrone", "MissileDrone", "HaulerDrone", "JunkDrone", "MegaDrone", "Turret1", "CopycatDrone", "EquipmentDrone", "BombardmentDrone", "ddVoltaicDroneBody", "ddInfernoDroneBody", "ddCloneDrone", "ddDroidDrone", "ddShockDrone", "ER_EnemiesReturnsMechanicalSpiderDrone" };
     private static HashSet<string> keepClankers = ["RechargeDrone", "CleanupDrone", "Drone2", "JailerDrone", "EmergencyDrone"];
     private static HashSet<ItemTier> bannedItemTiers = new HashSet<ItemTier> { ItemTier.VoidTier1, ItemTier.Lunar, ItemTier.VoidTier2, ItemTier.VoidTier3, ItemTier.VoidBoss };
+    private static HashSet<ItemTierDef> bannedItemTierDefs = [CaeliImperiumAssets.VoidTier1, CaeliImperiumAssets.VoidTier2, CaeliImperiumAssets.VoidTier3, CaeliImperiumAssets.Lunar];
     public static void Init(GameObject gameObject)
     {
         On.RoR2.HealthComponent.Heal += HealthComponent_Heal;
@@ -479,7 +480,7 @@ public static class DoomguyEvents
                     if (pickupDef.itemIndex != ItemIndex.None)
                     {
                         ItemDef itemDef = ItemCatalog.GetItemDef(pickupDef.itemIndex);
-                        if (itemDef && bannedItemTiers.Contains(itemDef.tier)) return;
+                        if (itemDef && bannedItemTierDefs.Contains(itemDef._itemTierDef)) return;
                     }
                     if (pickupDef.equipmentIndex != EquipmentIndex.None)
                     {
@@ -582,7 +583,7 @@ public static class DoomguyEvents
         if (!characterBody || !characterBody.HasModdedBodyFlag(DoomguyBodyFlag)) return count;
         ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
         if (!itemDef) return count;
-        if (bannedItemTiers.Contains(itemDef.tier)) return 0;
+        if (bannedItemTierDefs.Contains(itemDef._itemTierDef)) return 0;
         return count;
     }
 
@@ -1234,6 +1235,7 @@ public static class DoomguyEvents
                 if (self.body.HasBuff(Parry))
                 {
                     OnParry(self.body, damageInfo);
+                    damageInfo.rejected = true;
                     return;
                 }
                 if (self.body.HasBuff(Dodge)) return;

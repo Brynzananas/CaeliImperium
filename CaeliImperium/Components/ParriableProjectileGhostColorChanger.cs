@@ -66,6 +66,11 @@ public class ParriableProjectileGhostColorChanger : MonoBehaviour
         parriableMaterial = null;
         if (!keyValuePairs.TryGetValue(material, out parriableMaterial))
         {
+            if (material.shader.name == "Hopoo Games/FX/Distortion")
+            {
+                parriableMaterial = material;
+                keyValuePairs[material] = parriableMaterial;
+            }
             bool isRemap = remapShaderNames.Contains(material.shader.name);
             Texture2D texture2D;
             if (isRemap)
@@ -80,7 +85,7 @@ public class ParriableProjectileGhostColorChanger : MonoBehaviour
                     texture2D = null;
                 }
             }
-            else if (material.mainTexture && material.mainTexture is Texture2D texture21)
+            else if (material.HasTexture("_MainTex") && material.mainTexture && material.mainTexture is Texture2D texture21)
             {
                 texture2D = texture21;
             }
@@ -90,20 +95,20 @@ public class ParriableProjectileGhostColorChanger : MonoBehaviour
             }
             if (!texture2D)
             {
-                keyValuePairs.Add(material, material);
+                keyValuePairs[material] = material;
                 return;
             }
             if (!keyValuePairs1.TryGetValue(texture2D, out Texture2D texture2D1))
             {
                 texture2D1 = texture2D.ApplyGradientToTexture(gradient);
-                keyValuePairs1.Add(texture2D, texture2D1);
+                keyValuePairs1[texture2D] = texture2D1;
             }
             parriableMaterial = GameObject.Instantiate(material);
             if (isRemap)
             {
                 parriableMaterial.SetTexture("_RemapTex", texture2D1);
             }
-            else
+            else if (material.HasTexture("_MainTex"))
             {
                 parriableMaterial.mainTexture = texture2D1;
                 if (parriableMaterial.HasTexture("_EmTex"))
@@ -116,7 +121,7 @@ public class ParriableProjectileGhostColorChanger : MonoBehaviour
             {
                 parriableMaterial.SetFloat("_Boost", parriableMaterial.GetFloat("_Boost") * brightnessMultiplier);
             }
-            keyValuePairs.Add(material, parriableMaterial);
+            keyValuePairs[material] = parriableMaterial;
         }
         if (parriableMaterial == null) parriableMaterial = material;
     }

@@ -48,7 +48,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
 {
     public const string ModGuid = "com.brynzananas.caeliimperium";
     public const string ModName = "Caeli Imperium";
-    public const string ModVer = "0.13.0";
+    public const string ModVer = "0.13.2";
     public const string ModPrefix = "CI";
     public static bool emotesEnabled;
     public static bool riskOfOptionsEnabled;
@@ -118,7 +118,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         }
         else
         {
-            if (preGameRuleVoteController.IsChoiceVoted(hurtMePlentyRuleChoiceController.choiceDef)) normalRuleChoiceController.OnClick();
+            if (false && preGameRuleVoteController.IsChoiceVoted(hurtMePlentyRuleChoiceController.choiceDef)) normalRuleChoiceController.OnClick();
         }
     }
     public void AddCustomMusic()

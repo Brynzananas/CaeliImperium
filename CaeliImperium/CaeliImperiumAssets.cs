@@ -101,6 +101,11 @@ public static class CaeliImperiumAssets
     public static SceneCollection LoopStage3;
     public static SceneCollection LoopStage4;
     public static SceneCollection LoopStage5;
+    public static ItemTierDef VoidTier1;
+    public static ItemTierDef VoidTier2;
+    public static ItemTierDef VoidTier3;
+    public static ItemTierDef VoidBoss;
+    public static ItemTierDef Lunar;
     public static MusicTrackDef MainMenuMusic;
     public static MusicTrackDef CharaceterSelectScreenMusic;
     public static PostProcessProfile NestPP;
@@ -184,6 +189,10 @@ public static class CaeliImperiumAssets
         LoopStage3 = Addressables.LoadAssetAsync<SceneCollection>("RoR2/Base/SceneGroups/loopSgStage3.asset").WaitForCompletion();
         LoopStage4 = Addressables.LoadAssetAsync<SceneCollection>("RoR2/Base/SceneGroups/loopSgStage4.asset").WaitForCompletion();
         LoopStage5 = Addressables.LoadAssetAsync<SceneCollection>("RoR2/Base/SceneGroups/loopSgStage5.asset").WaitForCompletion();
+        VoidTier1 = Addressables.LoadAssetAsync<ItemTierDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_Common.VoidTier1Def_asset).WaitForCompletion();
+        VoidTier2 = Addressables.LoadAssetAsync<ItemTierDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_Common.VoidTier2Def_asset).WaitForCompletion();
+        VoidTier3 = Addressables.LoadAssetAsync<ItemTierDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_DLC1_Common.VoidTier3Def_asset).WaitForCompletion();
+        Lunar = Addressables.LoadAssetAsync<ItemTierDef>(RoR2BepInExPack.GameAssetPathsBetter.RoR2_Base_Common.LunarTierDef_asset).WaitForCompletion();
         MainCamera = Addressables.LoadAssetAsync<GameObject>("RoR2/Base/Core/Camera/Main Camera.prefab").WaitForCompletion();
         TitanicPlains = Addressables.LoadAssetAsync<SceneDef>("RoR2/Base/golemplains/golemplains.asset").WaitForCompletion();
         MetalSurface = Addressables.LoadAssetAsync<SurfaceDef>("RoR2/Base/Common/sdMetal.asset").WaitForCompletion();
