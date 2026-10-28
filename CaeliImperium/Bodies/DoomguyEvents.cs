@@ -217,7 +217,7 @@ public static class DoomguyEvents
         On.RoR2.SetStateOnHurt.SetImmobilize += SetStateOnHurt_SetImmobilize;
         On.RoR2.CombatDirector.EliteTierDef.CanSelect += EliteTierDef_CanSelect;
         On.RoR2.PickupDropletController.CreatePickupDroplet_CreatePickupInfo_Vector3_Vector3 += PickupDropletController_CreatePickupDroplet_CreatePickupInfo_Vector3_Vector3;
-        MusicController.pickTrackHook += MusicController_pickTrackHook;
+        //MusicController.pickTrackHook += MusicController_pickTrackHook;
         R2API.RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
         IL.EntityStates.ChampRush.SpawnOrb.Ascending.OnEnter += Ascending_OnEnter;
         IL.EntityStates.Missions.ChampRush.QuadrantPhase.OnQuadrantComplete += QuadrantPhase_OnQuadrantComplete;
