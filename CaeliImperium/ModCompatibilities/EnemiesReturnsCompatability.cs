@@ -9,7 +9,7 @@ public static class EnemiesReturnsCompatability
 {
     public const string GUID = "com.Viliger.EnemiesReturns";
     private static bool init;
-    public static void BishopInit()
+    public static void DoomguyInit()
     {
         if (init) return;
         init = true;

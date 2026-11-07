@@ -152,6 +152,7 @@ namespace CaeliImperium
 "Monsters Projectile Speed: <style=cIsHealing>-35%</style>\n" +
 "Monsters Flight Height: <style=cIsHealing>8m</style>\n" +
 "Elites: <style=cIsHealing>Gone</style>\n" +
+(CaeliImperiumPlugin.varianceEnabled ? "Variants: <style=cIsHealing>Gone</style>\n" : "") +
 "Knockback: <style=cIsDamage>Gone</style>\n" +
 "Drones, Items And Equipments: <style=cIsDamage>Repooled</style>. <style=cIsHealth>-75% damage. Cannot stun, shock, immobilize and freeze</style>\n" +
 "Monsters: <style=cIsHealth>Do not target minions</style>\n" +
@@ -167,6 +168,7 @@ namespace CaeliImperium
 "Скорость Поле Снарядов Монстро: <style=cIsHealing>-35%</style>\n" +
 "Высота Полета Монстров: <style=cIsHealing>8m</style>\n" +
 "Элитные Монстры: <style=cIsHealing>Отсутствуют</style>\n" +
+(CaeliImperiumPlugin.varianceEnabled ? "Варианты: <style=cIsHealing>Отсутствуют</style>\n" : "") +
 "Отброс: <style=cIsDamage>Отсутствует</style>\n" +
 "Дроны, Предметы и Снарядение: <style=cIsDamage>Пересобранны</style>. <style=cIsHealth>-75% урона. Не могут замораживать, оглушать и шокрировать</style>\n" +
 "Монстры: <style=cIsHealth>Больше не атакуют приспешников</style>\n" +

@@ -49,6 +49,10 @@
 			<Private>false</Private>
 			<HintPath>D:\Ror2Mods\CaeliImperium\CaeliImperium\CaeliImperium\OtherMods\EnemyAbilities-nstrip.dll</HintPath>
 		</Reference>
+	<Reference Include="Nebby-Variance">
+			<Private>false</Private>
+			<HintPath>D:\Ror2Mods\CaeliImperium\CaeliImperium\CaeliImperium\OtherMods\VarianceAPI.Runtime-nstrip.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="call weaver.bat $(TargetDir) $(AssemblyName)" />

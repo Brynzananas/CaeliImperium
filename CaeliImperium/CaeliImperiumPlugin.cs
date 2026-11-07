@@ -43,17 +43,19 @@ namespace CaeliImperium;
 [BepInDependency(RiskOfOptionsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(EnemiesReturnsCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [BepInDependency(EnemyAbilitiesCompatibility.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+[BepInDependency(VarianceCompatability.GUID, BepInDependency.DependencyFlags.SoftDependency)]
 [System.Serializable]
 public class CaeliImperiumPlugin : BaseUnityPlugin
 {
     public const string ModGuid = "com.brynzananas.caeliimperium";
     public const string ModName = "Caeli Imperium";
-    public const string ModVer = "0.13.3";
+    public const string ModVer = "0.13.4";
     public const string ModPrefix = "CI";
     public static bool emotesEnabled;
     public static bool riskOfOptionsEnabled;
     public static bool enemiesReturnsEnabled;
     public static bool enemyAbilitiesEnabled;
+    public static bool varianceEnabled;
     public static ExpansionDef expansionDef;
     public static PluginInfo PluginInfo { get; private set; }
     public static ConfigFile configFile { get; private set; }
@@ -70,6 +72,7 @@ public class CaeliImperiumPlugin : BaseUnityPlugin
         riskOfOptionsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(RiskOfOptionsCompatability.GUID);
         enemiesReturnsEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(EnemiesReturnsCompatability.GUID);
         enemyAbilitiesEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(EnemyAbilitiesCompatibility.GUID);
+        varianceEnabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(VarianceCompatability.GUID);
         CaeliImperiumSave.Init();
         CaeliImperiumConfigs.OverrideConfigValuesOnUpdate = Config.Bind(CaeliImperiumConfigs.sectionName, "Override config values on update", true, "Update config values with new default values if existing config value matches old default value on mod update?");
         CaeliImperiumConfigs.AlphaContent = Config.Bind(CaeliImperiumConfigs.sectionName, "Alpha content", true, "Enable alpha content? Current alpha content: Doomguy survivor, Hurt Me Plenty difficulty");
