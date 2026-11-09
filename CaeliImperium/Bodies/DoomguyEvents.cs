@@ -396,9 +396,40 @@ public static class DoomguyEvents
             bishopStaggerOnHurt.staggerDuration = StaggerDuration;
             DoomguyAddBerserkOnEnable doomguyAddBerserkOnEnable = gameObject1.AddComponent<DoomguyAddBerserkOnEnable>();
         }
-        if (CaeliImperiumPlugin.enemiesReturnsEnabled) EnemiesReturnsCompatability.DoomguyInit();
-        if (CaeliImperiumPlugin.enemyAbilitiesEnabled) EnemyAbilitiesCompatibility.DoomguyInit();
-        if (CaeliImperiumPlugin.varianceEnabled) VarianceCompatability.DoomguyInit();
+        if (CaeliImperiumPlugin.enemiesReturnsEnabled)
+        {
+            try
+            {
+                EnemiesReturnsCompatability.DoomguyInit();
+            }
+            catch (Exception ex)
+            {
+                CaeliImperiumPlugin.Log.LogError(ex);
+            }
+        }
+        if (CaeliImperiumPlugin.enemyAbilitiesEnabled)
+        {
+            try
+            {
+                EnemyAbilitiesCompatibility.DoomguyInit();
+            }
+            catch (Exception ex)
+            {
+                CaeliImperiumPlugin.Log.LogError(ex);
+            }
+        }
+        if (CaeliImperiumPlugin.varianceEnabled)
+        {
+            try
+            {
+                VarianceCompatability.DoomguyInit();
+            }
+            catch (Exception ex)
+            {
+                CaeliImperiumPlugin.Log.LogError(ex);
+            }
+        }
+        
     }
 
     private static float TrajectoryAimAssist_GetAimAssistRadius(On.RoR2.TrajectoryAimAssist.orig_GetAimAssistRadius orig, GameObject owner)
